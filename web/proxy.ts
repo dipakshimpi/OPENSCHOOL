@@ -17,7 +17,7 @@ const ratelimit = redis ? new Ratelimit({
     analytics: true,
 }) : null;
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     if (request.method === "POST" && request.headers.has("next-action")) {
         return NextResponse.next();
     }
