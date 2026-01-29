@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:13-alpine
+    env_file: .env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: always
+
+  redis:
+    image: redis:6-alpine
+    volumes:
+      - redisdata:/data
+    restart: always
+
+  peertube:
+    image: chocobozzz/peertube:production-bookworm
+    env_file: .env
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./data:/data
+      - ./config:/config
+    depends_on:
+      - postgres
+      - redis
+    restart: always
+
+volumes:
+  pgdata:
+  redisdata:
+
+

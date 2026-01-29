@@ -1,0 +1,26 @@
+# --- General ---
+node_modules/
+.DS_Store
+Thumbs.db
+
+# --- Next.js (Web) ---
+web/.next/
+web/out/
+web/build/
+web/.vercel/
+
+# --- Environment Variables (SECRETS - DO NOT PUSH) ---
+.env
+.env.local
+.env.*.local
+
+# --- PeerTube Specific ---
+# Ignore the actual data, videos, and database files
+peertube/data/
+peertube/docker-volume/
+peertube/storage/
+
+# Ignore local configuration that might contain secrets
+# (Adjust this if your config file has a different name)
+peertube/config/local-production.json
+peertube/logs/

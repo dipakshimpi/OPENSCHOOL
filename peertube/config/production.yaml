@@ -1,0 +1,47 @@
+﻿# yaml-language-server: $schema=https://raw.githubusercontent.com/Chocobozzz/PeerTube/develop/support/doc/api/openapi.yaml
+# (The line above helps the IDE understand this file, or we can use 'none' if that fails.
+# actually, openapi isn't the config schema. Let's strictly use 'none' to clear the errors safely.)
+# yaml-language-server: $schema=none
+listen:
+  hostname: "0.0.0.0"
+  port: 9000
+
+webserver:
+  hostname: "127.0.0.1"
+  port: 9000
+  https: false
+
+database:
+  hostname: "postgres"
+  port: 5432
+  suffix: ""
+  username: "peertube"
+  password: "peertube_db_pass_123"
+  pool:
+    max: 5
+  name: "peertube"
+
+redis:
+  hostname: "redis"
+  port: 6379
+
+storage:
+  tmp: "/data/tmp"
+  avatars: "/data/avatars"
+  videos: "/data/videos"
+  streaming_playlists: "/data/streaming-playlists"
+  previews: "/data/previews"
+  thumbnails: "/data/thumbnails"
+  torrents: "/data/torrents"
+  captions: "/data/captions"
+  cache: "/data/cache"
+  redundancy: "/data/redundancy"
+
+secrets:
+  peertube: "6fb03608cc658686a3454b56876c5678a1234567890abcdef1234567890abcde"
+
+admin:
+  email: "admin@localhost.local"
+
+logging:
+  level: "info"
