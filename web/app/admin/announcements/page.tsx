@@ -26,6 +26,9 @@ interface Announcement {
     };
 }
 
+// Force dynamic rendering since this page relies on Request data not available at build time
+export const dynamic = "force-dynamic";
+
 export default function AdminAnnouncementsPage() {
     const [announcements, setAnnouncements] = useState<Announcement[]>([]);
     const [loading, setLoading] = useState(false);
