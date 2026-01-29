@@ -13,7 +13,7 @@ const redis = (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_R
 
 const ratelimit = redis ? new Ratelimit({
     redis: redis,
-    limiter: Ratelimit.slidingWindow(60, "60 s"),
+    limiter: Ratelimit.slidingWindow(100, "60 s"),
     analytics: true,
 }) : null;
 
