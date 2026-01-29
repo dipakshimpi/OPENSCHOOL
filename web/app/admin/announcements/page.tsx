@@ -27,9 +27,11 @@ interface Announcement {
 }
 
 // Force dynamic rendering since this page relies on Request data not available at build time
+// Force dynamic rendering since this page relies on Request data not available at build time
 export const dynamic = "force-dynamic";
+import { Suspense } from "react";
 
-export default function AdminAnnouncementsPage() {
+function AdminAnnouncementsContent() {
     const [announcements, setAnnouncements] = useState<Announcement[]>([]);
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -178,5 +180,13 @@ export default function AdminAnnouncementsPage() {
                 </div>
             </div>
         </DashboardLayout>
+    );
+}
+
+export default function AdminAnnouncementsPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <AdminAnnouncementsContent />
+        </Suspense>
     );
 }
