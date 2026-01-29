@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,9 +27,7 @@ interface Announcement {
 }
 
 // Force dynamic rendering since this page relies on Request data not available at build time
-// Force dynamic rendering since this page relies on Request data not available at build time
 export const dynamic = "force-dynamic";
-import { Suspense } from "react";
 
 function AdminAnnouncementsContent() {
     const [announcements, setAnnouncements] = useState<Announcement[]>([]);
