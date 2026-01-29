@@ -18,8 +18,13 @@ interface AuthToken {
 export async function getPeerTubeToken(): Promise<string> {
     try {
         // 1. Get Client ID and Secret
-        const clientRes = await fetch(`${PEERTUBE_URL}/api/v1/oauth-clients/local`);
-        if (!clientRes.ok) throw new Error("Failed to fetch PeerTube OAuth client info");
+        const clientRes = await fetch(`${PEERTUBE_URL}/api/v1/oauth-clients/local`, {
+            headers: { "ngrok-skip-browser-warning": "true" }
+        });
+        if (!clientRes.ok) {
+            const errText = await clientRes.text();
+            throw new Error(`Failed to fetch PeerTube OAuth client info: ${errText}`);
+        }
         const clientData = await clientRes.json();
 
         const clientId = clientData.client_id;
@@ -30,6 +35,7 @@ export async function getPeerTubeToken(): Promise<string> {
             method: "POST",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
+                "ngrok-skip-browser-warning": "true"
             },
             body: new URLSearchParams({
                 client_id: clientId,
@@ -74,14 +80,14 @@ export async function uploadToPeerTube(file: File, name: string, description: st
         method: "POST",
         headers: {
             "Authorization": `Bearer ${token}`,
-            // Do NOT set Content-Type header manually for FormData, fetch does it automatically with boundary
+            "ngrok-skip-browser-warning": "true"
         },
         body: formData,
     });
 
     if (!uploadRes.ok) {
-        const err = await uploadRes.json();
-        console.error("PeerTube Upload Failed:", err);
+        const err = await uploadRes.json().catch(() => ({ error: "Unknown error" }));
+        console.error("PeerTube Upload Failed Details:", err);
         throw new Error(err.error || "Unknown PeerTube Upload Error");
     }
 

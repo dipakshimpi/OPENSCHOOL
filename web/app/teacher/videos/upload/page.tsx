@@ -88,7 +88,8 @@ export default function UploadVideoPage() {
             const uploadRes = await fetch(`${peerTubeUrl}/api/v1/videos/upload`, {
                 method: "POST",
                 headers: {
-                    "Authorization": `Bearer ${token}`
+                    "Authorization": `Bearer ${token}`,
+                    "ngrok-skip-browser-warning": "true"
                 },
                 body: formData
             });
