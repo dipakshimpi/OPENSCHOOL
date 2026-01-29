@@ -8,6 +8,6 @@ export async function getUploadToken() {
         return { token };
     } catch (error) {
         console.error("Failed to get PeerTube token:", error);
-        return { error: "Failed to authenticate with Video Server" };
+        return { error: `Failed to authenticate with Video Server: ${error instanceof Error ? error.message : String(error)}` };
     }
 }
