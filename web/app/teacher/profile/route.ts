@@ -1,32 +1,19 @@
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  const classes = [
-    {
-      id: "1",
-      title: "Mathematics – Grade 8",
-      schedule: "Mon, Wed, Fri",
-      time: "9:00 AM – 9:45 AM",
-      studentCount: 30,
-      status: "Active",
-    },
-    {
-      id: "2",
-      title: "Science – Grade 7",
-      schedule: "Tue, Thu",
-      time: "10:00 AM – 10:45 AM",
-      studentCount: 28,
-      status: "Scheduled",
-    },
-    {
-      id: "3",
-      title: "English – Grade 9",
-      schedule: "Mon, Wed, Fri",
-      time: "2:00 PM – 2:45 PM",
-      studentCount: 32,
-      status: "Active",
-    },
-  ];
+  // In a real app, you'd get the user ID from the session and query the database
+  const profile = {
+    fullName: "John Doe",
+    role: "Mathematics Teacher",
+    status: "Active",
+    email: "john.doe@school.com",
+    assignedCourses: 4,
+    memberSince: "January 2024",
+    teacherId: "TCH-2024-001",
+  };
 
-  return NextResponse.json({ classes });
+  // Simulate a network delay
+  await new Promise((resolve) => setTimeout(resolve, 500));
+
+  return NextResponse.json(profile);
 }
