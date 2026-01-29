@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowUpTrayIcon, VideoCameraIcon, FilmIcon } from "@heroicons/react/24/outline";
-import { uploadVideoAction } from "@/app/actions/upload-video";
+import { getUploadToken } from "@/app/actions/get-upload-token";
 
 interface Course {
     id: string;
@@ -63,33 +63,71 @@ export default function UploadVideoPage() {
         }
 
         setIsUploading(true);
-        setUploadStatus("Initializing secure upload...");
-
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("title", title);
-        formData.append("description", description);
-        formData.append("courseId", selectedCourse);
+        setUploadStatus("Authenticating...");
 
         try {
-            setUploadStatus("Uploading to server (this can take a while)...");
+            // 1. Get Auth Token from Server (Secure)
+            const { token, error } = await getUploadToken();
+            if (error || !token) throw new Error(error || "Failed to get auth token");
 
-            // Use Server Action directly
-            const result = await uploadVideoAction(formData);
+            // 2. Prepare Direct Upload to PeerTube
+            setUploadStatus("Uploading directly to Video Server...");
+            const formData = new FormData();
+            formData.append("videofile", file);
+            formData.append("channelId", "1");
+            formData.append("name", title);
+            formData.append("privacy", "1");
+            if (description) formData.append("description", description);
 
-            if (result.error) {
-                throw new Error(result.error);
+            // 3. Send to PeerTube (Bypassing Vercel Limit)
+            const peerTubeUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9000";
+            // Check if we are using the proxied API route or direct
+            // We need to hit the PeerTube API directly to avoid Vercel Limits
+            // AND we need to use the public URL (ngrok)
+
+            const uploadRes = await fetch(`${peerTubeUrl}/api/v1/videos/upload`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                },
+                body: formData
+            });
+
+            if (!uploadRes.ok) {
+                const errText = await uploadRes.text();
+                throw new Error(`Upload Failed: ${errText}`);
             }
 
-            setUploadStatus("Processing complete! Redirecting...");
+            const videoData = await uploadRes.json();
+            const videoUrl = videoData.video.url || `${peerTubeUrl}/w/${videoData.video.shortUUID}`;
+
+            setUploadStatus("Linking to Course...");
+
+            // 4. Save metadata to Supabase (via existing server action, but just for DB)
+            // We need a separate action for this or modify the existing one.
+            // For now, let's just use a simple API call to save the reference
+            const saveRes = await fetch("/api/videos", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title,
+                    description,
+                    course_id: selectedCourse,
+                    peertube_url: videoUrl
+                })
+            });
+
+            if (!saveRes.ok) throw new Error("Failed to save video to course database");
+
+            setUploadStatus("Success! Redirecting...");
             setTimeout(() => {
                 router.push("/teacher/videos");
             }, 1000);
 
         } catch (error: unknown) {
             console.error("Upload Error:", error);
-            const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-            alert(`Upload Failed: ${errorMessage}`);
+            const message = error instanceof Error ? error.message : "An unknown error occurred";
+            alert(message);
             setIsUploading(false);
             setUploadStatus("");
         }
