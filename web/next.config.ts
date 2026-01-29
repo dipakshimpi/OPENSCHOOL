@@ -29,7 +29,6 @@ const nextConfig: NextConfig = {
   },
 
   experimental: {
-    turbo: false, // 👈 ADD THIS
     serverActions: {
       bodySizeLimit: "500mb",
     },
