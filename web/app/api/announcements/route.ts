@@ -11,7 +11,7 @@ export async function GET() {
 
         if (error) throw error;
         return NextResponse.json(data);
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: "Failed to fetch announcements" }, { status: 500 });
     }
 }
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
 
         if (error) throw error;
         return NextResponse.json(data);
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

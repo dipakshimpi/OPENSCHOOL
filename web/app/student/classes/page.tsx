@@ -3,7 +3,7 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Calendar, Users, User } from "lucide-react";
+import { Clock, Calendar, User } from "lucide-react";
 
 export default function StudentClasses() {
   return (

@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
     UsersIcon,
-    CurrencyDollarIcon,
     AcademicCapIcon,
     ChartBarIcon,
     ArrowTrendingUpIcon
@@ -14,8 +13,23 @@ import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 
+interface AdminStats {
+    stats: {
+        studentCount: number;
+        teacherCount: number;
+        courseCount: number;
+        attendanceRate: number;
+    };
+    recentActivity: Array<{
+        user: string;
+        action: string;
+        target: string;
+        time: string;
+    }>;
+}
+
 export default function AdminDashboard() {
-    const [data, setData] = useState<any>(null);
+    const [data, setData] = useState<AdminStats | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -33,7 +47,7 @@ export default function AdminDashboard() {
         fetchStats();
     }, []);
 
-    if (loading) {
+    if (loading || !data) {
         return (
             <DashboardLayout role="admin" title="Admin Overview">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -119,7 +133,7 @@ export default function AdminDashboard() {
                     <CardContent className="p-6">
                         <div className="space-y-6">
                             {data.recentActivity.length > 0 ? (
-                                data.recentActivity.map((item: any, i: number) => (
+                                data.recentActivity.map((item, i: number) => (
                                     <div key={i} className="flex items-start gap-4 group">
                                         <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30 group-hover:bg-indigo-500 group-hover:text-white transition-all">
                                             <UsersIcon className="w-4 h-4" />

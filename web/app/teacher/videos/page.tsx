@@ -40,7 +40,7 @@ function TeacherVideosContent() {
                     const data = await res.json();
                     setVideos(data);
                 }
-            } catch (error) {
+            } catch {
                 console.error("Failed to fetch videos");
             } finally {
                 setLoading(false);

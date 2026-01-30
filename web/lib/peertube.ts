@@ -17,18 +17,22 @@ interface AuthToken {
  */
 export async function getPeerTubeToken(): Promise<string> {
     try {
-        // 1. Get Client ID and Secret
-        const clientRes = await fetch(`${PEERTUBE_URL}/api/v1/oauth-clients/local`, {
-            headers: { "ngrok-skip-browser-warning": "true" }
-        });
-        if (!clientRes.ok) {
-            const errText = await clientRes.text();
-            throw new Error(`Failed to fetch PeerTube OAuth client info: ${errText}`);
-        }
-        const clientData = await clientRes.json();
+        let clientId = process.env.PEERTUBE_CLIENT_ID;
+        let clientSecret = process.env.PEERTUBE_CLIENT_SECRET;
 
-        const clientId = clientData.client_id;
-        const clientSecret = clientData.client_secret;
+        // 1. Get Client ID and Secret (Only if not provided in env)
+        if (!clientId || !clientSecret) {
+            const clientRes = await fetch(`${PEERTUBE_URL}/api/v1/oauth-clients/local`, {
+                headers: { "ngrok-skip-browser-warning": "true" }
+            });
+            if (!clientRes.ok) {
+                const errText = await clientRes.text();
+                throw new Error(`Failed to fetch PeerTube OAuth client info: ${errText}. Try adding PEERTUBE_CLIENT_ID/SECRET to env.`);
+            }
+            const clientData = await clientRes.json();
+            clientId = clientData.client_id;
+            clientSecret = clientData.client_secret;
+        }
 
         // 2. Request Token
         const tokenRes = await fetch(`${PEERTUBE_URL}/api/v1/users/token`, {
@@ -38,8 +42,8 @@ export async function getPeerTubeToken(): Promise<string> {
                 "ngrok-skip-browser-warning": "true"
             },
             body: new URLSearchParams({
-                client_id: clientId,
-                client_secret: clientSecret,
+                client_id: clientId!,
+                client_secret: clientSecret!,
                 grant_type: "password",
                 username: USERNAME,
                 password: PASSWORD,
