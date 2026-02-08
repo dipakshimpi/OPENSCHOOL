@@ -1,0 +1,37 @@
+name: openschool ci pipeline
+
+on: 
+    push:
+        branches: ['main']
+
+    pull_request:
+        branches: ['main']
+jobs:
+    build-and-test:
+        
+        runs-on: ubuntu-latest
+        
+        defaults:
+            run:
+                working-directory: ./web
+            
+        steps:
+
+            - name: checkout Repository
+              uses: actions/checkout@v4
+
+            - name: steup Node.js
+              uses: actions/setup-node@v4
+              with:
+                node-version: 20
+                cache: 'npm'
+                
+            - name: install dependencies
+              run: npm ci
+
+            - name: run linter
+              run: npm run lint 
+            
+            - name: run build
+              run: npm run build
+              
