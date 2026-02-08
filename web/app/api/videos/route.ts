@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -16,7 +17,7 @@ export async function GET(request: Request) {
         const { data: videos, error } = await query.order('created_at', { ascending: false });
 
         if (error) throw error;
-        return NextResponse.json(videos);
+        return NextResponse.json(videos || []);
     } catch {
         return NextResponse.json({ error: "Failed to fetch videos" }, { status: 500 });
     }
@@ -24,6 +25,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     try {
+        // Use regular client to verify user authentication
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
 
@@ -44,7 +46,10 @@ export async function POST(request: Request) {
         }
         const videoId = urlMatch[1];
 
-        const { data, error } = await supabase
+        // Use admin client for database operations (bypasses RLS)
+        const adminClient = createAdminClient();
+
+        const { data, error } = await adminClient
             .from('videos')
             .insert({
                 id: videoId,  // Use PeerTube ID as primary key

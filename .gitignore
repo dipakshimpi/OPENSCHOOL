@@ -24,3 +24,10 @@ peertube/storage/
 # (Adjust this if your config file has a different name)
 peertube/config/local-production.json
 peertube/logs/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

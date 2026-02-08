@@ -62,6 +62,11 @@ export default function UploadVideoPage() {
             return;
         }
 
+        if (title.length < 3) {
+            alert("The lesson title must be at least 3 characters long.");
+            return;
+        }
+
         setIsUploading(true);
         setUploadStatus("Authenticating...");
 
@@ -80,7 +85,7 @@ export default function UploadVideoPage() {
             if (description) formData.append("description", description);
 
             // 3. Send to PeerTube (Bypassing Vercel Limit)
-            const peerTubeUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9000";
+            const peerTubeUrl = process.env.NEXT_PUBLIC_PEERTUBE_URL || "http://localhost:9000";
             // Check if we are using the proxied API route or direct
             // We need to hit the PeerTube API directly to avoid Vercel Limits
             // AND we need to use the public URL (ngrok)

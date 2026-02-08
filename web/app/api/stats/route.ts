@@ -97,9 +97,9 @@ export async function GET() {
                     attendanceRate: Math.round(attendanceRate)
                 },
                 recentActivity: enrollments?.map(e => ({
-                    user: (e.profiles as any)?.full_name || 'Anonymous',
+                    user: (e.profiles as unknown as { full_name: string })?.full_name || 'Anonymous',
                     action: 'enrolled in',
-                    target: (e.courses as any)?.title || 'Course',
+                    target: (e.courses as unknown as { title: string })?.title || 'Course',
                     time: new Date(e.enrolled_at).toLocaleTimeString()
                 })) || []
             });
@@ -111,8 +111,20 @@ export async function GET() {
                 .eq('student_id', user.id);
 
             const avgProgress = enrollments && enrollments.length > 0
-                ? enrollments.reduce((acc: number, curr: any) => acc + (curr.progress || 0), 0) / enrollments.length
+                ? enrollments.reduce((acc: number, curr: { progress: number | null }) => acc + (curr.progress || 0), 0) / enrollments.length
                 : 0;
+
+            // Fetch real attendance rate for this student
+            const { data: attendanceRecords } = await supabase
+                .from('student_attendance')
+                .select('status')
+                .eq('student_id', user.id);
+
+            const totalAttendance = attendanceRecords?.length || 0;
+            const presentCount = attendanceRecords?.filter(a => a.status === 'present').length || 0;
+            const attendanceRate = totalAttendance > 0
+                ? (presentCount / totalAttendance) * 100
+                : 100; // Default to 100% if no records yet
 
             return NextResponse.json({
                 role: 'student',
@@ -120,7 +132,8 @@ export async function GET() {
                 enrolledCourses: enrollments || [],
                 stats: {
                     enrolledCount: enrollmentCount || 0,
-                    avgProgress: Math.round(avgProgress)
+                    avgProgress: Math.round(avgProgress),
+                    attendanceRate: Math.round(attendanceRate)
                 }
             });
         }

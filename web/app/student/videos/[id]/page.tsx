@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -10,7 +10,6 @@ import {
     InformationCircleIcon,
     AcademicCapIcon
 } from "@heroicons/react/24/outline";
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { VideoPlayer } from "@/components/video/VideoPlayer";
@@ -35,11 +34,11 @@ export default function VideoWatchPage() {
             try {
                 // Fetch specific video (we can filter general videos for now or create a specific endpoint)
                 const res = await fetch("/api/videos");
-                const data = await res.json();
-                const found = data.find((v: any) => v.id === params.id);
-                setVideo(found);
+                const data: Video[] = await res.json();
+                const found = data.find((v: Video) => v.id === params.id);
+                setVideo(found || null);
             } catch (error) {
-                console.error("Failed to fetch video");
+                console.error("Failed to fetch video", error);
             } finally {
                 setLoading(false);
             }
@@ -134,7 +133,7 @@ export default function VideoWatchPage() {
                         <ul className="text-xs text-amber-700 space-y-2 list-disc list-inside">
                             <li>Take notes during the video.</li>
                             <li>Re-watch difficult sections.</li>
-                            <li>Don't forget to complete the corresponding assignment.</li>
+                            <li>Don&apos;t forget to complete the corresponding assignment.</li>
                         </ul>
                     </div>
                 </div>

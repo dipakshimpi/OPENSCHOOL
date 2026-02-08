@@ -40,9 +40,10 @@ export async function uploadVideoAction(formData: FormData) {
         let peerTubeVideo;
         try {
             peerTubeVideo = await uploadToPeerTube(file, title, description || "");
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "Unknown PeerTube Error";
             console.error("PeerTube Error:", error);
-            return { error: `PeerTube Upload Failed: ${error.message}` };
+            return { error: `PeerTube Upload Failed: ${errorMessage}` };
         }
 
         // 3. Save to Supabase
@@ -64,8 +65,9 @@ export async function uploadVideoAction(formData: FormData) {
 
         return { success: true };
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown Error";
         console.error("Server Action Error:", error);
-        return { error: error.message };
+        return { error: errorMessage };
     }
 }

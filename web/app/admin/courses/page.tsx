@@ -15,6 +15,7 @@ import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
 interface Course {
   id: string;
@@ -54,10 +55,12 @@ export default function AdminCoursesPage() {
           title="All Courses"
           description="Manage and monitor all educational content across the platform."
           action={
-            <Button className="bg-indigo-600 hover:bg-black shadow-lg">
-              <Plus className="h-4 w-4 mr-2" />
-              Direct Add Course
-            </Button>
+            <Link href="/admin/courses/create">
+              <Button className="bg-indigo-600 hover:bg-black shadow-lg">
+                <Plus className="h-4 w-4 mr-2" />
+                Direct Add Course
+              </Button>
+            </Link>
           }
         />
 
@@ -127,7 +130,9 @@ export default function AdminCoursesPage() {
                 <BookOpen className="h-16 w-16 text-slate-200 mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-slate-900">Virtual Library is Empty</h3>
                 <p className="text-slate-500 mb-6">No courses have been published to the platform yet.</p>
-                <Button className="bg-indigo-600 hover:bg-black">Initialize First Course</Button>
+                <Link href="/admin/courses/create">
+                  <Button className="bg-indigo-600 hover:bg-black">Initialize First Course</Button>
+                </Link>
               </div>
             )}
           </CardContent>

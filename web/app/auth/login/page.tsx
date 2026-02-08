@@ -36,23 +36,41 @@ export default function LoginPage() {
             return;
         }
 
-        // Get the role from profile to verify access
+        // Get the profile data
         const { data: profile } = await supabaseClient
             .from("profiles")
-            .select("role")
+            .select("role, is_admin_approved, is_teacher_approved")
             .eq("id", data.user.id)
             .single();
 
         const actualRole = profile?.role;
 
         // Security Check: Enforce Role Match
-        // We use a generic error message here to prevent role enumeration attacks
         if (actualRole && actualRole !== role) {
             await supabaseClient.auth.signOut();
-            setError("Invalid email or password."); // GENERIC ERROR for security
+            setError("Invalid email or password.");
             setIsLoading(false);
             return;
         }
+
+        // Approval Checks
+        if (actualRole === 'student') {
+            if (!profile?.is_admin_approved) {
+                router.push("/auth/pending?step=admin");
+                setIsLoading(false);
+                return;
+            }
+            if (!profile?.is_teacher_approved) {
+                router.push("/auth/pending?step=teacher");
+                setIsLoading(false);
+                return;
+            }
+        }
+
+        // For Teachers, verify if they need approval too, or just simplify validation
+        // Assuming strict double approval is mostly for Students as per request.
+        // But if we added constraints to teacher, check here. 
+        // For now, proceed.
 
         router.push(`/${actualRole}`);
         setIsLoading(false);

@@ -5,6 +5,9 @@ export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const role = searchParams.get('role');
+        const adminApproved = searchParams.get('admin_approved');
+        const teacherApproved = searchParams.get('teacher_approved');
+        const approved = searchParams.get('approved');
 
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -23,8 +26,27 @@ export async function GET(request: Request) {
         }
 
         let query = supabase.from('profiles').select('*');
+
         if (role) {
             query = query.eq('role', role);
+        }
+
+        if (adminApproved === 'true') {
+            query = query.eq('is_admin_approved', true);
+        } else if (adminApproved === 'false') {
+            query = query.eq('is_admin_approved', false);
+        }
+
+        if (teacherApproved === 'true') {
+            query = query.eq('is_teacher_approved', true);
+        } else if (teacherApproved === 'false') {
+            query = query.eq('is_teacher_approved', false);
+        }
+
+        if (approved === 'true') {
+            query = query.eq('is_approved', true);
+        } else if (approved === 'false') {
+            query = query.eq('is_approved', false);
         }
 
         const { data: users, error } = await query.order('created_at', { ascending: false });
@@ -56,25 +78,43 @@ export async function PATCH(request: Request) {
         }
 
         const body = await request.json();
-        const { id, is_approved } = body;
+        const { id, is_admin_approved, is_teacher_approved, is_approved, school_id } = body;
 
         if (!id) return NextResponse.json({ error: "Missing user ID" }, { status: 400 });
 
+        const updates: Record<string, unknown> = {};
+        if (typeof is_admin_approved !== 'undefined') updates.is_admin_approved = is_admin_approved;
+        if (typeof is_teacher_approved !== 'undefined') updates.is_teacher_approved = is_teacher_approved;
+        if (typeof is_approved !== 'undefined') updates.is_approved = is_approved;
+        if (typeof school_id !== 'undefined') updates.school_id = school_id;
+
+        if (Object.keys(updates).length === 0) {
+            return NextResponse.json({ error: "No fields to update" }, { status: 400 });
+        }
+
         const { data, error } = await supabase
             .from('profiles')
-            .update({ is_approved })
+            .update(updates)
             .eq('id', id)
             .select();
 
-        if (error) throw error;
+        if (error) {
+            console.error("DATABASE_UPDATE_ERROR:", error);
+            throw error;
+        }
 
         if (!data || data.length === 0) {
+            console.warn("UPDATE_TARGET_NOT_FOUND:", id);
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
+        console.log("USER_UPDATED_SUCCESSFULLY:", id, updates);
         return NextResponse.json(data[0]);
     } catch (error) {
         console.error("UPDATE_USER_ERROR:", error);
-        return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
+        return NextResponse.json({
+            error: "Failed to update user",
+            details: error instanceof Error ? error.message : String(error)
+        }, { status: 500 });
     }
 }

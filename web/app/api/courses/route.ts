@@ -11,7 +11,7 @@ export async function GET() {
     if (error) throw error;
 
     // Transform the data to have a cleaner count field
-    const transformedData = courses.map(course => ({
+    const transformedData = (courses || []).map(course => ({
       ...course,
       enrollmentCount: course.enrollments?.[0]?.count || 0
     }));

@@ -13,7 +13,10 @@ import {
     ArrowRightOnRectangleIcon,
     AcademicCapIcon,
     MegaphoneIcon,
-    UserCircleIcon
+    UserCircleIcon,
+    CheckBadgeIcon,
+    TableCellsIcon,
+    UserPlusIcon
 } from "@heroicons/react/24/outline";
 import { supabaseClient } from "@/lib/supabase/client";
 
@@ -30,12 +33,16 @@ export function Sidebar({ role }: SidebarProps) {
             { href: "/admin/courses", label: "Courses", icon: BookOpenIcon },
             { href: "/admin/teachers", label: "Teachers", icon: AcademicCapIcon },
             { href: "/admin/students", label: "Students", icon: UsersIcon },
+            { href: "/admin/approvals", label: "Approvals", icon: CheckBadgeIcon },
+            { href: "/admin/timetable", label: "Timetable", icon: TableCellsIcon },
             { href: "/admin/announcements", label: "Notices", icon: MegaphoneIcon },
             { href: "/admin/settings", label: "Settings", icon: Cog6ToothIcon },
         ],
         teacher: [
             { href: "/teacher", label: "Dashboard", icon: HomeIcon },
             { href: "/teacher/classes", label: "My Classes", icon: UsersIcon },
+            { href: "/teacher/approvals", label: "Enrollments", icon: UserPlusIcon },
+            { href: "/teacher/timetable", label: "Timetable", icon: TableCellsIcon },
             { href: "/teacher/attendance", label: "Attendance", icon: CalendarIcon },
             { href: "/teacher/videos", label: "Lesson Gallery", icon: VideoCameraIcon },
             { href: "/teacher/profile", label: "My Profile", icon: UserCircleIcon },
@@ -43,6 +50,7 @@ export function Sidebar({ role }: SidebarProps) {
         student: [
             { href: "/student", label: "Dashboard", icon: HomeIcon },
             { href: "/student/courses", label: "My Courses", icon: BookOpenIcon },
+            { href: "/student/timetable", label: "Timetable", icon: TableCellsIcon },
             { href: "/student/attendance", label: "Attendance", icon: CalendarIcon },
             { href: "/student/videos", label: "Video Library", icon: VideoCameraIcon },
             { href: "/student/profile", label: "My Profile", icon: UserCircleIcon },

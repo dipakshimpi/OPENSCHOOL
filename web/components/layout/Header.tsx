@@ -15,6 +15,25 @@ interface Notice {
 export function Header({ title }: { title: string }) {
     const [notices, setNotices] = useState<Notice[]>([]);
     const [showPanel, setShowPanel] = useState(false);
+    const [userInitials, setUserInitials] = useState("AD");
+
+    useEffect(() => {
+        async function fetchProfile() {
+            try {
+                const res = await fetch("/api/profile");
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.full_name) {
+                        const initials = data.full_name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
+                        setUserInitials(initials);
+                    }
+                }
+            } catch (err) {
+                console.error("Profile fetch error", err);
+            }
+        }
+        fetchProfile();
+    }, []);
 
     useEffect(() => {
         async function fetchNotices() {
@@ -88,7 +107,7 @@ export function Header({ title }: { title: string }) {
                 </div>
 
                 <div className="h-8 w-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold text-sm border border-indigo-200 dark:border-indigo-800">
-                    AD
+                    {userInitials}
                 </div>
             </div>
         </header>

@@ -52,9 +52,10 @@ export async function POST(request: NextRequest) {
         let peerTubeVideo;
         try {
             peerTubeVideo = await uploadToPeerTube(file, title, description || "");
-        } catch (uploadError: any) {
+        } catch (uploadError: unknown) {
+            const errorMessage = uploadError instanceof Error ? uploadError.message : "Unknown PeerTube Error";
             console.error("❌ PeerTube Upload Failed:", uploadError);
-            return NextResponse.json({ error: `PeerTube Error: ${uploadError.message}` }, { status: 502 });
+            return NextResponse.json({ error: `PeerTube Error: ${errorMessage}` }, { status: 502 });
         }
 
         console.log("✅ PeerTube Upload Success. ID:", peerTubeVideo.shortUUID);
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
                 teacher_id: user.id,
                 title: title,
                 description: description || "",
-                url: peerTubeVideo.url, // Store the full URL/Link
+                peertube_url: peerTubeVideo.url, // Store the full URL/Link
             })
             .select()
             .single();
@@ -84,8 +85,9 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({ success: true, video: videoRecord });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown Error";
         console.error("💥 Critical Upload Error:", error);
-        return NextResponse.json({ error: "Internal Server Error: " + error.message }, { status: 500 });
+        return NextResponse.json({ error: "Internal Server Error: " + errorMessage }, { status: 500 });
     }
 }

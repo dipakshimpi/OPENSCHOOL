@@ -40,19 +40,22 @@ export default function StudentVideosPage() {
                 const statsRes = await fetch("/api/stats");
                 const statsData = await statsRes.json();
 
-                if (statsRes.ok) {
-                    const enrolled = statsData.enrolledCourses.map((e: any) => e.courses);
+                if (statsRes.ok && statsData) {
+                    const enrolledCourses = statsData.enrolledCourses || [];
+                    const enrolled = Array.isArray(enrolledCourses)
+                        ? enrolledCourses.map((e: { courses: Course }) => e.courses).filter(Boolean)
+                        : [];
                     setCourses(enrolled);
 
                     // Fetch all videos for these courses
                     const videoRes = await fetch("/api/videos");
                     if (videoRes.ok) {
                         const videoData = await videoRes.json();
-                        setVideos(videoData);
+                        setVideos(Array.isArray(videoData) ? videoData : []);
                     }
                 }
-            } catch (error) {
-                console.error("Failed to fetch student data");
+            } catch (err) {
+                console.error("Failed to fetch student data", err);
             } finally {
                 setLoading(false);
             }
@@ -80,7 +83,8 @@ export default function StudentVideosPage() {
                 ) : courses.length > 0 ? (
                     <div className="space-y-12">
                         {courses.map(course => {
-                            const courseVideos = videos.filter(v => v.course_id === course.id);
+                            const safeVideos = Array.isArray(videos) ? videos : [];
+                            const courseVideos = safeVideos.filter(v => v.course_id === course.id);
                             return (
                                 <section key={course.id} className="space-y-6">
                                     <div className="flex items-center justify-between border-b border-slate-200 pb-4">

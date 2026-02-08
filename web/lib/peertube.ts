@@ -1,6 +1,4 @@
-
-
-const PEERTUBE_URL = process.env.PEERTUBE_API_URL || "http://127.0.0.1:9000";
+const PEERTUBE_URL = process.env.PEERTUBE_API_URL || "http://localhost:9000";
 const USERNAME = process.env.PEERTUBE_ADMIN_USER || "root";
 const PASSWORD = process.env.PEERTUBE_ADMIN_PASSWORD || "password";
 
@@ -12,11 +10,38 @@ interface AuthToken {
 }
 
 /**
+ * Check if PeerTube server is available
+ */
+export async function isPeerTubeAvailable(): Promise<boolean> {
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+
+        const response = await fetch(`${PEERTUBE_URL}/api/v1/config`, {
+            signal: controller.signal,
+            headers: { "ngrok-skip-browser-warning": "true" }
+        });
+
+        clearTimeout(timeoutId);
+        return response.ok;
+    } catch (error) {
+        console.warn("⚠️ PeerTube health check failed:", error instanceof Error ? error.message : String(error));
+        return false;
+    }
+}
+
+/**
  * Authenticates with PeerTube and returns an access token.
  * This effectively acts as the "Service Account" login.
  */
 export async function getPeerTubeToken(): Promise<string> {
     try {
+        // First check if PeerTube is available
+        const isAvailable = await isPeerTubeAvailable();
+        if (!isAvailable) {
+            throw new Error("Video Server is currently unavailable. Please contact your administrator.");
+        }
+
         let clientId = process.env.PEERTUBE_CLIENT_ID;
         let clientSecret = process.env.PEERTUBE_CLIENT_SECRET;
 
@@ -58,7 +83,12 @@ export async function getPeerTubeToken(): Promise<string> {
         const tokenData: AuthToken = await tokenRes.json();
         return tokenData.access_token;
 
-    } catch (error) {
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (message.includes("ECONNREFUSED") || message.includes("fetch failed")) {
+            console.error("❌ PeerTube Server is DOWN at", PEERTUBE_URL);
+            throw new Error("Video Server is currently offline. Please try again later or contact support.");
+        }
         console.error("PeerTube Auth Error:", error);
         throw error;
     }

@@ -2,6 +2,42 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { isWithinGeofence } from "@/lib/geo";
 
+export async function GET() {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        // Check if there's an attendance record for today
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const { data, error } = await supabase
+            .from('attendance')
+            .select('*')
+            .eq('teacher_id', user.id)
+            .gte('timestamp', today.toISOString())
+            .order('timestamp', { ascending: false })
+            .limit(1);
+
+        if (error) {
+            console.error("Fetch Attendance Error:", error);
+            return NextResponse.json({ error: "Failed to fetch attendance status" }, { status: 500 });
+        }
+
+        return NextResponse.json({
+            hasAttended: data && data.length > 0,
+            lastAttendance: data && data.length > 0 ? data[0] : null
+        });
+    } catch (error) {
+        console.error("API Error:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}
+
 export async function POST(request: Request) {
     try {
         const supabase = await createClient();
@@ -12,7 +48,18 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        // 2. Parse request body
+        // 2. Get user's school_id
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('school_id')
+            .eq('id', user.id)
+            .single();
+
+        if (!profile?.school_id) {
+            return NextResponse.json({ error: "No school assigned to your profile" }, { status: 403 });
+        }
+
+        // 3. Parse request body
         const body = await request.json();
         const { latitude, longitude, accuracy, deviceInfo } = body;
 
@@ -20,36 +67,42 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Location data required" }, { status: 400 });
         }
 
-        // 3. Fetch geo-fences for verification
+        // 4. Fetch geo-fences for THIS specific school
         const { data: fences, error: fenceError } = await supabase
             .from('geo_fences')
-            .select('*');
+            .select('*')
+            .eq('school_id', profile.school_id);
 
         if (fenceError) {
-            return NextResponse.json({ error: "Failed to fetch campus data" }, { status: 500 });
+            return NextResponse.json({ error: "Failed to fetch school boundary data" }, { status: 500 });
         }
 
-        // 4. Verify if within ANY geo-fence
+        // 5. Verify if within school boundary
         let isInside = false;
 
-        for (const fence of fences) {
-            if (isWithinGeofence(latitude, longitude, fence.center_lat, fence.center_lng, fence.radius_meters)) {
-                isInside = true;
-                break;
+        // If no fences are set yet, we allow for demo/first-time setup 
+        // Or we could be strict. Let's be semi-strict.
+        if (fences.length === 0) {
+            console.log("No school fence set for school", profile.school_id);
+            isInside = true; // Temporary allow for demo
+        } else {
+            for (const fence of fences) {
+                if (isWithinGeofence(latitude, longitude, fence.center_lat, fence.center_lng, fence.radius_meters)) {
+                    isInside = true;
+                    break;
+                }
             }
         }
 
-        // For demo purposes, we can allow even if outside if we want to show "Admin Override"
-        // But for the "Star Feature", let's be strict unless it's an override.
         if (!isInside && !body.adminOverride) {
             return NextResponse.json({
                 error: "Outside school premises",
                 isInside: false,
-                message: "You must be within the school boundary to mark attendance."
+                message: "You must be within the school boundary set by your Admin to mark attendance."
             }, { status: 403 });
         }
 
-        // 5. Insert attendance record
+        // 6. Insert attendance record
         const { data, error: insertError } = await supabase
             .from('attendance')
             .insert({

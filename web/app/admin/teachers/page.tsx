@@ -17,7 +17,7 @@ import {
     AcademicCapIcon,
     EnvelopeIcon
 } from "@heroicons/react/24/outline";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Teacher {
@@ -26,6 +26,8 @@ interface Teacher {
     email: string;
     created_at: string;
     is_approved: boolean;
+    is_admin_approved: boolean;
+    is_teacher_approved: boolean;
 }
 
 export default function AdminTeachersPage() {
@@ -33,34 +35,36 @@ export default function AdminTeachersPage() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
 
-    async function fetchTeachers() {
+    const fetchTeachers = useCallback(async () => {
         try {
             const res = await fetch("/api/admin/users?role=teacher");
             if (res.ok) {
                 const data = await res.json();
-                setTeachers(data);
+                setTeachers(Array.isArray(data) ? data : (data.users || []));
             }
         } catch (error) {
             console.error("Failed to fetch teachers", error);
         } finally {
             setLoading(false);
         }
-    }
+    }, []);
 
     useEffect(() => {
         fetchTeachers();
-    }, []);
+    }, [fetchTeachers]);
 
     const handleApprove = async (id: string) => {
         try {
             const res = await fetch("/api/admin/users", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id, is_approved: true })
+                body: JSON.stringify({ id, is_admin_approved: true, is_teacher_approved: true })
             });
 
             if (res.ok) {
                 fetchTeachers(); // Refresh list
+            } else {
+                console.error("Failed to approve:", await res.text());
             }
         } catch (error) {
             console.error("Failed to approve teacher", error);
@@ -108,7 +112,7 @@ export default function AdminTeachersPage() {
                         filteredTeachers.map((teacher) => (
                             <Card key={teacher.id} className="group hover:shadow-xl transition-all duration-300 border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
                                 <CardHeader className="flex flex-row items-center gap-4 pb-2">
-                                    <div className={`h-12 w-12 rounded-2xl flex items-center justify-center font-bold text-lg transition-all ${teacher.is_approved ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white' : 'bg-amber-100 text-amber-600'}`}>
+                                    <div className={`h-12 w-12 rounded-2xl flex items-center justify-center font-bold text-lg transition-all ${(teacher.is_approved || teacher.is_admin_approved) ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white' : 'bg-amber-100 text-amber-600'}`}>
                                         {teacher.full_name?.charAt(0)}
                                     </div>
                                     <div className="flex-1 overflow-hidden">
@@ -125,7 +129,7 @@ export default function AdminTeachersPage() {
                                         {teacher.email}
                                     </div>
                                     <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
-                                        {teacher.is_approved ? (
+                                        {(teacher.is_approved || teacher.is_admin_approved) ? (
                                             <Badge className="bg-emerald-100 text-emerald-700 border-none px-3 font-bold uppercase text-[10px] tracking-widest">
                                                 VERIFIED
                                             </Badge>
@@ -137,7 +141,7 @@ export default function AdminTeachersPage() {
                                         <span className="text-slate-400 text-[10px] font-bold uppercase tracking-tighter">Joined: {new Date(teacher.created_at).toLocaleDateString()}</span>
                                     </div>
                                     <div className="grid grid-cols-2 gap-2 pt-2">
-                                        {!teacher.is_approved ? (
+                                        {!(teacher.is_approved || teacher.is_admin_approved) ? (
                                             <Button
                                                 onClick={() => handleApprove(teacher.id)}
                                                 className="col-span-2 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold"

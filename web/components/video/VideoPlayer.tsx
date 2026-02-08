@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from "react";
-import ReactPlayer from "react-player";
+import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LockClosedIcon, ShieldCheckIcon } from "@heroicons/react/24/solid";
 
@@ -14,7 +13,7 @@ export function VideoPlayer({ videoId, userEmail }: VideoPlayerProps) {
     const [videoData, setVideoData] = useState<{ stream_url: string; title: string } | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const playerRef = useRef<any>(null);
+
 
     useEffect(() => {
         async function fetchVideo() {
@@ -26,8 +25,9 @@ export function VideoPlayer({ videoId, userEmail }: VideoPlayerProps) {
                 }
                 const data = await res.json();
                 setVideoData(data);
-            } catch (err: any) {
-                setError(err.message);
+            } catch (err: unknown) {
+                const errorMessage = err instanceof Error ? err.message : "Failed to load video";
+                setError(errorMessage);
             } finally {
                 setLoading(false);
             }
