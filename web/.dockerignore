@@ -1,0 +1,10 @@
+# web/.dockerignore
+node_modules
+.next
+out
+build
+.env*
+.git
+.github
+README.md
+*.log
