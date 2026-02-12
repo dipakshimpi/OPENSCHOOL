@@ -38,7 +38,7 @@ services:
         - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
         # THIS IS FOR THE BROWSER (Windows)
-        - NEXT_PUBLIC_PEERTUBE_URL=http://localhost:9001
+        - NEXT_PUBLIC_PEERTUBE_URL=${NEXT_PUBLIC_PEERTUBE_URL}
     ports:
       - "3000:3000"
     environment:

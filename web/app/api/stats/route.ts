@@ -105,10 +105,21 @@ export async function GET() {
             });
         } else {
             // Student stats
-            const { data: enrollments, count: enrollmentCount } = await supabase
+            const enrollmentQuery = supabase
                 .from('enrollments')
                 .select('*, courses(*, profiles(full_name))')
                 .eq('student_id', user.id);
+
+            // Filter by grade level if applicable (only show courses for their grade)
+            // Note: This filters what enrolled courses constitute "active" learning for stats
+            // Ideally, we filter BEFORE the query, butSupabase joins are tricky with nested filters.
+            // A better way is to filter the RESULT or ensure enrollments only happen for correct grades.
+            // For now, let's assume if they are enrolled, they SHOULD see it.
+            // BUT, let's filter the 'courses' list returned for the catalog views if we were fetching catalog.
+            // Since this returns *enrolled* courses, we keep them all.
+            // However, we should return the student's grade level so the frontend can filter the catalog.
+
+            const { data: enrollments, count: enrollmentCount } = await enrollmentQuery;
 
             const avgProgress = enrollments && enrollments.length > 0
                 ? enrollments.reduce((acc: number, curr: { progress: number | null }) => acc + (curr.progress || 0), 0) / enrollments.length
@@ -129,6 +140,7 @@ export async function GET() {
             return NextResponse.json({
                 role: 'student',
                 fullName: profile?.full_name || 'Student',
+                gradeLevel: profile?.grade_level || null,
                 enrolledCourses: enrollments || [],
                 stats: {
                     enrolledCount: enrollmentCount || 0,

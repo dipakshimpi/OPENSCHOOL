@@ -33,6 +33,7 @@ export default function StudentCourses() {
   const [enrolledIds, setEnrolledIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [enrollingMap, setEnrollingMap] = useState<Record<string, boolean>>({});
+  const [userGrade, setUserGrade] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -41,14 +42,20 @@ export default function StudentCourses() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [coursesRes, enrolledRes] = await Promise.all([
+      const [coursesRes, enrolledRes, statsRes] = await Promise.all([
         fetch("/api/courses"),
-        fetch("/api/enrollments")
+        fetch("/api/enrollments"),
+        fetch("/api/stats")
       ]);
 
       if (coursesRes.ok && enrolledRes.ok) {
         const courses = await coursesRes.json();
         const enrolled = await enrolledRes.json();
+        // stats might fail if not fully set up but usually returns profile
+        if (statsRes.ok) {
+          const stats = await statsRes.json();
+          setUserGrade(stats.gradeLevel);
+        }
 
         // Ensure courses is an array
         const coursesArray = Array.isArray(courses) ? courses : [];
@@ -93,7 +100,20 @@ export default function StudentCourses() {
   const safeEnrolledIds = Array.isArray(enrolledIds) ? enrolledIds : [];
 
   const enrolledCourses = safeAllCourses.filter(c => safeEnrolledIds.includes(c.id));
-  const availableCourses = safeAllCourses.filter(c => !safeEnrolledIds.includes(c.id));
+
+  // Filter available courses based on grade level (if set)
+  const availableCourses = safeAllCourses.filter(c => {
+    // If already enrolled, don't show in explore (unless we want to show everything)
+    if (safeEnrolledIds.includes(c.id)) return false;
+
+    // If user has a grade, and course has a grade, match them
+    // If course has no grade, show it to everyone (elective?)
+    // If user has no grade, show everything
+    if (userGrade && (c as any).grade_level) {
+      return (c as any).grade_level === userGrade;
+    }
+    return true;
+  });
 
 
   return (
@@ -260,7 +280,7 @@ function CourseCard({
             <div className="flex items-center gap-2">
               <div className="w-1.5 h-6 bg-indigo-500 rounded-full" />
               <span className="text-[10px] font-black tracking-[0.2em] text-indigo-400 uppercase">
-                Grade Level: High School
+                {`Grade Level: ${(course as any).grade_level || 'General'}`}
               </span>
             </div>
             <h4 className="font-black text-2xl text-slate-800 dark:text-white leading-tight line-clamp-2">

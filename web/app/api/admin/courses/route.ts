@@ -23,10 +23,10 @@ export async function POST(request: Request) {
 
         // Parse request body
         const body = await request.json();
-        const { title, description, thumbnail_url, instructor_id } = body;
+        const { title, description, thumbnail_url, instructor_id, grade_level } = body;
 
-        if (!title || !instructor_id) {
-            return NextResponse.json({ error: "Title and instructor are required" }, { status: 400 });
+        if (!title || !instructor_id || !grade_level) {
+            return NextResponse.json({ error: "Title, instructor, and grade level are required" }, { status: 400 });
         }
 
         // Verify instructor exists and is approved
@@ -48,6 +48,7 @@ export async function POST(request: Request) {
                 description,
                 thumbnail_url,
                 instructor_id,
+                grade_level,
             })
             .select()
             .single();

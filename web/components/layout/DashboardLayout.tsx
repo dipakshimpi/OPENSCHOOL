@@ -18,43 +18,50 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children, role, title = "Dashboard" }: DashboardLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [profileData, setProfileData] = useState<{ is_approved: boolean; grade_level: string | null; section: string | null } | null>(null);
   const [hasAttended, setHasAttended] = useState<boolean | null>(
     role !== "teacher" || pathname === "/teacher/attendance" ? true : null
   );
-  const [isLoading, setIsLoading] = useState(
-    role === "teacher" && pathname !== "/teacher/attendance"
-  );
+  const [isLoading, setIsLoading] = useState(true);
   const [prevPath, setPrevPath] = useState(pathname);
   const [prevRole, setPrevRole] = useState(role);
 
-  // Sync state if role or path changes (React recommended pattern for state dependent on props)
+  // Sync state if role or path changes
   if (pathname !== prevPath || role !== prevRole) {
     setPrevPath(pathname);
     setPrevRole(role);
-    if (role === "teacher" && pathname !== "/teacher/attendance") {
-      setIsLoading(true);
-      setHasAttended(null);
-    } else {
-      setIsLoading(false);
-      setHasAttended(true);
-    }
+    setIsLoading(true);
   }
 
   useEffect(() => {
-    // Only fetch if we are a teacher, not on attendance page, and haven't checked yet
-    if (role === "teacher" && pathname !== "/teacher/attendance" && hasAttended === null) {
-      fetch("/api/attendance")
-        .then(res => res.json())
-        .then(data => {
-          setHasAttended(data.hasAttended);
-        })
-        .catch(() => setHasAttended(false))
-        .finally(() => setIsLoading(false));
-    }
-  }, [role, pathname, hasAttended]);
+    async function checkStatus() {
+      try {
+        // 1. Fetch Profile Status (Approval & Class)
+        const profileRes = await fetch("/api/profile");
+        const profile = await profileRes.json();
+        setProfileData(profile);
 
-  // If teacher hasn't attended and is not on the attendance page, show the lock screen
-  const showLock = role === "teacher" && hasAttended === false && pathname !== "/teacher/attendance";
+        // 2. Fetch Attendance for Teachers
+        if (role === "teacher" && pathname !== "/teacher/attendance") {
+          const attRes = await fetch("/api/attendance");
+          const attData = await attRes.json();
+          setHasAttended(attData.hasAttended);
+        } else {
+          setHasAttended(true);
+        }
+      } catch (err) {
+        console.error("Dashboard status check failed", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    checkStatus();
+  }, [role, pathname]);
+
+  // Logic for different lock states
+  const isUnapproved = profileData && role !== "admin" && !profileData.is_approved;
+  const isMissingAssignment = role === "student" && profileData?.is_approved && (!profileData.grade_level || !profileData.section);
+  const showAttendanceLock = role === "teacher" && hasAttended === false && pathname !== "/teacher/attendance";
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex font-sans">
@@ -68,9 +75,46 @@ export function DashboardLayout({ children, role, title = "Dashboard" }: Dashboa
               <div className="flex items-center justify-center min-h-[400px]">
                 <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
               </div>
-            ) : showLock ? (
-              <div className="fixed inset-0 z-[60] ml-64 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-8 transition-all duration-500 animate-in fade-in">
-                <Card className="max-w-md w-full border-2 border-indigo-100 dark:border-indigo-900/30 shadow-2xl rounded-3xl overflow-hidden bg-white dark:bg-slate-900 scale-100 hover:scale-[1.01] transition-transform">
+            ) : isUnapproved ? (
+              <div className="fixed inset-0 z-[60] ml-64 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-8">
+                <Card className="max-w-md w-full border-2 border-orange-100 shadow-2xl rounded-3xl overflow-hidden bg-white dark:bg-slate-900">
+                  <div className="h-2 bg-orange-500" />
+                  <CardContent className="p-10 text-center space-y-8">
+                    <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto text-orange-600">
+                      <ShieldCheck className="w-10 h-10 animate-pulse" />
+                    </div>
+                    <div className="space-y-3">
+                      <h2 className="text-2xl font-black text-slate-900">Approval Pending</h2>
+                      <p className="text-slate-500 text-sm font-medium">
+                        Welcome to OpenSchool! Your account is currently under review by the administration. You will receive access once your credentials are verified.
+                      </p>
+                    </div>
+                    <div className="p-4 bg-orange-50 rounded-xl text-orange-700 text-xs font-bold uppercase tracking-widest">
+                      Expected Wait: 12-24 Hours
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : isMissingAssignment ? (
+              <div className="fixed inset-0 z-[60] ml-64 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-8">
+                <Card className="max-w-md w-full border-2 border-indigo-100 shadow-2xl rounded-3xl overflow-hidden bg-white dark:bg-slate-900">
+                  <div className="h-2 bg-indigo-500" />
+                  <CardContent className="p-10 text-center space-y-8">
+                    <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto text-indigo-600">
+                      <MapPin className="w-10 h-10" />
+                    </div>
+                    <div className="space-y-3">
+                      <h2 className="text-2xl font-black text-slate-900">Class Assignment Required</h2>
+                      <p className="text-slate-500 text-sm font-medium">
+                        Your account is approved, but you haven&apos;t been assigned to a Class or Section yet. Please contact your administrator to complete your setup.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : showAttendanceLock ? (
+              <div className="fixed inset-0 z-[60] ml-64 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-8">
+                <Card className="max-w-md w-full border-2 border-indigo-100 dark:border-indigo-900/30 shadow-2xl rounded-3xl overflow-hidden bg-white dark:bg-slate-900 scale-100">
                   <div className="h-2 bg-gradient-to-r from-indigo-500 to-purple-600" />
                   <CardContent className="p-10 text-center space-y-8">
                     <div className="w-20 h-20 bg-indigo-50 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mx-auto text-indigo-600">

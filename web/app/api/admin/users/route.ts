@@ -78,15 +78,25 @@ export async function PATCH(request: Request) {
         }
 
         const body = await request.json();
-        const { id, is_admin_approved, is_teacher_approved, is_approved, school_id } = body;
+        const { id, is_admin_approved, is_teacher_approved, is_approved, school_id, grade_level, section } = body;
 
         if (!id) return NextResponse.json({ error: "Missing user ID" }, { status: 400 });
 
         const updates: Record<string, unknown> = {};
-        if (typeof is_admin_approved !== 'undefined') updates.is_admin_approved = is_admin_approved;
-        if (typeof is_teacher_approved !== 'undefined') updates.is_teacher_approved = is_teacher_approved;
-        if (typeof is_approved !== 'undefined') updates.is_approved = is_approved;
+        if (typeof is_approved !== 'undefined') {
+            updates.is_approved = is_approved;
+            // SYNC: If Admin approves/rejects, synchronize the sub-approval flags
+            updates.is_admin_approved = is_approved;
+            updates.is_teacher_approved = is_approved;
+        } else {
+            // Only update individual flags if is_approved itself isn't being toggled
+            if (typeof is_admin_approved !== 'undefined') updates.is_admin_approved = is_admin_approved;
+            if (typeof is_teacher_approved !== 'undefined') updates.is_teacher_approved = is_teacher_approved;
+        }
+
         if (typeof school_id !== 'undefined') updates.school_id = school_id;
+        if (typeof grade_level !== 'undefined') updates.grade_level = grade_level;
+        if (typeof section !== 'undefined') updates.section = section;
 
         if (Object.keys(updates).length === 0) {
             return NextResponse.json({ error: "No fields to update" }, { status: 400 });

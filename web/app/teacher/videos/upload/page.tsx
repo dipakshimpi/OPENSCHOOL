@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,8 +16,11 @@ interface Course {
     title: string;
 }
 
-export default function UploadVideoPage() {
+function UploadVideoContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const courseIdParam = searchParams.get("courseId");
+
     const [courses, setCourses] = useState<Course[]>([]);
     const [loadingCourses, setLoadingCourses] = useState(true);
 
@@ -25,14 +28,15 @@ export default function UploadVideoPage() {
     const [file, setFile] = useState<File | null>(null);
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
-    const [selectedCourse, setSelectedCourse] = useState("");
+    const [selectedCourse, setSelectedCourse] = useState(courseIdParam || "");
 
     const [isUploading, setIsUploading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState<string>("");
 
     useEffect(() => {
+        if (courseIdParam) setSelectedCourse(courseIdParam);
         fetchCourses();
-    }, []);
+    }, [courseIdParam]);
 
     const fetchCourses = async () => {
         try {
@@ -277,5 +281,19 @@ export default function UploadVideoPage() {
                 </Card>
             </div>
         </DashboardLayout>
+    );
+}
+
+export default function UploadVideoPage() {
+    return (
+        <Suspense fallback={
+            <DashboardLayout role="teacher" title="Loading...">
+                <div className="flex items-center justify-center h-96">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                </div>
+            </DashboardLayout>
+        }>
+            <UploadVideoContent />
+        </Suspense>
     );
 }

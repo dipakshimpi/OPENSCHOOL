@@ -42,7 +42,6 @@ export function Sidebar({ role }: SidebarProps) {
         teacher: [
             { href: "/teacher", label: "Dashboard", icon: HomeIcon },
             { href: "/teacher/classes", label: "My Classes", icon: UsersIcon },
-            { href: "/teacher/approvals", label: "Enrollments", icon: UserPlusIcon },
             { href: "/teacher/timetable", label: "Timetable", icon: TableCellsIcon },
             { href: "/teacher/attendance", label: "Attendance", icon: CalendarIcon },
             { href: "/teacher/videos", label: "Lesson Gallery", icon: VideoCameraIcon },

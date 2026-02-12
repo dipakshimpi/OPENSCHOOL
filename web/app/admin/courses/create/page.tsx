@@ -27,6 +27,7 @@ export default function AdminCreateCoursePage() {
         description: "",
         thumbnail_url: "",
         instructor_id: "",
+        grade_level: "",
     });
 
     useEffect(() => {
@@ -55,6 +56,11 @@ export default function AdminCreateCoursePage() {
 
         if (!formData.instructor_id) {
             alert("Please select an instructor for this course.");
+            return;
+        }
+
+        if (!formData.grade_level) {
+            alert("Please select a grade level.");
             return;
         }
 
@@ -160,6 +166,24 @@ export default function AdminCreateCoursePage() {
                                     <User className="w-3 h-3" />
                                     Only approved teachers are shown
                                 </p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="grade_level">Grade Level *</Label>
+                                <select
+                                    id="grade_level"
+                                    value={formData.grade_level}
+                                    onChange={(e) => setFormData({ ...formData, grade_level: e.target.value })}
+                                    required
+                                    className="w-full rounded-md border-2 border-slate-200 bg-transparent px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+                                >
+                                    <option value="">-- Select Grade Level --</option>
+                                    {Array.from({ length: 12 }, (_, i) => i + 1).map((grade) => (
+                                        <option key={grade} value={grade.toString()}>
+                                            Grade {grade}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
 
                             <div className="space-y-2">
