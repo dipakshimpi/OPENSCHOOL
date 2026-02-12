@@ -15,7 +15,7 @@ interface AuthToken {
 export async function isPeerTubeAvailable(): Promise<boolean> {
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
         const response = await fetch(`${PEERTUBE_URL}/api/v1/config`, {
             signal: controller.signal,

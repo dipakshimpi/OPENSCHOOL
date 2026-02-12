@@ -19,7 +19,7 @@ services:
     image: chocobozzz/peertube:production-bookworm
     env_file: ./peertube/.env
     ports:
-      - "9000:9000"
+      - "9001:9000"
     volumes:
       - ./peertube/data:/data
       - ./peertube/config:/config
@@ -38,7 +38,7 @@ services:
         - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
         # THIS IS FOR THE BROWSER (Windows)
-        - NEXT_PUBLIC_PEERTUBE_URL=http://localhost:9000
+        - NEXT_PUBLIC_PEERTUBE_URL=http://localhost:9001
     ports:
       - "3000:3000"
     environment:

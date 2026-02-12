@@ -6,6 +6,8 @@ CREATE TABLE public.videos (
   title TEXT NOT NULL,
   description TEXT,
   peertube_url TEXT NOT NULL,
+  thumbnail_url TEXT, -- Added for gallery previews
+  duration INTEGER, -- Added for lesson metadata
   course_id UUID REFERENCES public.courses(id) ON DELETE CASCADE,
   teacher_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT now() NOT NULL

@@ -12,6 +12,7 @@ import {
 import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
 interface AdminStats {
     stats: {
@@ -153,9 +154,11 @@ export default function AdminDashboard() {
                                 </div>
                             )}
                         </div>
-                        <Button variant="ghost" className="w-full mt-8 border border-white/10 text-slate-400 hover:text-white hover:bg-white/5 text-xs">
-                            View Security Audit Log
-                        </Button>
+                        <Link href="/admin/users">
+                            <Button variant="ghost" className="w-full mt-8 border border-white/10 text-slate-400 hover:text-white hover:bg-white/5 text-xs font-bold uppercase tracking-widest">
+                                Manage Registered Users →
+                            </Button>
+                        </Link>
                     </CardContent>
                 </Card>
             </div>

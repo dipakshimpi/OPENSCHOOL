@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 
 interface VideoData {
@@ -23,6 +24,8 @@ interface VideoData {
     title: string;
     description: string;
     peertube_url: string;
+    thumbnail_url: string | null;
+    duration: number;
 }
 
 interface CourseData {
@@ -30,6 +33,17 @@ interface CourseData {
     title: string;
     description: string;
     profiles: { full_name: string } | null;
+}
+
+function formatDuration(seconds: number) {
+    if (!seconds) return "00:00";
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    if (h > 0) {
+        return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
 export default function CourseDetailPage() {
@@ -160,15 +174,29 @@ export default function CourseDetailPage() {
                                 >
                                     <Link href={`/student/videos/${video.id}`}>
                                         <Card className="group border-none shadow-xl hover:shadow-2xl transition-all duration-300 rounded-[2rem] overflow-hidden bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 h-full flex flex-col">
-                                            <div className="h-44 bg-slate-950 relative flex items-center justify-center group-hover:bg-slate-900 transition-colors">
-                                                <PlayCircle className="w-16 h-16 text-white/30 group-hover:text-indigo-500 group-hover:scale-110 transition-all duration-500" />
+                                            <div className="h-44 bg-slate-950 relative flex items-center justify-center group-hover:bg-slate-900 transition-colors overflow-hidden">
+                                                {video.thumbnail_url ? (
+                                                    <Image
+                                                        src={video.thumbnail_url}
+                                                        alt={video.title}
+                                                        fill
+                                                        className="object-cover group-hover:scale-110 transition-transform duration-500 opacity-60 group-hover:opacity-80"
+                                                    />
+                                                ) : (
+                                                    <PlayCircle className="w-16 h-16 text-white/30 group-hover:text-indigo-500 group-hover:scale-110 transition-all duration-500" />
+                                                )}
+                                                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                                                    <PlayCircle className="w-16 h-16 text-white opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300" />
+                                                </div>
                                                 <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/80 to-transparent flex justify-between items-end">
                                                     <Badge className="bg-indigo-600 text-white border-none font-black text-[10px] tracking-widest px-3">
                                                         LESSON {idx + 1}
                                                     </Badge>
-                                                    <span className="text-[10px] font-bold text-white/60 flex items-center gap-1">
-                                                        <Clock className="w-3 h-3" /> 12:45
-                                                    </span>
+                                                    {video.duration > 0 && (
+                                                        <span className="text-[10px] font-bold text-white/90 flex items-center gap-1 bg-black/40 px-2 py-1 rounded backdrop-blur-sm">
+                                                            <Clock className="w-3 h-3" /> {formatDuration(video.duration)}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
                                             <CardContent className="p-8 flex-1 flex flex-col">

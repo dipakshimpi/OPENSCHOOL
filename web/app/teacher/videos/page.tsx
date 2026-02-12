@@ -13,6 +13,7 @@ import {
     TrashIcon
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -21,8 +22,21 @@ interface Video {
     title: string;
     description: string;
     peertube_url: string;
+    thumbnail_url: string | null;
+    duration: number;
     created_at: string;
     courses: { title: string };
+}
+
+function formatDuration(seconds: number) {
+    if (!seconds) return "00:00";
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (h > 0) {
+        return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
 function TeacherVideosContent() {
@@ -99,12 +113,31 @@ function TeacherVideosContent() {
                 ) : videos.length > 0 ? (
                     videos.map((video) => (
                         <Card key={video.id} className="group border-none shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden bg-white/80 backdrop-blur-sm transform hover:-translate-y-1">
-                            <div className="h-40 bg-slate-900 relative flex items-center justify-center">
-                                <PlayCircleIcon className="w-16 h-16 text-white/20 group-hover:text-white/50 transition-colors" />
-                                <div className="absolute top-4 left-4">
+                            <div className="h-40 bg-slate-900 relative flex items-center justify-center overflow-hidden">
+                                {video.thumbnail_url ? (
+                                    <Image
+                                        src={video.thumbnail_url}
+                                        alt={video.title}
+                                        fill
+                                        className="object-cover group-hover:scale-110 transition-transform duration-500 opacity-60 group-hover:opacity-80"
+                                    />
+                                ) : (
+                                    <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-indigo-950 flex items-center justify-center">
+                                        <PlayCircleIcon className="w-16 h-16 text-white/20 group-hover:text-white/50 transition-colors" />
+                                    </div>
+                                )}
+                                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                                    <PlayCircleIcon className="w-16 h-16 text-white opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300" />
+                                </div>
+                                <div className="absolute top-4 left-4 flex flex-col gap-2">
                                     <Badge className="bg-indigo-500 border-none shadow-lg">
                                         {video.courses?.title || "Course"}
                                     </Badge>
+                                    {video.duration > 0 && (
+                                        <Badge variant="secondary" className="bg-black/60 text-white border-none w-fit backdrop-blur-md">
+                                            {formatDuration(video.duration)}
+                                        </Badge>
+                                    )}
                                 </div>
                                 <button
                                     onClick={() => handleDelete(video.id)}
@@ -117,7 +150,7 @@ function TeacherVideosContent() {
                                 <h3 className="font-bold text-lg text-slate-900 mb-2 line-clamp-1 group-hover:text-indigo-600 transition-colors">
                                     {video.title}
                                 </h3>
-                                <p className="text-slate-500 text-sm line-clamp-2 mb-4 h-10">
+                                <p className="text-slate-500 text-sm line-clamp-2 mb-4 h-10 italic">
                                     {video.description || "No description provided."}
                                 </p>
                                 <div className="flex items-center justify-between pt-4 border-t border-slate-100">
@@ -127,7 +160,7 @@ function TeacherVideosContent() {
                                     </div>
                                     <Link href={`/student/videos/${video.id}`}>
                                         <Button variant="ghost" size="sm" className="text-indigo-600 hover:bg-indigo-50 font-bold p-0">
-                                            Preview →
+                                            Watch Preview →
                                         </Button>
                                     </Link>
                                 </div>

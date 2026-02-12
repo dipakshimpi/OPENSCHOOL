@@ -105,13 +105,20 @@ export default function UploadVideoPage() {
             }
 
             const videoData = await uploadRes.json();
-            const videoUrl = videoData.video.url || `${peerTubeUrl}/w/${videoData.video.shortUUID}`;
+
+            // PeerTube returns thumbnailPath like /static/thumbnails/uuid.jpg
+            const peerTubePublicUrl = process.env.NEXT_PUBLIC_PEERTUBE_URL || "http://localhost:9001";
+            // Construct the public URL for the video player
+            const videoUrl = `${peerTubePublicUrl}/w/${videoData.video.shortUUID}`;
+
+            const thumbnailFullUrl = videoData.video.thumbnailPath
+                ? `${peerTubePublicUrl}${videoData.video.thumbnailPath}`
+                : null;
+            const videoDuration = videoData.video.duration || 0;
 
             setUploadStatus("Linking to Course...");
 
             // 4. Save metadata to Supabase (via existing server action, but just for DB)
-            // We need a separate action for this or modify the existing one.
-            // For now, let's just use a simple API call to save the reference
             const saveRes = await fetch("/api/videos", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -119,7 +126,9 @@ export default function UploadVideoPage() {
                     title,
                     description,
                     course_id: selectedCourse,
-                    peertube_url: videoUrl
+                    peertube_url: videoUrl,
+                    thumbnail_url: thumbnailFullUrl,
+                    duration: videoDuration
                 })
             });
 

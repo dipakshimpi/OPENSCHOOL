@@ -32,17 +32,21 @@ export async function POST(request: Request) {
         if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const body = await request.json();
-        const { title, description, peertube_url, course_id } = body;
+        const { title, description, peertube_url, course_id, thumbnail_url, duration } = body;
 
         if (!title || !peertube_url || !course_id) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
-        // Extract video ID from PeerTube URL
-        // Format: http://127.0.0.1:9000/w/VIDEO_ID or https://peertube.example.com/w/VIDEO_ID
+        // Match various formats:
+        // http://localhost:9001/w/shortUUID
+        // https://example.com/w/shortUUID
+        // http://127.0.0.1:9001/w/shortUUID
         const urlMatch = peertube_url.match(/\/w\/([a-zA-Z0-9_-]+)/);
+
         if (!urlMatch) {
-            return NextResponse.json({ error: "Invalid PeerTube URL format. Expected format: http://domain/w/VIDEO_ID" }, { status: 400 });
+            console.error("Invalid URL Format:", peertube_url);
+            return NextResponse.json({ error: "Invalid PeerTube URL format. Expected format: .../w/VIDEO_ID" }, { status: 400 });
         }
         const videoId = urlMatch[1];
 
@@ -56,6 +60,8 @@ export async function POST(request: Request) {
                 title,
                 description,
                 peertube_url,
+                thumbnail_url,
+                duration,
                 course_id,
                 teacher_id: user.id
             })

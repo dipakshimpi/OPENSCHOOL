@@ -31,8 +31,9 @@ export function Sidebar({ role }: SidebarProps) {
         admin: [
             { href: "/admin", label: "Dashboard", icon: HomeIcon },
             { href: "/admin/courses", label: "Courses", icon: BookOpenIcon },
+            { href: "/admin/users", label: "User Management", icon: UsersIcon },
             { href: "/admin/teachers", label: "Teachers", icon: AcademicCapIcon },
-            { href: "/admin/students", label: "Students", icon: UsersIcon },
+            { href: "/admin/students", label: "Students", icon: UserPlusIcon },
             { href: "/admin/approvals", label: "Approvals", icon: CheckBadgeIcon },
             { href: "/admin/timetable", label: "Timetable", icon: TableCellsIcon },
             { href: "/admin/announcements", label: "Notices", icon: MegaphoneIcon },
