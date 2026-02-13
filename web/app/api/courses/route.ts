@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { courseSchema } from "@/lib/validations";
 
 export async function GET() {
   try {
@@ -37,11 +38,16 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { title, description, thumbnail_url } = body;
+    const result = courseSchema.safeParse(body);
 
-    if (!title) {
-      return NextResponse.json({ error: "Title is required" }, { status: 400 });
+    if (!result.success) {
+      return NextResponse.json({
+        error: "Invalid input",
+        details: result.error.format()
+      }, { status: 400 });
     }
+
+    const { title, description, thumbnail_url } = result.data;
 
     // Ensure profile exists
     const { data: profile, error: profileError } = await supabase

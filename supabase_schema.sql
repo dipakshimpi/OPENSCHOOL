@@ -87,14 +87,39 @@ DROP POLICY IF EXISTS "Courses are viewable by everyone" ON public.courses;
 CREATE POLICY "Courses are viewable by everyone" ON public.courses
   FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Only approved instructors can create courses" ON public.courses;
+CREATE POLICY "Only approved instructors can create courses" ON public.courses
+  FOR INSERT WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = auth.uid() 
+      AND (role = 'teacher' OR role = 'admin')
+      AND is_approved = true
+    )
+  );
+
+DROP POLICY IF EXISTS "Instructors can update their own courses" ON public.courses;
+CREATE POLICY "Instructors can update their own courses" ON public.courses
+  FOR UPDATE USING (
+    instructor_id = auth.uid() OR 
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+  );
+
 -- Attendance: Teachers view own, Admins view all
 DROP POLICY IF EXISTS "Teachers can view own attendance" ON public.attendance;
 CREATE POLICY "Teachers can view own attendance" ON public.attendance
   FOR SELECT USING (auth.uid() = teacher_id);
 
-DROP POLICY IF EXISTS "Teachers can insert own attendance" ON public.attendance;
-CREATE POLICY "Teachers can insert own attendance" ON public.attendance
-  FOR INSERT WITH CHECK (auth.uid() = teacher_id);
+DROP POLICY IF EXISTS "Approved teachers can insert own attendance" ON public.attendance;
+CREATE POLICY "Approved teachers can insert own attendance" ON public.attendance
+  FOR INSERT WITH CHECK (
+    auth.uid() = teacher_id AND
+    EXISTS (
+      SELECT 1 FROM public.profiles 
+      WHERE id = auth.uid() 
+      AND is_approved = true
+    )
+  );
 
 -- 9. AUTH TRIGGER (ROBUST VERSION)
 -- This automatically creates a profile and handles potential metadata errors

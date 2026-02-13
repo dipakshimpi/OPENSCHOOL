@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { isWithinGeofence } from "@/lib/geo";
+import { attendanceSchema } from "@/lib/validations";
 
 export async function GET() {
     try {
@@ -61,11 +62,16 @@ export async function POST(request: Request) {
 
         // 3. Parse request body
         const body = await request.json();
-        const { latitude, longitude, accuracy, deviceInfo } = body;
+        const result = attendanceSchema.safeParse(body);
 
-        if (!latitude || !longitude) {
-            return NextResponse.json({ error: "Location data required" }, { status: 400 });
+        if (!result.success) {
+            return NextResponse.json({
+                error: "Invalid input",
+                details: result.error.format()
+            }, { status: 400 });
         }
+
+        const { latitude, longitude, accuracy, deviceInfo, adminOverride, overrideReason } = result.data;
 
         // 4. Fetch geo-fences for THIS specific school
         const { data: fences, error: fenceError } = await supabase
@@ -80,11 +86,11 @@ export async function POST(request: Request) {
         // 5. Verify if within school boundary
         let isInside = false;
 
-        // If no fences are set yet, we allow for demo/first-time setup 
-        // Or we could be strict. Let's be semi-strict.
         if (fences.length === 0) {
-            console.log("No school fence set for school", profile.school_id);
-            isInside = true; // Temporary allow for demo
+            return NextResponse.json({
+                error: "School boundary not configured",
+                message: "Location tracking is enabled but no school boundary has been set by your Admin."
+            }, { status: 403 });
         } else {
             for (const fence of fences) {
                 if (isWithinGeofence(latitude, longitude, fence.center_lat, fence.center_lng, fence.radius_meters)) {
@@ -112,8 +118,8 @@ export async function POST(request: Request) {
                 accuracy,
                 status: 'present',
                 device_info: deviceInfo || {},
-                admin_override: body.adminOverride || false,
-                override_reason: body.overrideReason || null,
+                admin_override: adminOverride || false,
+                override_reason: overrideReason || null,
                 timestamp: new Date().toISOString()
             })
             .select()

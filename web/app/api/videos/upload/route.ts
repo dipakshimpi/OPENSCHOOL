@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { uploadToPeerTube } from "@/lib/peertube";
 import { NextResponse, NextRequest } from "next/server";
+import { videoSchema } from "@/lib/validations";
 
 export async function POST(request: NextRequest) {
     try {
@@ -33,16 +34,28 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Invalid Content-Type. Must be multipart/form-data." }, { status: 400 });
         }
 
-        // 2. Parse Form Data
+        // 2. Parse and Validate Form Data
         const formData = await request.formData();
         const file = formData.get("file") as File;
-        const title = formData.get("title") as string;
-        const description = formData.get("description") as string;
-        const courseId = formData.get("courseId") as string;
 
-        if (!file || !title || !courseId) {
-            return NextResponse.json({ error: "Missing required fields (file, title, courseId)" }, { status: 400 });
+        const result = videoSchema.safeParse({
+            title: formData.get("title"),
+            description: formData.get("description"),
+            courseId: formData.get("courseId"),
+        });
+
+        if (!result.success) {
+            return NextResponse.json({
+                error: "Invalid input",
+                details: result.error.format()
+            }, { status: 400 });
         }
+
+        if (!file) {
+            return NextResponse.json({ error: "Missing required field: file" }, { status: 400 });
+        }
+
+        const { title, description, courseId } = result.data;
 
         console.log(`📂 Received file: ${file.name} (${file.size} bytes) for Course: ${courseId}`);
 

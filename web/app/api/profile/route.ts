@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { profileSchema } from "@/lib/validations";
 
 export async function GET() {
     try {
@@ -36,8 +37,16 @@ export async function PATCH(request: Request) {
 
         const body = await request.json();
 
-        // Allowed fields to update
-        const { full_name, phone_number, bio, department, grade, address, avatar_url } = body;
+        // 2. Validate input with Zod
+        const result = profileSchema.safeParse(body);
+        if (!result.success) {
+            return NextResponse.json({
+                error: "Invalid input",
+                details: result.error.format()
+            }, { status: 400 });
+        }
+
+        const { full_name, phone_number, bio, department, grade, address, avatar_url } = result.data;
 
         const { data, error } = await supabase
             .from('profiles')
