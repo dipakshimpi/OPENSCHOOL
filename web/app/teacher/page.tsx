@@ -30,6 +30,8 @@ interface Course {
     title: string;
 }
 
+import { authedFetch } from "@/lib/api";
+
 export default function TeacherDashboard() {
     const [data, setData] = useState<TeacherStats | null>(null);
     const [courses, setCourses] = useState<Course[]>([]);
@@ -39,8 +41,8 @@ export default function TeacherDashboard() {
         async function fetchData() {
             try {
                 const [statsRes, coursesRes] = await Promise.all([
-                    fetch("/api/stats"),
-                    fetch("/api/courses")
+                    authedFetch("/api/stats"),
+                    authedFetch("/api/courses")
                 ]);
 
                 if (statsRes.ok) setData(await statsRes.json());

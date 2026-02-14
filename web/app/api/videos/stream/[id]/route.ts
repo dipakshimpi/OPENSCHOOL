@@ -1,5 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
+import { verifySession } from "@/lib/auth-utils";
 
 export async function GET(
     request: Request,
@@ -7,16 +8,17 @@ export async function GET(
 ) {
     try {
         const { id } = await params;
-        const supabase = await createClient();
 
-        // 1. Check user authentication and approval
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        // 1. Check Firebase session
+        const session = await verifySession();
+        if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        const { data: profile } = await supabase
+        const adminClient = createAdminClient();
+
+        const { data: profile } = await adminClient
             .from('profiles')
             .select('is_approved, role')
-            .eq('id', user.id)
+            .eq('id', session.uid)
             .single();
 
         if (!profile?.is_approved) {
@@ -24,8 +26,8 @@ export async function GET(
         }
 
         // 2. Fetch video metadata
-        // RLS will ensure the user can only see this if enrolled or teacher
-        const { data: video, error } = await supabase
+        // We use adminClient to bypass RLS since we've already verified the session
+        const { data: video, error } = await adminClient
             .from('videos')
             .select('peertube_url, title')
             .eq('id', id)
@@ -45,7 +47,14 @@ export async function GET(
         }
 
         const peertubeId = videoIdMatch[1];
-        const peertubeBaseUrl = video.peertube_url.split('/w/')[0]; // Get http://127.0.0.1:9000
+
+        // Use the public PeerTube URL from environment if available, 
+        // this fixes issues where the stored URL has a wrong port (e.g. 9001) 
+        // or uses an internal Docker hostname (e.g. http://peertube:9000)
+        const peertubeBaseUrl = process.env.NEXT_PUBLIC_PEERTUBE_URL ?
+            process.env.NEXT_PUBLIC_PEERTUBE_URL.replace(/\/$/, "") :
+            video.peertube_url.split('/w/')[0].replace(/\/$/, "");
+
         const embedUrl = `${peertubeBaseUrl}/videos/embed/${peertubeId}`;
 
         return NextResponse.json({
@@ -55,7 +64,11 @@ export async function GET(
         });
 
     } catch (error) {
-        console.error("VIDEO_PROXY_ERROR:", error);
+        console.error("❌ VIDEO_PROXY_ERROR:", {
+            message: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+            id: (await params).id
+        });
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

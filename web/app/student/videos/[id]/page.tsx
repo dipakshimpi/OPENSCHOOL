@@ -13,6 +13,7 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { VideoPlayer } from "@/components/video/VideoPlayer";
+import { authedFetch } from "@/lib/api";
 
 interface Video {
     id: string;
@@ -33,7 +34,7 @@ export default function VideoWatchPage() {
         async function fetchVideo() {
             try {
                 // Fetch specific video (we can filter general videos for now or create a specific endpoint)
-                const res = await fetch("/api/videos");
+                const res = await authedFetch("/api/videos");
                 const data: Video[] = await res.json();
                 const found = data.find((v: Video) => v.id === params.id);
                 setVideo(found || null);

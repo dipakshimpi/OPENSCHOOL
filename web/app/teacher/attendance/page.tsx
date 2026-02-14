@@ -17,6 +17,8 @@ import { calculateDistance } from "@/lib/geo";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 
+import { authedFetch } from "@/lib/api";
+
 export default function TeacherAttendance() {
   const router = useRouter();
   const [isVerifying, setIsVerifying] = useState(false);
@@ -27,7 +29,7 @@ export default function TeacherAttendance() {
 
   useEffect(() => {
     // Check if already attended today
-    fetch("/api/attendance")
+    authedFetch("/api/attendance")
       .then(res => res.json())
       .then(data => {
         if (data.hasAttended) {
@@ -55,7 +57,7 @@ export default function TeacherAttendance() {
 
         try {
           // Check location against fences
-          const fenceRes = await fetch("/api/geo-fences");
+          const fenceRes = await authedFetch("/api/geo-fences");
           const fences = await fenceRes.json();
 
           let inside = false;
@@ -79,7 +81,7 @@ export default function TeacherAttendance() {
           }
 
           // Submit attendance
-          const submitRes = await fetch("/api/attendance", {
+          const submitRes = await authedFetch("/api/attendance", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({

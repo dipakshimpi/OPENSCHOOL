@@ -15,9 +15,15 @@ interface User {
   email: string;
   role: string;
   is_approved: boolean;
+  is_admin_approved: boolean;
+  is_teacher_approved: boolean;
   school_id: string | null;
   created_at: string;
 }
+
+import { authedFetch } from "@/lib/api";
+import { auth } from "@/lib/firebase/client";
+import { onAuthStateChanged } from "firebase/auth";
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -26,13 +32,21 @@ export default function AdminUsersPage() {
   const [adminSchoolId, setAdminSchoolId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchUsers();
-    fetchAdminProfile();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        fetchUsers();
+        fetchAdminProfile();
+      } else {
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const fetchAdminProfile = async () => {
     try {
-      const res = await fetch("/api/profile");
+      const res = await authedFetch("/api/profile");
       const data = await res.json();
       if (res.ok) {
         setAdminSchoolId(data.school_id);
@@ -44,10 +58,9 @@ export default function AdminUsersPage() {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch("/api/admin/users");
+      const res = await authedFetch("/api/admin/users");
       const data = await res.json();
       if (res.ok) {
-        // Handle both older array format and new object format
         const userList = Array.isArray(data) ? data : (data.users || []);
         setUsers(userList);
       }
@@ -61,7 +74,7 @@ export default function AdminUsersPage() {
   const handleApprove = async (userId: string, currentStatus: boolean) => {
     setProcessingId(userId);
     try {
-      const res = await fetch("/api/admin/users", {
+      const res = await authedFetch("/api/admin/users", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -72,7 +85,12 @@ export default function AdminUsersPage() {
 
       if (res.ok) {
         setUsers(users.map(u =>
-          u.id === userId ? { ...u, is_approved: !currentStatus } : u
+          u.id === userId ? {
+            ...u,
+            is_approved: !currentStatus,
+            is_admin_approved: !currentStatus,
+            is_teacher_approved: !currentStatus
+          } : u
         ));
       } else {
         alert("Failed to update user status");
@@ -92,7 +110,7 @@ export default function AdminUsersPage() {
 
     setProcessingId(userId);
     try {
-      const res = await fetch("/api/admin/users", {
+      const res = await authedFetch("/api/admin/users", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -181,7 +199,7 @@ export default function AdminUsersPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        {user.is_approved ? (
+                        {(user.role === 'student' ? (user.is_admin_approved && user.is_teacher_approved) : user.is_approved) ? (
                           <div className="flex items-center text-emerald-600 text-xs font-bold gap-1">
                             <CheckCircle className="w-4 h-4" /> Approved
                           </div>

@@ -1,3 +1,5 @@
+"use client";
+
 import { BellIcon, MagnifyingGlassIcon, MegaphoneIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +14,8 @@ interface Notice {
     created_at: string;
 }
 
+import { authedFetch } from "@/lib/api";
+
 export function Header({ title }: { title: string }) {
     const [notices, setNotices] = useState<Notice[]>([]);
     const [showPanel, setShowPanel] = useState(false);
@@ -20,7 +24,7 @@ export function Header({ title }: { title: string }) {
     useEffect(() => {
         async function fetchProfile() {
             try {
-                const res = await fetch("/api/profile");
+                const res = await authedFetch("/api/profile");
                 if (res.ok) {
                     const data = await res.json();
                     if (data.full_name) {
@@ -38,7 +42,7 @@ export function Header({ title }: { title: string }) {
     useEffect(() => {
         async function fetchNotices() {
             try {
-                const res = await fetch("/api/announcements");
+                const res = await authedFetch("/api/announcements");
                 if (res.ok) {
                     const data = await res.json();
                     setNotices(data.slice(0, 5)); // Show last 5

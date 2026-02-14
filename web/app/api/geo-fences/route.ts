@@ -1,46 +1,69 @@
-import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { verifySession } from "@/lib/auth-utils";
+import { createClient } from "@supabase/supabase-js";
+
+export const dynamic = "force-dynamic";
+
+// Use Service Role for backend-to-backend communication
+// Helper to get supabase admin client lazily
+function getSupabaseAdmin() {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!url || !key) {
+        throw new Error("Missing Supabase admin environment variables");
+    }
+
+    return createClient(url, key);
+}
 
 export async function GET() {
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const session = await verifySession();
+        if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+        const userId = session.uid;
+
+        const supabaseAdmin = getSupabaseAdmin();
 
         // Get user's school_id
-        const { data: profile } = await supabase
+        const { data: profile } = await supabaseAdmin
             .from('profiles')
             .select('school_id')
-            .eq('id', user.id)
+            .eq('id', userId)
             .single();
 
         if (!profile?.school_id) {
             return NextResponse.json([]); // No school assigned
         }
 
-        const { data: fences, error } = await supabase
+        const { data: fences, error } = await supabaseAdmin
             .from('geo_fences')
             .select('*')
             .eq('school_id', profile.school_id);
 
         if (error) throw error;
         return NextResponse.json(fences);
-    } catch {
+    } catch (error) {
+        console.error("GET_GEOFENCES_ERROR:", error);
         return NextResponse.json({ error: "Failed to fetch geo-fences" }, { status: 500 });
     }
 }
 
 export async function POST(request: Request) {
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const session = await verifySession();
+        if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+        const userId = session.uid;
+
+        const supabaseAdmin = getSupabaseAdmin();
 
         // Verify admin role and get school_id
-        const { data: profile } = await supabase
+        const { data: profile } = await supabaseAdmin
             .from('profiles')
             .select('role, school_id')
-            .eq('id', user.id)
+            .eq('id', userId)
             .single();
 
         if (profile?.role !== 'admin') {
@@ -52,10 +75,10 @@ export async function POST(request: Request) {
         // Self-healing: If admin is missing a school_id, generate one for them
         if (!schoolId) {
             const newSchoolId = crypto.randomUUID();
-            const { error: updateError } = await supabase
+            const { error: updateError } = await supabaseAdmin
                 .from('profiles')
                 .update({ school_id: newSchoolId })
-                .eq('id', user.id);
+                .eq('id', userId);
 
             if (updateError) {
                 console.error("Failed to auto-assign school_id:", updateError);
@@ -73,7 +96,7 @@ export async function POST(request: Request) {
 
         // We'll manage one main fence per school for this demo/setup
         // Check if one exists
-        const { data: existing } = await supabase
+        const { data: existing } = await supabaseAdmin
             .from('geo_fences')
             .select('id')
             .eq('school_id', schoolId)
@@ -82,7 +105,7 @@ export async function POST(request: Request) {
 
         let result;
         if (existing) {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseAdmin
                 .from('geo_fences')
                 .update({
                     center_lat,
@@ -96,7 +119,7 @@ export async function POST(request: Request) {
             if (error) throw error;
             result = data;
         } else {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseAdmin
                 .from('geo_fences')
                 .insert({
                     school_id: schoolId,

@@ -18,16 +18,22 @@ import {
     TableCellsIcon,
     UserPlusIcon
 } from "@heroicons/react/24/outline";
-import { supabaseClient } from "@/lib/supabase/client";
+import { auth } from "@/lib/firebase/client";
 
 interface SidebarProps {
     role: "admin" | "teacher" | "student";
 }
 
+interface NavigationLink {
+    href: string;
+    label: string;
+    icon: any; // Using any for icons is often necessary with library icons, but we can try to be more specific if needed
+}
+
 export function Sidebar({ role }: SidebarProps) {
     const pathname = usePathname();
 
-    const links = {
+    const links: Record<string, NavigationLink[]> = {
         admin: [
             { href: "/admin", label: "Dashboard", icon: HomeIcon },
             { href: "/admin/courses", label: "Courses", icon: BookOpenIcon },
@@ -95,7 +101,7 @@ export function Sidebar({ role }: SidebarProps) {
             <div className="p-4 border-t border-white/5 bg-slate-950/30">
                 <div
                     onClick={async () => {
-                        await supabaseClient.auth.signOut();
+                        await auth.signOut();
                         window.location.href = "/auth/login";
                     }}
                     className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-400 hover:text-white cursor-pointer hover:bg-white/5 rounded-lg transition-colors"

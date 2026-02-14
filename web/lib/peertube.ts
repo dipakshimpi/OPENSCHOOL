@@ -126,8 +126,9 @@ export async function uploadToPeerTube(file: File, name: string, description: st
     }
 
     const data = await uploadRes.json();
+    const peertubePublicUrl = process.env.NEXT_PUBLIC_PEERTUBE_URL || PEERTUBE_URL;
     return {
         shortUUID: data.video.shortUUID,
-        url: data.video.url || `${PEERTUBE_URL}/w/${data.video.shortUUID}`
+        url: data.video.url || `${peertubePublicUrl}/w/${data.video.shortUUID}`
     };
 }

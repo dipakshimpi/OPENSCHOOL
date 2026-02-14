@@ -7,7 +7,7 @@ listen:
   port: 9000
 
 webserver:
-  hostname: "127.0.0.1"
+  hostname: "localhost"
   port: 9000
   https: false
 

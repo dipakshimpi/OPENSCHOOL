@@ -17,12 +17,14 @@ interface TeacherCourse {
   videoCount: number;
 }
 
+import { authedFetch } from "@/lib/api";
+
 export default function TeacherCourses() {
   const [courses, setCourses] = useState<TeacherCourse[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/teacher/courses")
+    authedFetch("/api/teacher/courses")
       .then(res => res.json())
       .then(data => {
         setCourses(Array.isArray(data) ? data : []);

@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AcademicCapIcon } from "@heroicons/react/24/outline";
-import { supabaseClient } from "@/lib/supabase/client";
+import { auth } from "@/lib/firebase/client";
+import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -21,46 +22,99 @@ export default function RegisterPage() {
     const [phoneNumber, setPhoneNumber] = useState("");
     const [schoolId, setSchoolId] = useState("");
     const [securityCode, setSecurityCode] = useState("");
+    const [isEmailSent, setIsEmailSent] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
+        setError(null);
 
         // Security check for roles
         if (role === 'admin' && securityCode !== 'ADMIN123') {
-            alert("Invalid Administrator Passcode.");
+            setError("Invalid Administrator Passcode.");
             setIsLoading(false);
             return;
         }
         if (role === 'teacher' && securityCode !== 'TEACHER123') {
-            alert("Invalid Teacher Verification Code.");
+            setError("Invalid Teacher Verification Code.");
             setIsLoading(false);
             return;
         }
 
-        const { error } = await supabaseClient.auth.signUp({
-            email,
-            password,
-            options: {
-                data: {
+        try {
+            // 1. Create User in Firebase
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            // 2. Sync Profile to Supabase DB via our API
+            const syncResponse = await fetch("/api/auth/register-profile", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id: user.uid,
+                    email: user.email,
                     full_name: `${firstName} ${lastName}`,
                     role: role,
                     phone_number: phoneNumber,
                     school_id: schoolId || null,
-                },
-            },
-        });
+                }),
+            });
 
-        if (error) {
-            alert(error.message);
+            if (!syncResponse.ok) {
+                const errorData = await syncResponse.json();
+                throw new Error(errorData.error || "Failed to sync profile");
+            }
+
+            // 3. Send Firebase Email Verification
+            await sendEmailVerification(user);
+
+            setIsEmailSent(true);
+        } catch (err: unknown) {
+            console.error("REGISTER_ERROR:", err);
+            const error = err as { code?: string; message?: string };
+            if (error.code === 'auth/email-already-in-use') {
+                setError("This email is already registered. Please login instead.");
+            } else {
+                setError(error.message || "An unexpected error occurred.");
+            }
+        } finally {
             setIsLoading(false);
-            return;
         }
-
-        alert("Registration successful! Proceed to login.");
-        router.push("/auth/login");
-        setIsLoading(false);
     };
+
+    if (isEmailSent) {
+        return (
+            <div className="w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 p-4">
+                <Card className="w-full max-w-md z-10 shadow-card-hover border-white/40 bg-white/80 backdrop-blur-xl dark:bg-slate-900/80 dark:border-slate-800 text-center">
+                    <CardHeader>
+                        <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <CardTitle className="text-2xl font-bold">Check your email</CardTitle>
+                        <CardDescription>
+                            We&apos;ve sent a verification link to <span className="font-semibold text-slate-900 dark:text-white">{email}</span>.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <p className="text-sm text-slate-500">
+                            Please click the link in the email to verify your account. Once verified, you can log in to your dashboard.
+                        </p>
+                    </CardContent>
+                    <CardFooter className="flex flex-col gap-2">
+                        <Button variant="outline" className="w-full" onClick={() => setIsEmailSent(false)}>
+                            Back to Registration
+                        </Button>
+                        <Button variant="link" onClick={() => router.push("/auth/login")}>
+                            Go to Login
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </div>
+        );
+    }
 
     return (
         <div className="w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 p-4">
@@ -90,6 +144,12 @@ export default function RegisterPage() {
                             <TabsTrigger value="student">Student</TabsTrigger>
                         </TabsList>
                     </Tabs>
+
+                    {error && (
+                        <div className="mb-4 p-3 bg-rose-50 dark:bg-rose-900/30 border border-rose-200 dark:border-rose-800 rounded-lg text-rose-600 dark:text-rose-400 text-sm font-medium animate-in fade-in slide-in-from-top-1">
+                            {error}
+                        </div>
+                    )}
 
                     <form onSubmit={handleRegister} className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">

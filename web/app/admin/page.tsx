@@ -29,24 +29,83 @@ interface AdminStats {
     }>;
 }
 
+import { authedFetch } from "@/lib/api";
+import { auth } from "@/lib/firebase/client";
+import { onAuthStateChanged } from "firebase/auth";
+
 export default function AdminDashboard() {
     const [data, setData] = useState<AdminStats | null>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        async function fetchStats() {
-            try {
-                const res = await fetch("/api/stats");
-                const json = await res.json();
-                if (res.ok) setData(json);
-            } catch (error) {
-                console.error("Stats fetch error:", error);
-            } finally {
-                setLoading(false);
+        console.log("[AdminDashboard] Mounting, waiting for auth state...");
+
+        async function initAuth() {
+            if (auth.authStateReady) {
+                await auth.authStateReady();
             }
+
+            const unsubscribe = onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    console.log("[AdminDashboard] User authenticated, UID:", user.uid);
+                    fetchStats();
+                } else {
+                    console.warn("[AdminDashboard] No authenticated user found after initialization");
+                    setError("Authentication required.");
+                    setLoading(false);
+                }
+            });
+            return unsubscribe;
         }
-        fetchStats();
+
+        const authUnsubscribePromise = initAuth();
+
+        return () => {
+            console.log("[AdminDashboard] Unmounting, cleaning up...");
+            authUnsubscribePromise.then(unsub => unsub?.());
+        };
     }, []);
+
+    async function fetchStats() {
+        console.log("[AdminDashboard] Fetching platform stats...");
+        setError(null);
+        try {
+            const res = await authedFetch("/api/stats");
+            console.log("[AdminDashboard] Stats response status:", res.status);
+            const json = await res.json();
+            if (res.ok) {
+                setData(json);
+                console.log("[AdminDashboard] Stats loaded successfully");
+            } else {
+                console.error("[AdminDashboard] Failed to load stats:", json.error);
+                setError(json.error || "Failed to load dashboard data.");
+            }
+        } catch (err) {
+            console.error("[AdminDashboard] Stats fetch error:", err);
+            setError("A network error occurred while loading stats.");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+
+    if (error) {
+        return (
+            <DashboardLayout role="admin" title="Error">
+                <Card className="border-rose-200 bg-rose-50 p-8 text-center">
+                    <p className="text-rose-600 font-bold">{error}</p>
+                    <Button
+                        variant="outline"
+                        className="mt-4 border-rose-200 text-rose-600 hover:bg-rose-100"
+                        onClick={() => window.location.reload()}
+                    >
+                        Retry Loading
+                    </Button>
+                </Card>
+            </DashboardLayout>
+        );
+    }
 
     if (loading || !data) {
         return (

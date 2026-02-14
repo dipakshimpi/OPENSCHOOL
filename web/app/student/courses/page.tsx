@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { authedFetch } from "@/lib/api";
+import { motion } from "framer-motion";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface Course {
@@ -26,6 +27,7 @@ interface Course {
   instructor_id: string;
   profiles: { full_name: string } | null;
   enrollmentCount?: number;
+  grade_level?: string;
 }
 
 export default function StudentCourses() {
@@ -43,18 +45,20 @@ export default function StudentCourses() {
     setLoading(true);
     try {
       const [coursesRes, enrolledRes, statsRes] = await Promise.all([
-        fetch("/api/courses"),
-        fetch("/api/enrollments"),
-        fetch("/api/stats")
+        authedFetch("/api/courses"),
+        authedFetch("/api/enrollments"),
+        authedFetch("/api/stats")
       ]);
 
       if (coursesRes.ok && enrolledRes.ok) {
         const courses = await coursesRes.json();
         const enrolled = await enrolledRes.json();
-        // stats might fail if not fully set up but usually returns profile
+
+        let userGrade = null;
         if (statsRes.ok) {
           const stats = await statsRes.json();
-          setUserGrade(stats.gradeLevel);
+          userGrade = stats.gradeLevel;
+          setUserGrade(userGrade);
         }
 
         // Ensure courses is an array
@@ -74,7 +78,7 @@ export default function StudentCourses() {
   const handleEnroll = async (courseId: string) => {
     setEnrollingMap(prev => ({ ...prev, [courseId]: true }));
     try {
-      const res = await fetch("/api/enrollments", {
+      const res = await authedFetch("/api/enrollments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ courseId })
@@ -106,11 +110,12 @@ export default function StudentCourses() {
     // If already enrolled, don't show in explore (unless we want to show everything)
     if (safeEnrolledIds.includes(c.id)) return false;
 
-    // If user has a grade, and course has a grade, match them
-    // If course has no grade, show it to everyone (elective?)
-    // If user has no grade, show everything
-    if (userGrade && (c as any).grade_level) {
-      return (c as any).grade_level === userGrade;
+    // If course is 'General' or has no grade, show it to everyone
+    if (c.grade_level === 'General' || !c.grade_level) return true;
+
+    // If user has a grade, and course has a specific grade, match them
+    if (userGrade && c.grade_level) {
+      return c.grade_level === userGrade;
     }
     return true;
   });
@@ -157,67 +162,61 @@ export default function StudentCourses() {
             </TabsList>
           </div>
 
-          <AnimatePresence mode="wait">
-            <TabsContent value="explore" className="m-0 focus-visible:ring-0">
-              {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {[1, 2, 3].map(i => <Skeleton key={i} className="h-[400px] rounded-[2rem]" />)}
-                </div>
-              ) : availableCourses.length > 0 ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-                >
-                  {availableCourses.map((course, idx) => (
-                    <CourseCard
-                      key={course.id}
-                      course={course}
-                      delay={idx * 0.1}
-                      isEnrolled={false}
-                      onEnroll={() => handleEnroll(course.id)}
-                      isEnrolling={enrollingMap[course.id]}
-                    />
-                  ))}
-                </motion.div>
-              ) : (
-                <div className="py-32 text-center border-4 border-dashed border-slate-100 dark:border-slate-800 rounded-[3rem]">
-                  <BookOpen className="w-20 h-20 text-slate-200 mx-auto mb-6" />
-                  <h4 className="text-2xl font-black text-slate-800 dark:text-white mb-2">Wow, you&apos;re a fast learner!</h4>
-                  <p className="text-slate-400 font-medium">You have already enrolled in all our available courses.</p>
-                </div>
-              )}
-            </TabsContent>
+          <TabsContent value="explore" className="m-0 focus-visible:ring-0">
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {[1, 2, 3].map(i => <Skeleton key={i} className="h-[400px] rounded-[2rem]" />)}
+              </div>
+            ) : availableCourses.length > 0 ? (
+              <div
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+              >
+                {availableCourses.map((course, idx) => (
+                  <CourseCard
+                    key={course.id}
+                    course={course}
+                    delay={idx * 0.1}
+                    isEnrolled={false}
+                    onEnroll={() => handleEnroll(course.id)}
+                    isEnrolling={enrollingMap[course.id]}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="py-32 text-center border-4 border-dashed border-slate-100 dark:border-slate-800 rounded-[3rem]">
+                <BookOpen className="w-20 h-20 text-slate-200 mx-auto mb-6" />
+                <h4 className="text-2xl font-black text-slate-800 dark:text-white mb-2">Wow, you&apos;re a fast learner!</h4>
+                <p className="text-slate-400 font-medium">You have already enrolled in all our available courses.</p>
+              </div>
+            )}
+          </TabsContent>
 
-            <TabsContent value="my-courses" className="m-0 focus-visible:ring-0">
-              {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {[1, 2, 3].map(i => <Skeleton key={i} className="h-[400px] rounded-[2rem]" />)}
-                </div>
-              ) : enrolledCourses.length > 0 ? (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-                >
-                  {enrolledCourses.map((course, idx) => (
-                    <CourseCard
-                      key={course.id}
-                      course={course}
-                      delay={idx * 0.1}
-                      isEnrolled={true}
-                    />
-                  ))}
-                </motion.div>
-              ) : (
-                <div className="py-32 text-center border-4 border-dashed border-slate-100 dark:border-slate-800 rounded-[3rem]">
-                  <PlusCircle className="w-20 h-20 text-slate-200 mx-auto mb-6" />
-                  <h4 className="text-2xl font-black text-slate-800 dark:text-white mb-2">Your Learning Path is Empty</h4>
-                  <p className="text-slate-400 font-medium mb-8">Ready to start? Head over to the Explore tab and pick your first course!</p>
-                </div>
-              )}
-            </TabsContent>
-          </AnimatePresence>
+          <TabsContent value="my-courses" className="m-0 focus-visible:ring-0">
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {[1, 2, 3].map(i => <Skeleton key={i} className="h-[400px] rounded-[2rem]" />)}
+              </div>
+            ) : enrolledCourses.length > 0 ? (
+              <div
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+              >
+                {enrolledCourses.map((course, idx) => (
+                  <CourseCard
+                    key={course.id}
+                    course={course}
+                    delay={idx * 0.1}
+                    isEnrolled={true}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="py-32 text-center border-4 border-dashed border-slate-100 dark:border-slate-800 rounded-[3rem]">
+                <PlusCircle className="w-20 h-20 text-slate-200 mx-auto mb-6" />
+                <h4 className="text-2xl font-black text-slate-800 dark:text-white mb-2">Your Learning Path is Empty</h4>
+                <p className="text-slate-400 font-medium mb-8">Ready to start? Head over to the Explore tab and pick your first course!</p>
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
       </div>
     </DashboardLayout>
@@ -280,7 +279,7 @@ function CourseCard({
             <div className="flex items-center gap-2">
               <div className="w-1.5 h-6 bg-indigo-500 rounded-full" />
               <span className="text-[10px] font-black tracking-[0.2em] text-indigo-400 uppercase">
-                {`Grade Level: ${(course as any).grade_level || 'General'}`}
+                {`Grade Level: ${course.grade_level || 'General'}`}
               </span>
             </div>
             <h4 className="font-black text-2xl text-slate-800 dark:text-white leading-tight line-clamp-2">

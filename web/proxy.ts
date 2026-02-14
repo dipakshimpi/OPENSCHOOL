@@ -45,7 +45,7 @@ export async function proxy(request: NextRequest) {
             },
         })
 
-        const supabase = createServerClient(
+        createServerClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
             {
@@ -91,99 +91,9 @@ export async function proxy(request: NextRequest) {
             }
         )
 
-        // 1. Check if user is logged in
-        // We use try-catch here specifically for Supabase fetch drops (ECONNRESET)
-        let user = null;
-        try {
-            const { data } = await supabase.auth.getUser();
-            user = data.user;
-        } catch (authErr) {
-            console.error("SUPABASE_AUTH_FETCH_FAILED:", authErr);
-            // If auth fails due to network, we can decide to redirect to login or allow next
-            // For safety, let's treat them as guest
-        }
-
-        const url = request.nextUrl.clone()
-
-        // 2. Identify intended dashboard segment
-        const isAccessingAdmin = url.pathname.startsWith('/admin')
-        const isAccessingTeacher = url.pathname.startsWith('/teacher')
-        const isAccessingStudent = url.pathname.startsWith('/student')
-        const isAccessingDashboard = isAccessingAdmin || isAccessingTeacher || isAccessingStudent
-
-        // 3. Handle Guest Access on Protected Routes
-        if (!user && isAccessingDashboard) {
-            url.pathname = '/auth/login'
-            return NextResponse.redirect(url)
-        }
-
-        // 4. Strong Role-Based Access Control (RBAC)
-        if (user && isAccessingDashboard) {
-            // Fetch real-time role and approval status
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('role, is_approved')
-                .eq('id', user.id)
-                .single();
-
-            // Handle case when profile doesn't exist (user in auth but profile deleted)
-            if (!profile) {
-                await supabase.auth.signOut();
-                url.pathname = '/auth/login';
-                return NextResponse.redirect(url);
-            }
-
-            const role = profile.role || 'student';
-            const isApproved = profile.is_approved ?? false;
-
-            // Block mismatching roles
-            if (isAccessingAdmin && role !== 'admin') {
-                url.pathname = `/${role}`
-                return NextResponse.redirect(url)
-            }
-
-            // Handle teacher approval
-            if (role === 'teacher' && !isApproved) {
-                url.pathname = '/auth/pending'
-                return NextResponse.redirect(url)
-            }
-
-            if (isAccessingTeacher && role !== 'teacher') {
-                url.pathname = `/${role}`
-                return NextResponse.redirect(url)
-            }
-            if (isAccessingStudent && role !== 'student') {
-                url.pathname = `/${role}`
-                return NextResponse.redirect(url)
-            }
-        }
-
-        // 5. Check if unapproved teacher is trying to skip the pending page
-        if (user && url.pathname === '/auth/pending') {
-            const { data: profile } = await supabase.from('profiles').select('is_approved').eq('id', user.id).single();
-            if (profile?.is_approved) {
-                url.pathname = '/teacher'
-                return NextResponse.redirect(url)
-            }
-        }
-
-        // 6. Handle Auth Pages for Logged-In Users
-        if (user && url.pathname.startsWith('/auth') && url.pathname !== '/auth/pending') {
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', user.id)
-                .single();
-
-            // If profile doesn't exist, allow access to auth pages (user needs to finish setup)
-            if (!profile) {
-                return response;
-            }
-
-            const role = profile.role || 'student';
-            url.pathname = `/${role}`
-            return NextResponse.redirect(url)
-        }
+        // Note: We are using Firebase for auth. Supabase session management via cookies 
+        // is kept for compatibility, but the Client-side DashboardLayout and 
+        // API verifySession handle the core security using Firebase ID tokens.
 
         return response;
     } catch (globalErr) {

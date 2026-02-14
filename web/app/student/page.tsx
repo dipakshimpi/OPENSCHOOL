@@ -40,6 +40,8 @@ interface DashboardData {
     };
 }
 
+import { authedFetch } from "@/lib/api";
+
 export default function StudentDashboard() {
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -48,7 +50,7 @@ export default function StudentDashboard() {
     useEffect(() => {
         async function fetchStats() {
             try {
-                const res = await fetch("/api/stats");
+                const res = await authedFetch("/api/stats");
                 if (!res.ok) {
                     throw new Error(`Failed to fetch stats: ${res.statusText}`);
                 }

@@ -16,6 +16,8 @@ interface Teacher {
     email: string;
 }
 
+import { authedFetch } from "@/lib/api";
+
 export default function AdminCreateCoursePage() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
@@ -32,7 +34,7 @@ export default function AdminCreateCoursePage() {
 
     useEffect(() => {
         // Fetch approved teachers
-        fetch("/api/admin/users?role=teacher&approved=true")
+        authedFetch("/api/admin/users?role=teacher&approved=true")
             .then(res => {
                 if (!res.ok) throw new Error('Failed to fetch teachers');
                 return res.json();
@@ -67,7 +69,7 @@ export default function AdminCreateCoursePage() {
         setIsLoading(true);
 
         try {
-            const response = await fetch("/api/admin/courses", {
+            const response = await authedFetch("/api/admin/courses", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),

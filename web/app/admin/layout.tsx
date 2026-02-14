@@ -1,10 +1,6 @@
 "use client";
 
 import { Suspense } from "react";
-import { Refine } from "@refinedev/core";
-import routerProvider from "@refinedev/nextjs-router";
-import { dataProvider } from "@refinedev/supabase";
-import { supabaseClient } from "@/lib/supabase/client";
 
 export default function AdminLayout({
   children,
@@ -12,19 +8,8 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <Suspense fallback={<div>Loading Admin Panel...</div>}>
-      <Refine
-        routerProvider={routerProvider}
-        dataProvider={dataProvider(supabaseClient)}
-        resources={[
-          {
-            name: "courses",
-            list: "/admin/courses",
-          },
-        ]}
-      >
-        {children}
-      </Refine>
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading Admin Panel...</div>}>
+      {children}
     </Suspense>
   );
 }

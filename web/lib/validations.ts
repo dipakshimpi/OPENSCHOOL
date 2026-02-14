@@ -28,5 +28,24 @@ export const courseSchema = z.object({
 export const videoSchema = z.object({
     title: z.string().min(3, "Title must be at least 3 characters").max(100, "Title too long"),
     description: z.string().max(1000, "Description too long").optional().nullable(),
-    courseId: z.string().uuid("Invalid Course ID"),
+    courseId: z.string().min(1, "Invalid Course ID"),
+});
+
+export const registerSchema = z.object({
+    firstName: z.string().min(2, "First name must be at least 2 characters").max(20),
+    lastName: z.string().min(1, "Last name must be at least 1 characters").max(20),
+    email: z.string().email("Invalid email address").refine(email => {
+        const dummyDomains = ['test.com', 'example.com', 'dummy.com', 'temp.com'];
+        return !dummyDomains.some(domain => email.endsWith(domain));
+    }, { message: "Please use a real email address" }),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    phoneNumber: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format").optional().nullable(),
+    schoolId: z.string().min(1, "Invalid School ID").optional().nullable().or(z.literal("")),
+    role: z.enum(["admin", "teacher", "student"]),
+    securityCode: z.string().optional(),
+});
+
+export const loginSchema = z.object({
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(1, "Password is required"),
 });

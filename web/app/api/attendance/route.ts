@@ -1,25 +1,41 @@
-import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
-import { isWithinGeofence } from "@/lib/geo";
 import { attendanceSchema } from "@/lib/validations";
+import { verifySession } from "@/lib/auth-utils";
+import { createClient } from "@supabase/supabase-js";
+import { isWithinGeofence } from "@/lib/geo";
+
+export const dynamic = "force-dynamic";
+
+// Use Service Role for backend-to-backend communication
+// Helper to get supabase admin client lazily
+function getSupabaseAdmin() {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!url || !key) {
+        throw new Error("Missing Supabase admin environment variables");
+    }
+
+    return createClient(url, key);
+}
 
 export async function GET() {
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
+        const session = await verifySession();
+        if (!session) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+        const supabaseAdmin = getSupabaseAdmin();
+        const userId = session.uid;
 
         // Check if there's an attendance record for today
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('attendance')
             .select('*')
-            .eq('teacher_id', user.id)
+            .eq('teacher_id', userId)
             .gte('timestamp', today.toISOString())
             .order('timestamp', { ascending: false })
             .limit(1);
@@ -41,19 +57,18 @@ export async function GET() {
 
 export async function POST(request: Request) {
     try {
-        const supabase = await createClient();
-
-        // 1. Check authentication
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        if (authError || !user) {
+        const session = await verifySession();
+        if (!session) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+        const supabaseAdmin = getSupabaseAdmin();
+        const userId = session.uid;
 
         // 2. Get user's school_id
-        const { data: profile } = await supabase
+        const { data: profile } = await supabaseAdmin
             .from('profiles')
             .select('school_id')
-            .eq('id', user.id)
+            .eq('id', userId)
             .single();
 
         if (!profile?.school_id) {
@@ -74,7 +89,7 @@ export async function POST(request: Request) {
         const { latitude, longitude, accuracy, deviceInfo, adminOverride, overrideReason } = result.data;
 
         // 4. Fetch geo-fences for THIS specific school
-        const { data: fences, error: fenceError } = await supabase
+        const { data: fences, error: fenceError } = await supabaseAdmin
             .from('geo_fences')
             .select('*')
             .eq('school_id', profile.school_id);
@@ -86,7 +101,7 @@ export async function POST(request: Request) {
         // 5. Verify if within school boundary
         let isInside = false;
 
-        if (fences.length === 0) {
+        if (!fences || fences.length === 0) {
             return NextResponse.json({
                 error: "School boundary not configured",
                 message: "Location tracking is enabled but no school boundary has been set by your Admin."
@@ -109,10 +124,10 @@ export async function POST(request: Request) {
         }
 
         // 6. Insert attendance record
-        const { data, error: insertError } = await supabase
+        const { data, error: insertError } = await supabaseAdmin
             .from('attendance')
             .insert({
-                teacher_id: user.id,
+                teacher_id: userId,
                 latitude,
                 longitude,
                 accuracy,

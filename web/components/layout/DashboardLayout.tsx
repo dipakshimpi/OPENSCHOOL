@@ -15,10 +15,19 @@ interface DashboardLayoutProps {
   title?: string;
 }
 
+import { authedFetch } from "@/lib/api";
+
 export function DashboardLayout({ children, role, title = "Dashboard" }: DashboardLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [profileData, setProfileData] = useState<{ is_approved: boolean; grade_level: string | null; section: string | null } | null>(null);
+  const [profileData, setProfileData] = useState<{
+    is_approved: boolean;
+    is_admin_approved?: boolean;
+    is_teacher_approved?: boolean;
+    grade_level: string | null;
+    section: string | null;
+    role: string
+  } | null>(null);
   const [hasAttended, setHasAttended] = useState<boolean | null>(
     role !== "teacher" || pathname === "/teacher/attendance" ? true : null
   );
@@ -35,22 +44,33 @@ export function DashboardLayout({ children, role, title = "Dashboard" }: Dashboa
 
   useEffect(() => {
     async function checkStatus() {
+      console.log("[DashboardLayout] Checking user status for role:", role);
       try {
         // 1. Fetch Profile Status (Approval & Class)
-        const profileRes = await fetch("/api/profile");
-        const profile = await profileRes.json();
-        setProfileData(profile);
+        const profileRes = await authedFetch("/api/profile");
+        console.log("[DashboardLayout] Profile fetch status:", profileRes.status);
+        if (profileRes.ok) {
+          const profile = await profileRes.json();
+          setProfileData(profile);
+          console.log("[DashboardLayout] Profile data loaded, role:", profile.role, "approved:", profile.is_approved);
+        } else {
+          console.warn("[DashboardLayout] Profile fetch failed, status:", profileRes.status);
+        }
 
         // 2. Fetch Attendance for Teachers
         if (role === "teacher" && pathname !== "/teacher/attendance") {
-          const attRes = await fetch("/api/attendance");
-          const attData = await attRes.json();
-          setHasAttended(attData.hasAttended);
+          console.log("[DashboardLayout] Fetching teacher attendance status...");
+          const attRes = await authedFetch("/api/attendance");
+          if (attRes.ok) {
+            const attData = await attRes.json();
+            setHasAttended(attData.hasAttended);
+            console.log("[DashboardLayout] Attendance record:", attData.hasAttended);
+          }
         } else {
           setHasAttended(true);
         }
       } catch (err) {
-        console.error("Dashboard status check failed", err);
+        console.error("[DashboardLayout] Status check error:", err);
       } finally {
         setIsLoading(false);
       }
@@ -59,8 +79,17 @@ export function DashboardLayout({ children, role, title = "Dashboard" }: Dashboa
   }, [role, pathname]);
 
   // Logic for different lock states
-  const isUnapproved = profileData && role !== "admin" && !profileData.is_approved;
-  const isMissingAssignment = role === "student" && profileData?.is_approved && (!profileData.grade_level || !profileData.section);
+  const isUnapproved = profileData && role !== "admin" && (
+    role === "student"
+      ? (!profileData.is_admin_approved || !profileData.is_teacher_approved)
+      : !profileData.is_approved
+  );
+
+  const isMissingAssignment = role === "student" &&
+    profileData?.is_admin_approved &&
+    profileData?.is_teacher_approved &&
+    (!profileData.grade_level || !profileData.section);
+
   const showAttendanceLock = role === "teacher" && hasAttended === false && pathname !== "/teacher/attendance";
 
   return (
@@ -84,13 +113,23 @@ export function DashboardLayout({ children, role, title = "Dashboard" }: Dashboa
                       <ShieldCheck className="w-10 h-10 animate-pulse" />
                     </div>
                     <div className="space-y-3">
-                      <h2 className="text-2xl font-black text-slate-900">Approval Pending</h2>
+                      <h2 className="text-2xl font-black text-slate-900">
+                        {role === 'student' && !profileData?.is_admin_approved ? "Admin Verification Pending" :
+                          role === 'student' && !profileData?.is_teacher_approved ? "Teacher Approval Pending" :
+                            "Approval Pending"}
+                      </h2>
                       <p className="text-slate-500 text-sm font-medium">
-                        Welcome to OpenSchool! Your account is currently under review by the administration. You will receive access once your credentials are verified.
+                        {role === 'student' && !profileData?.is_admin_approved
+                          ? "Welcome! Your registration is being verified by the school administration. This is the first step of your onboarding."
+                          : role === 'student' && !profileData?.is_teacher_approved
+                            ? "Great news! Admin has verified you. Now, your assigned Class Teacher just needs to approve your dashboard access."
+                            : "Welcome to OpenSchool! Your account is currently under review by the administration. You will receive access once your credentials are verified."
+                        }
                       </p>
                     </div>
-                    <div className="p-4 bg-orange-50 rounded-xl text-orange-700 text-xs font-bold uppercase tracking-widest">
-                      Expected Wait: 12-24 Hours
+                    <div className="p-4 bg-orange-50 rounded-xl text-orange-700 text-xs font-bold uppercase tracking-widest leading-6">
+                      Status: {role === 'student' && profileData?.is_admin_approved ? "Admin Verified ✓" : "Waiting for Admin"} <br />
+                      {role === 'student' && <span>Onboarding: {profileData?.is_admin_approved ? "Step 2 of 2" : "Step 1 of 2"}</span>}
                     </div>
                   </CardContent>
                 </Card>

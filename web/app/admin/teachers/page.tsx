@@ -30,6 +30,10 @@ interface Teacher {
     is_teacher_approved: boolean;
 }
 
+import { authedFetch } from "@/lib/api";
+import { auth } from "@/lib/firebase/client";
+import { onAuthStateChanged } from "firebase/auth";
+
 export default function AdminTeachersPage() {
     const [teachers, setTeachers] = useState<Teacher[]>([]);
     const [loading, setLoading] = useState(true);
@@ -37,7 +41,7 @@ export default function AdminTeachersPage() {
 
     const fetchTeachers = useCallback(async () => {
         try {
-            const res = await fetch("/api/admin/users?role=teacher");
+            const res = await authedFetch("/api/admin/users?role=teacher");
             if (res.ok) {
                 const data = await res.json();
                 setTeachers(Array.isArray(data) ? data : (data.users || []));
@@ -50,12 +54,19 @@ export default function AdminTeachersPage() {
     }, []);
 
     useEffect(() => {
-        fetchTeachers();
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                fetchTeachers();
+            } else {
+                setLoading(false);
+            }
+        });
+        return () => unsubscribe();
     }, [fetchTeachers]);
 
     const handleApprove = async (id: string) => {
         try {
-            const res = await fetch("/api/admin/users", {
+            const res = await authedFetch("/api/admin/users", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ id, is_admin_approved: true, is_teacher_approved: true })

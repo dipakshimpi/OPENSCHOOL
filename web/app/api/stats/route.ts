@@ -1,149 +1,227 @@
-import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { verifySession } from "@/lib/auth-utils";
+import { createClient } from "@supabase/supabase-js";
+
+// Use Service Role for backend-to-backend communication
+export const dynamic = "force-dynamic";
+
+// Helper to get supabase admin client lazily
+function getSupabaseAdmin() {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!url || !key) {
+        throw new Error("Missing Supabase admin environment variables");
+    }
+
+    return createClient(url, key);
+}
+
+interface Profile {
+    id: string;
+    role: 'admin' | 'teacher' | 'student';
+    full_name: string;
+    grade_level?: string;
+}
+
+interface EnrollmentWithCourse {
+    progress: number | null;
+    courses: {
+        title: string;
+        profiles: {
+            full_name: string;
+        } | null;
+    } | null;
+}
+
+interface AdminRecentActivity {
+    enrolled_at: string;
+    profiles: {
+        full_name: string;
+    } | null;
+    courses: {
+        title: string;
+    } | null;
+}
 
 export async function GET() {
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const session = await verifySession();
+        if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+        const supabaseAdmin = getSupabaseAdmin();
+        const userId = session.uid;
 
         // Get user profile for name/role
-        const { data: profile } = await supabase
+        const { data: profile } = await supabaseAdmin
             .from('profiles')
             .select('*')
-            .eq('id', user.id)
+            .eq('id', userId)
             .single();
 
-        if (profile?.role === 'teacher') {
+        const userProfile = profile as Profile;
+
+        if (userProfile?.role === 'teacher') {
             // Teacher stats
-            const { count: courseCount } = await supabase
+            const { count: courseCount } = await supabaseAdmin
                 .from('courses')
                 .select('*', { count: 'exact', head: true })
-                .eq('instructor_id', user.id);
+                .eq('instructor_id', userId);
 
             // Get all students enrolled in teacher's courses
-            const { data: courses } = await supabase
+            const { data: courses } = await supabaseAdmin
                 .from('courses')
                 .select('id')
-                .eq('instructor_id', user.id);
+                .eq('instructor_id', userId);
 
-            const courseIds = courses?.map(c => c.id) || [];
-            const { count: studentCount } = await supabase
+            const courseIds = courses?.map((c) => c.id) || [];
+            const { count: studentCount } = await supabaseAdmin
                 .from('enrollments')
                 .select('*', { count: 'exact', head: true })
                 .in('course_id', courseIds);
 
             // Calculate real attendance rate
-            const { data: attendanceLogs } = await supabase
+            const { data: attendanceLogs } = await supabaseAdmin
                 .from('attendance')
                 .select('status')
-                .eq('teacher_id', user.id);
+                .eq('teacher_id', userId);
 
             const totalAttendanceRecords = attendanceLogs?.length || 0;
-            const presentRecords = attendanceLogs?.filter(a => a.status === 'present').length || 0;
+            const presentRecords = attendanceLogs?.filter((a) => a.status === 'present').length || 0;
             const attendanceRate = totalAttendanceRecords > 0
                 ? (presentRecords / totalAttendanceRecords) * 100
                 : 100;
 
             return NextResponse.json({
                 role: 'teacher',
-                fullName: profile.full_name,
+                fullName: userProfile.full_name,
                 stats: {
                     activeCourses: courseCount || 0,
                     totalStudents: studentCount || 0,
                     attendanceRate: Math.round(attendanceRate * 10) / 10
                 }
             });
-        } else if (profile?.role === 'admin') {
+        } else if (userProfile?.role === 'admin') {
             // Admin stats
-            const { count: studentCount } = await supabase
+            const { count: studentCount } = await supabaseAdmin
                 .from('profiles')
                 .select('*', { count: 'exact', head: true })
                 .eq('role', 'student');
 
-            const { count: teacherCount } = await supabase
+            const { count: teacherCount } = await supabaseAdmin
                 .from('profiles')
                 .select('*', { count: 'exact', head: true })
                 .eq('role', 'teacher');
 
-            const { count: courseCount } = await supabase
+            const { count: courseCount } = await supabaseAdmin
                 .from('courses')
                 .select('*', { count: 'exact', head: true });
 
-            const { data: attendanceLogs } = await supabase
+            const { data: attendanceLogs } = await supabaseAdmin
                 .from('attendance')
                 .select('status');
 
             const totalAttendanceRecords = attendanceLogs?.length || 0;
-            const presentRecords = attendanceLogs?.filter(a => a.status === 'present').length || 0;
+            const presentRecords = attendanceLogs?.filter((a) => a.status === 'present').length || 0;
             const attendanceRate = totalAttendanceRecords > 0
                 ? (presentRecords / totalAttendanceRecords) * 100
                 : 95; // Default if no data yet
 
             // Fetch recent activities (enrollments + new courses)
-            const { data: enrollments } = await supabase
+            const { data: enrollments } = await supabaseAdmin
                 .from('enrollments')
                 .select('enrolled_at, profiles(full_name), courses(title)')
                 .order('enrolled_at', { ascending: false })
                 .limit(5);
 
+            const typedEnrollments = (enrollments as unknown as AdminRecentActivity[]) || [];
+
             return NextResponse.json({
                 role: 'admin',
-                fullName: profile.full_name,
+                fullName: userProfile.full_name,
                 stats: {
                     studentCount: studentCount || 0,
                     teacherCount: teacherCount || 0,
                     courseCount: courseCount || 0,
                     attendanceRate: Math.round(attendanceRate)
                 },
-                recentActivity: enrollments?.map(e => ({
-                    user: (e.profiles as unknown as { full_name: string })?.full_name || 'Anonymous',
+                recentActivity: typedEnrollments.map((e) => ({
+                    user: e.profiles?.full_name || 'Anonymous',
                     action: 'enrolled in',
-                    target: (e.courses as unknown as { title: string })?.title || 'Course',
+                    target: e.courses?.title || 'Course',
                     time: new Date(e.enrolled_at).toLocaleTimeString()
-                })) || []
+                }))
             });
         } else {
-            // Student stats
-            const enrollmentQuery = supabase
+            // Student stats: RAIN-PROOF Robust Queries
+            // 1. Fetch enrollments
+            const { data: enrollmentsData, error: enrollError } = await supabaseAdmin
                 .from('enrollments')
-                .select('*, courses(*, profiles(full_name))')
-                .eq('student_id', user.id);
+                .select('*')
+                .eq('student_id', userId);
 
-            // Filter by grade level if applicable (only show courses for their grade)
-            // Note: This filters what enrolled courses constitute "active" learning for stats
-            // Ideally, we filter BEFORE the query, butSupabase joins are tricky with nested filters.
-            // A better way is to filter the RESULT or ensure enrollments only happen for correct grades.
-            // For now, let's assume if they are enrolled, they SHOULD see it.
-            // BUT, let's filter the 'courses' list returned for the catalog views if we were fetching catalog.
-            // Since this returns *enrolled* courses, we keep them all.
-            // However, we should return the student's grade level so the frontend can filter the catalog.
+            if (enrollError) throw enrollError;
 
-            const { data: enrollments, count: enrollmentCount } = await enrollmentQuery;
+            const enrollments = enrollmentsData || [];
 
-            const avgProgress = enrollments && enrollments.length > 0
-                ? enrollments.reduce((acc: number, curr: { progress: number | null }) => acc + (curr.progress || 0), 0) / enrollments.length
+            // 2. Resolve Course Details Manually (to bypass relationship issues)
+            const courseIds = [...new Set(enrollments.map(e => e.course_id).filter(Boolean))];
+            let coursesWithDetails: any[] = [];
+
+            if (courseIds.length > 0) {
+                const { data: coursesData } = await supabaseAdmin
+                    .from('courses')
+                    .select('*')
+                    .in('id', courseIds);
+
+                if (coursesData) {
+                    // 3. Resolve Instructor Names
+                    const instructorIds = [...new Set(coursesData.map(c => c.instructor_id).filter(Boolean))];
+                    const { data: instructors } = await supabaseAdmin
+                        .from('profiles')
+                        .select('id, full_name')
+                        .in('id', instructorIds);
+
+                    const instMap: Record<string, string> = {};
+                    instructors?.forEach(i => instMap[i.id] = i.full_name);
+
+                    // 4. Enrich Enrollments
+                    coursesWithDetails = enrollments.map(e => {
+                        const course = coursesData.find(c => c.id === e.course_id);
+                        return {
+                            ...e,
+                            courses: course ? {
+                                ...course,
+                                profiles: { full_name: instMap[course.instructor_id] || "Unknown Teacher" }
+                            } : null
+                        };
+                    });
+                }
+            }
+
+            const avgProgress = enrollments.length > 0
+                ? enrollments.reduce((acc: number, curr) => acc + (curr.progress || 0), 0) / enrollments.length
                 : 0;
 
             // Fetch real attendance rate for this student
-            const { data: attendanceRecords } = await supabase
+            const { data: attendanceRecords } = await supabaseAdmin
                 .from('student_attendance')
                 .select('status')
-                .eq('student_id', user.id);
+                .eq('student_id', userId);
 
             const totalAttendance = attendanceRecords?.length || 0;
-            const presentCount = attendanceRecords?.filter(a => a.status === 'present').length || 0;
+            const presentCount = attendanceRecords?.filter((a) => a.status === 'present').length || 0;
             const attendanceRate = totalAttendance > 0
                 ? (presentCount / totalAttendance) * 100
                 : 100; // Default to 100% if no records yet
 
             return NextResponse.json({
                 role: 'student',
-                fullName: profile?.full_name || 'Student',
-                gradeLevel: profile?.grade_level || null,
-                enrolledCourses: enrollments || [],
+                fullName: userProfile?.full_name || 'Student',
+                gradeLevel: userProfile?.grade_level || null,
+                enrolledCourses: coursesWithDetails,
                 stats: {
-                    enrolledCount: enrollmentCount || 0,
+                    enrolledCount: enrollments.length,
                     avgProgress: Math.round(avgProgress),
                     attendanceRate: Math.round(attendanceRate)
                 }

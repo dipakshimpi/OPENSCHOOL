@@ -21,6 +21,7 @@ import {
     CheckCircleIcon
 } from "@heroicons/react/24/outline";
 import { useState, useEffect } from "react";
+import { authedFetch } from "@/lib/api";
 
 export default function AdminSettingsPage() {
     const [saving, setSaving] = useState(false);
@@ -40,7 +41,7 @@ export default function AdminSettingsPage() {
 
     const fetchProfile = async () => {
         try {
-            const res = await fetch("/api/profile");
+            const res = await authedFetch("/api/profile");
             const data = await res.json();
             if (res.ok) {
                 setSchoolId(data.school_id);
@@ -52,7 +53,7 @@ export default function AdminSettingsPage() {
 
     const fetchFence = async () => {
         try {
-            const res = await fetch("/api/geo-fences");
+            const res = await authedFetch("/api/geo-fences");
             const data = await res.json();
             if (Array.isArray(data) && data.length > 0) {
                 const f = data[0];
@@ -95,7 +96,7 @@ export default function AdminSettingsPage() {
     const handleSaveFence = async () => {
         setSaving(true);
         try {
-            const res = await fetch("/api/geo-fences", {
+            const res = await authedFetch("/api/geo-fences", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

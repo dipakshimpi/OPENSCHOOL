@@ -9,6 +9,8 @@ interface Announcement {
     priority: string;
 }
 
+import { authedFetch } from "@/lib/api";
+
 export function UrgentNotice() {
     const [urgentNotice, setUrgentNotice] = useState<Announcement | null>(null);
     const [dismissed, setDismissed] = useState(false);
@@ -16,7 +18,7 @@ export function UrgentNotice() {
     useEffect(() => {
         async function fetchNotices() {
             try {
-                const res = await fetch("/api/announcements");
+                const res = await authedFetch("/api/announcements");
                 if (res.ok) {
                     const data = await res.json();
                     const urgent = data.find((n: Announcement) => n.priority === 'urgent');

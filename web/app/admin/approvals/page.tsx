@@ -18,22 +18,31 @@ interface Student {
     is_teacher_approved: boolean;
 }
 
+import { authedFetch } from "@/lib/api";
+import { auth } from "@/lib/firebase/client";
+import { onAuthStateChanged } from "firebase/auth";
+
 export default function AdminApprovalsPage() {
     const [pendingStudents, setPendingStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
     const [processingId, setProcessingId] = useState<string | null>(null);
 
     useEffect(() => {
-        fetchPendingStudents();
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                fetchPendingStudents();
+            } else {
+                setLoading(false);
+            }
+        });
+
+        return () => unsubscribe();
     }, []);
 
     async function fetchPendingStudents() {
         setLoading(true);
         try {
-            // Fetch students pending admin approval
-            // Note: Our API returns all users matching the filter.
-            // We specifically want students NOT approved by admin yet.
-            const res = await fetch("/api/admin/users?role=student&admin_approved=false");
+            const res = await authedFetch("/api/admin/users?role=student&admin_approved=false");
             if (res.ok) {
                 const data = await res.json();
                 setPendingStudents(data);
@@ -61,7 +70,7 @@ export default function AdminApprovalsPage() {
 
         setProcessingId(id);
         try {
-            const res = await fetch("/api/admin/users", {
+            const res = await authedFetch("/api/admin/users", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

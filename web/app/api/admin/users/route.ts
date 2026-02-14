@@ -1,31 +1,44 @@
-import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { verifySession } from "@/lib/auth-utils";
+import { createClient } from "@supabase/supabase-js";
+
+// Helper to get supabase admin client lazily
+function getSupabaseAdmin() {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!url || !key) {
+        throw new Error("Missing Supabase admin environment variables");
+    }
+
+    return createClient(url, key);
+}
 
 export async function GET(request: Request) {
     try {
+        const session = await verifySession();
+        if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+        const supabaseAdmin = getSupabaseAdmin();
+
+        // Check if the verified user is an admin
+        const { data: adminProfile } = await supabaseAdmin
+            .from('profiles')
+            .select('role')
+            .eq('id', session.uid)
+            .single();
+
+        if (adminProfile?.role !== 'admin') {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
         const { searchParams } = new URL(request.url);
         const role = searchParams.get('role');
         const adminApproved = searchParams.get('admin_approved');
         const teacherApproved = searchParams.get('teacher_approved');
         const approved = searchParams.get('approved');
 
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-        // Check Admin
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single();
-
-        if (profile?.role !== 'admin') {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-        }
-
-        let query = supabase.from('profiles').select('*');
+        let query = supabaseAdmin.from('profiles').select('*');
 
         if (role) {
             query = query.eq('role', role);
@@ -61,19 +74,19 @@ export async function GET(request: Request) {
 
 export async function PATCH(request: Request) {
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const session = await verifySession();
+        if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const supabaseAdmin = getSupabaseAdmin();
 
-        // Check Admin
-        const { data: profile } = await supabase
+        // Check if the verified user is an admin
+        const { data: adminProfile } = await supabaseAdmin
             .from('profiles')
             .select('role')
-            .eq('id', user.id)
+            .eq('id', session.uid)
             .single();
 
-        if (profile?.role !== 'admin') {
+        if (adminProfile?.role !== 'admin') {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
@@ -85,11 +98,9 @@ export async function PATCH(request: Request) {
         const updates: Record<string, unknown> = {};
         if (typeof is_approved !== 'undefined') {
             updates.is_approved = is_approved;
-            // SYNC: If Admin approves/rejects, synchronize the sub-approval flags
             updates.is_admin_approved = is_approved;
             updates.is_teacher_approved = is_approved;
         } else {
-            // Only update individual flags if is_approved itself isn't being toggled
             if (typeof is_admin_approved !== 'undefined') updates.is_admin_approved = is_admin_approved;
             if (typeof is_teacher_approved !== 'undefined') updates.is_teacher_approved = is_teacher_approved;
         }
@@ -102,29 +113,16 @@ export async function PATCH(request: Request) {
             return NextResponse.json({ error: "No fields to update" }, { status: 400 });
         }
 
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('profiles')
             .update(updates)
             .eq('id', id)
             .select();
 
-        if (error) {
-            console.error("DATABASE_UPDATE_ERROR:", error);
-            throw error;
-        }
-
-        if (!data || data.length === 0) {
-            console.warn("UPDATE_TARGET_NOT_FOUND:", id);
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
-        }
-
-        console.log("USER_UPDATED_SUCCESSFULLY:", id, updates);
+        if (error) throw error;
         return NextResponse.json(data[0]);
     } catch (error) {
         console.error("UPDATE_USER_ERROR:", error);
-        return NextResponse.json({
-            error: "Failed to update user",
-            details: error instanceof Error ? error.message : String(error)
-        }, { status: 500 });
+        return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
     }
 }

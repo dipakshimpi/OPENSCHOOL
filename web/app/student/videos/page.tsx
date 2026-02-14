@@ -14,6 +14,7 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
+import { authedFetch } from "@/lib/api";
 
 interface Course {
     id: string;
@@ -40,21 +41,25 @@ export default function StudentVideosPage() {
         async function fetchData() {
             try {
                 // Fetch enrolled courses first
-                const statsRes = await fetch("/api/stats");
+                const statsRes = await authedFetch("/api/stats");
+                if (!statsRes.ok) throw new Error("Failed to fetch stats");
                 const statsData = await statsRes.json();
 
-                if (statsRes.ok && statsData) {
+                if (statsData) {
                     const enrolledCourses = statsData.enrolledCourses || [];
                     const enrolled = Array.isArray(enrolledCourses)
-                        ? enrolledCourses.map((e: { courses: Course }) => e.courses).filter(Boolean)
+                        ? enrolledCourses.map((e: any) => e.courses).filter(Boolean)
                         : [];
                     setCourses(enrolled);
+                    console.log(`[StudentVideos] Found ${enrolled.length} enrolled courses`);
 
-                    // Fetch all videos for these courses
-                    const videoRes = await fetch("/api/videos");
+                    // Fetch all videos
+                    const videoRes = await authedFetch("/api/videos");
                     if (videoRes.ok) {
                         const videoData = await videoRes.json();
-                        setVideos(Array.isArray(videoData) ? videoData : []);
+                        const videoArray = Array.isArray(videoData) ? videoData : [];
+                        setVideos(videoArray);
+                        console.log(`[StudentVideos] Loaded ${videoArray.length} videos`);
                     }
                 }
             } catch (err) {

@@ -25,9 +25,29 @@ peertube/storage/
 peertube/config/local-production.json
 peertube/logs/
 
-# Playwright
+# --- Playwright ---
 /test-results/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# --- Documentation & Internal Scripts ---
+# Ignore all markdown except README
+*.md
+!README.md
+!web/README.md
+
+# Ignore migration and fix scripts (keep the actual logic files)
+*.sql
+*.js
+web/*.js
+web/*.sql
+web/lint_results.txt
+
+# --- Build Logs and Temporary Files ---
+build_log*.txt
+*.log
+peertube/.env
+test-video-insert.mjs
+*.mjs

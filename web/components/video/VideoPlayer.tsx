@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LockClosedIcon, ShieldCheckIcon } from "@heroicons/react/24/solid";
+import { authedFetch } from "@/lib/api";
 
 interface VideoPlayerProps {
     videoId: string;
@@ -18,7 +19,7 @@ export function VideoPlayer({ videoId, userEmail }: VideoPlayerProps) {
     useEffect(() => {
         async function fetchVideo() {
             try {
-                const res = await fetch(`/api/videos/stream/${videoId}`);
+                const res = await authedFetch(`/api/videos/stream/${videoId}`);
                 if (!res.ok) {
                     const err = await res.json();
                     throw new Error(err.error || "Failed to load video");

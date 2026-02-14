@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AcademicCapIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 
-import { supabaseClient } from "@/lib/supabase/client";
+import { auth } from "@/lib/firebase/client";
+import { signInWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -19,61 +20,116 @@ export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
+    const [showResend, setShowResend] = useState(false);
+    const [resendStatus, setResendStatus] = useState<string | null>(null);
+
+    useEffect(() => {
+        // Clear any broken sessions when hitting the login page
+        const cleanup = async () => {
+            if (auth.currentUser) {
+                console.log("[Login] Clearing existing session for fresh login...");
+                await auth.signOut();
+            }
+        };
+        cleanup();
+    }, []);
+
+    const handleResendEmail = async () => {
+        try {
+            if (auth.currentUser) {
+                await sendEmailVerification(auth.currentUser);
+                setResendStatus("Verification email sent! Please check your inbox.");
+                setShowResend(false);
+            }
+        } catch {
+            setError("Failed to resend email. Please try again later.");
+        }
+    };
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setError(null);
+        setShowResend(false);
+        setResendStatus(null);
 
-        const { data, error: authError } = await supabaseClient.auth.signInWithPassword({
-            email,
-            password,
-        });
+        try {
+            console.log("[Login] Attempting sign-in for:", email, "with role:", role);
+            // 1. Sign in with Firebase
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+            console.log("[Login] Firebase sign-in successful, UID:", user.uid);
 
-        if (authError) {
-            setError("Invalid email or password.");
-            setIsLoading(false);
-            return;
-        }
+            // 2. Security Check: Email Verification
+            if (!user.emailVerified) {
+                console.warn("[Login] Email not verified for UID:", user.uid);
+                setError("Please verify your email before logging in.");
+                setShowResend(true);
+                setIsLoading(false);
+                return;
+            }
 
-        // Get the profile data
-        const { data: profile } = await supabaseClient
-            .from("profiles")
-            .select("role, is_admin_approved, is_teacher_approved")
-            .eq("id", data.user.id)
-            .single();
+            // 3. Get the profile data from Supabase via our secure API
+            console.log("[Login] Fetching profile for UID:", user.uid);
+            const token = await user.getIdToken();
+            const profileResponse = await fetch(`/api/profile`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
 
-        const actualRole = profile?.role;
+            if (!profileResponse.ok) {
+                console.error("[Login] Profile fetch failed, status:", profileResponse.status);
+                setError("Could not retrieve your profile. Please contact support.");
+                setIsLoading(false);
+                return;
+            }
 
-        // Security Check: Enforce Role Match
-        if (actualRole && actualRole !== role) {
-            await supabaseClient.auth.signOut();
-            setError("Invalid email or password.");
-            setIsLoading(false);
-            return;
-        }
+            const profile = await profileResponse.json();
+            const actualRole = profile?.role;
+            console.log("[Login] Profile retrieved, role in DB:", actualRole, "matching against selected:", role);
 
-        // Approval Checks
-        if (actualRole === 'student') {
-            if (!profile?.is_admin_approved) {
+            // 4. Security Check: Enforce Role Match
+            if (actualRole && actualRole !== role) {
+                console.warn("[Login] Role mismatch. Expected:", role, "Actual:", actualRole);
+                await auth.signOut();
+                setError("Unauthorized access for this role.");
+                setIsLoading(false);
+                return;
+            }
+
+            // 5. Approval Checks
+            console.log("[Login] Performing approval checks for:", actualRole);
+            if (actualRole === 'student') {
+                if (!profile?.is_admin_approved) {
+                    console.log("[Login] Student pending admin approval");
+                    router.push("/auth/pending?step=admin");
+                    setIsLoading(false);
+                    return;
+                }
+                if (!profile?.is_teacher_approved) {
+                    console.log("[Login] Student pending teacher approval");
+                    router.push("/auth/pending?step=teacher");
+                    setIsLoading(false);
+                    return;
+                }
+            }
+
+            if (actualRole === 'teacher' && !profile?.is_approved) {
+                console.log("[Login] Teacher pending approval");
                 router.push("/auth/pending?step=admin");
                 setIsLoading(false);
                 return;
             }
-            if (!profile?.is_teacher_approved) {
-                router.push("/auth/pending?step=teacher");
-                setIsLoading(false);
-                return;
-            }
+
+            console.log("[Login] All checks passed, performing hard redirect to:", actualRole);
+            window.location.href = `/${actualRole}`;
+        } catch (authError: unknown) {
+            console.error("[Login] Auth Error:", authError);
+            setError("Invalid email or password.");
+        } finally {
+            setIsLoading(false);
         }
-
-        // For Teachers, verify if they need approval too, or just simplify validation
-        // Assuming strict double approval is mostly for Students as per request.
-        // But if we added constraints to teacher, check here. 
-        // For now, proceed.
-
-        router.push(`/${actualRole}`);
-        setIsLoading(false);
     };
 
     return (
@@ -115,9 +171,27 @@ export default function LoginPage() {
 
                         <form onSubmit={handleLogin} className="space-y-4">
                             {error && (
-                                <div className="p-3 text-sm text-rose-500 bg-rose-50 border border-rose-100 rounded-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-1">
-                                    <span className="h-4 w-4 rounded-full bg-rose-100 border border-rose-200 flex items-center justify-center font-bold text-[10px]">!</span>
-                                    {error}
+                                <div className="p-3 text-sm text-rose-500 bg-rose-50 border border-rose-100 rounded-lg flex flex-col gap-2 animate-in fade-in slide-in-from-top-1">
+                                    <div className="flex items-center gap-2">
+                                        <span className="h-4 w-4 rounded-full bg-rose-100 border border-rose-200 flex items-center justify-center font-bold text-[10px]">!</span>
+                                        {error}
+                                    </div>
+                                    {showResend && (
+                                        <Button
+                                            type="button"
+                                            variant="link"
+                                            className="text-xs text-rose-600 font-bold p-0 h-auto justify-start"
+                                            onClick={handleResendEmail}
+                                        >
+                                            Didn&apos;t receive email? Click here to resend verification.
+                                        </Button>
+                                    )}
+                                </div>
+                            )}
+
+                            {resendStatus && (
+                                <div className="p-3 text-sm text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-lg animate-in fade-in">
+                                    {resendStatus}
                                 </div>
                             )}
                             <div className="space-y-2">
