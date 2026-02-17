@@ -16,6 +16,20 @@ export function getAdminAuth() {
         }
 
         // --- SUPER ROBUST PEM PARSER ---
+        // 0. Base64 Decode Check (The "Nuclear Option")
+        // If the key doesn't start with dashes, it might be Base64 encoded.
+        if (!privateKey.includes('-----BEGIN') && !privateKey.includes('-----END')) {
+            try {
+                const decoded = Buffer.from(privateKey, 'base64').toString('utf8');
+                if (decoded.includes('-----BEGIN PRIVATE KEY-----')) {
+                    console.log("Detected Base64 encoded private key. Decoding...");
+                    privateKey = decoded;
+                }
+            } catch (e) {
+                console.warn("Failed to decode potential Base64 key");
+            }
+        }
+
         // 1. Clean up surrounding quotes and whitespace
         privateKey = privateKey.trim();
         if ((privateKey.startsWith('"') && privateKey.endsWith('"')) || (privateKey.startsWith("'") && privateKey.endsWith("'"))) {
