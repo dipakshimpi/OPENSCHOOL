@@ -15,17 +15,25 @@ export function getAdminAuth() {
             throw new Error("Missing Firebase Admin environment variables");
         }
 
-        // Handle potential quoting issues from .env handling (Coolify/Docker sometimes retains them)
-        if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+        // --- SUPER ROBUST PEM PARSER ---
+        // 1. Clean up surrounding quotes and whitespace
+        privateKey = privateKey.trim();
+        if ((privateKey.startsWith('"') && privateKey.endsWith('"')) || (privateKey.startsWith("'") && privateKey.endsWith("'"))) {
             privateKey = privateKey.slice(1, -1);
         }
 
-        // Handle escaped newlines
-        if (privateKey.includes('\\n')) {
-            privateKey = privateKey.replace(/\\n/g, '\n');
+        // 2. Fix newline escaping (literal \n -> actual newline)
+        privateKey = privateKey.replace(/\\n/g, '\n');
+
+        // 3. Ensure BEGIN/END headers are present (sometimes trimming clips them)
+        if (!privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+            privateKey = '-----BEGIN PRIVATE KEY-----\n' + privateKey;
+        }
+        if (!privateKey.includes('-----END PRIVATE KEY-----')) {
+            privateKey = privateKey + '\n-----END PRIVATE KEY-----';
         }
 
-        console.log("Initializing Firebase Admin with project:", projectId);
+        console.log("Initializing Firebase Admin for project:", projectId);
 
         admin.initializeApp({
             credential: admin.credential.cert({
