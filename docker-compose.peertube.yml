@@ -1,0 +1,51 @@
+services:
+  # --- DATABASE (For PeerTube) ---
+  postgres:
+    image: postgres:13-alpine
+    environment:
+      POSTGRES_USER: peertube
+      POSTGRES_PASSWORD: peertube_secure_password_2026
+      POSTGRES_DB: peertube
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: always
+
+  # --- CACHE (For PeerTube) ---
+  redis:
+    image: redis:6-alpine
+    volumes:
+      - redisdata:/data
+    restart: always
+
+  # --- VIDEO ENGINE (PeerTube) ---
+  peertube:
+    image: chocobozzz/peertube:production-bookworm
+    environment:
+      PEERTUBE_DB_HOSTNAME: postgres
+      PEERTUBE_DB_USERNAME: peertube
+      PEERTUBE_DB_PASSWORD: peertube_secure_password_2026
+      PEERTUBE_REDIS_HOSTNAME: redis
+      PEERTUBE_WEBSERVER_HOSTNAME: 184.72.154.201
+      PEERTUBE_WEBSERVER_PORT: 9000
+      PEERTUBE_WEBSERVER_HTTPS: false
+      PEERTUBE_ADMIN_EMAIL: admin@openschool.local
+      PEERTUBE_SMTP_HOSTNAME: localhost
+      PEERTUBE_SMTP_PORT: 25
+      PEERTUBE_SMTP_FROM: noreply@openschool.local
+      PEERTUBE_SMTP_TLS: false
+      PEERTUBE_SMTP_DISABLE_STARTTLS: true
+    ports:
+      - "9000:9000"
+    volumes:
+      - peertube_data:/data
+      - peertube_config:/config
+    depends_on:
+      - postgres
+      - redis
+    restart: always
+
+volumes:
+  pgdata:
+  redisdata:
+  peertube_data:
+  peertube_config:
