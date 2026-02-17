@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -27,7 +28,7 @@ interface SidebarProps {
 interface NavigationLink {
     href: string;
     label: string;
-    icon: any; // Using any for icons is often necessary with library icons, but we can try to be more specific if needed
+    icon: React.ElementType;
 }
 
 export function Sidebar({ role }: SidebarProps) {

@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, Auth } from "firebase/auth";
 
 const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -11,7 +11,7 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase safely
-let auth: any;
+let auth: Auth;
 
 if (typeof window !== "undefined" || (firebaseConfig.apiKey && firebaseConfig.apiKey !== "undefined")) {
     const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
@@ -22,7 +22,7 @@ if (typeof window !== "undefined" || (firebaseConfig.apiKey && firebaseConfig.ap
         currentUser: null,
         onAuthStateChanged: () => () => { },
         signOut: async () => { },
-    };
+    } as unknown as Auth;
 }
 
 export { auth };
