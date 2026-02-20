@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS public.courses (
   title TEXT NOT NULL,
   description TEXT,
   thumbnail_url TEXT,
+  grade_level TEXT,
   instructor_id UUID REFERENCES public.profiles(id),
   created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT now() NOT NULL
@@ -57,10 +58,24 @@ CREATE TABLE IF NOT EXISTS public.attendance (
 -- 6. Geo-fences table
 CREATE TABLE IF NOT EXISTS public.geo_fences (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  school_id UUID,
   name TEXT NOT NULL,
   center_lat NUMERIC NOT NULL,
   center_lng NUMERIC NOT NULL,
   radius_meters INTEGER DEFAULT 100,
+  created_at TIMESTAMPTZ DEFAULT now() NOT NULL
+);
+
+-- 7. Videos table (PeerTube Integration)
+CREATE TABLE IF NOT EXISTS public.videos (
+  id TEXT PRIMARY KEY, -- PeerTube shortUUID
+  title TEXT NOT NULL,
+  description TEXT,
+  peertube_url TEXT NOT NULL,
+  thumbnail_url TEXT,
+  duration INTEGER DEFAULT 0,
+  course_id UUID REFERENCES public.courses(id) ON DELETE CASCADE,
+  teacher_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
@@ -70,6 +85,7 @@ ALTER TABLE public.courses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.enrollments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.attendance ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.geo_fences ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.videos ENABLE ROW LEVEL SECURITY;
 
 -- 8. SIMPLE RLS POLICIES (Demo-ready)
 
@@ -102,6 +118,18 @@ DROP POLICY IF EXISTS "Instructors can update their own courses" ON public.cours
 CREATE POLICY "Instructors can update their own courses" ON public.courses
   FOR UPDATE USING (
     instructor_id = auth.uid() OR 
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+  );
+
+-- Videos: Viewable by anyone (demo/marketing), Manage by instructor/admin
+DROP POLICY IF EXISTS "Videos are viewable by everyone" ON public.videos;
+CREATE POLICY "Videos are viewable by everyone" ON public.videos
+  FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Instructors can manage their own videos" ON public.videos;
+CREATE POLICY "Instructors can manage their own videos" ON public.videos
+  FOR ALL USING (
+    teacher_id = auth.uid() OR 
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
@@ -168,3 +196,18 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+
+-- Keycloak Support
+CREATE TABLE IF NOT EXISTS public.allowed_emails (
+  email TEXT PRIMARY KEY,
+  role user_role DEFAULT 'student'::user_role,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.app_settings (
+  key TEXT PRIMARY KEY,
+  value JSONB,
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
