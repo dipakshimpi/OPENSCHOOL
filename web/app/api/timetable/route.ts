@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { verifySession } from "@/lib/auth-utils";
 
 export async function GET(request: Request) {
     try {
@@ -33,16 +34,16 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const session = await verifySession();
+        if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const supabase = await createClient();
 
         // Check Admin
         const { data: profile } = await supabase
             .from('profiles')
             .select('role')
-            .eq('id', user.id)
+            .eq('id', session.uid)
             .single();
 
         if (profile?.role !== 'admin') {
@@ -59,6 +60,7 @@ export async function POST(request: Request) {
 
         // Upsert based on unique constraint (class, section, day, period)
         // We first check if one exists to handle conflicts or use upsert if we defined the constraint right
+        // Upsert based on the unique_class_slot constraint
         const { data, error } = await supabase
             .from('timetables')
             .upsert({
@@ -71,16 +73,35 @@ export async function POST(request: Request) {
                 start_time,
                 end_time
             }, {
-                onConflict: 'class_grade, section, day_of_week, period_number'
-                // Note: onConflict requires the exact constraint name or column list. 
-                // In my migration I defined: unique_class_slot UNIQUE (class_grade, section, day_of_week, period_number)
+                onConflict: 'class_grade,section,day_of_week,period_number' // Removing spaces for strict match
             })
             .select();
 
-        if (error) throw error;
+        if (error) {
+            console.error("❌ SUPABASE_UPSERT_ERROR:", error);
+
+            // Check for teacher double-booking (23505 is Unique Violation)
+            if (error.code === '23505' && error.message.includes('unique_teacher_slot')) {
+                return NextResponse.json({
+                    error: "Teacher Busy",
+                    details: "This teacher is already assigned to another class during this period."
+                }, { status: 409 });
+            }
+
+            return NextResponse.json({
+                error: "Database Conflict",
+                details: error.message,
+                code: error.code
+            }, { status: 409 });
+        }
+
         return NextResponse.json(data[0]);
-    } catch (error) {
-        console.error("UPDATE_TIMETABLE_ERROR:", error);
-        return NextResponse.json({ error: "Failed to update timetable" }, { status: 500 });
+    } catch (error: unknown) {
+        const err = error as Error;
+        console.error("UPDATE_TIMETABLE_ERROR:", err);
+        return NextResponse.json({
+            error: "Failed to update timetable",
+            details: err.message
+        }, { status: 500 });
     }
 }

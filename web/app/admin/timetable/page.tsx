@@ -123,11 +123,13 @@ export default function AdminTimetablePage() {
                 setIsEditOpen(false);
                 fetchTimetable();
             } else {
-                alert("Failed to save slot. Check for conflicts or missing fields.");
+                const errData = await res.json();
+                alert(`Failed to save slot: ${errData.error || "Unknown Error"}. ${errData.details || ""}`);
             }
-        } catch (err) {
-            console.error(err);
-            alert("Error saving slot");
+        } catch (err: unknown) {
+            const error = err as Error;
+            console.error(error);
+            alert("Error saving slot: " + (error.message || "Network Error"));
         }
     }
 

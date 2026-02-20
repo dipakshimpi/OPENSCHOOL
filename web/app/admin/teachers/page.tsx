@@ -17,7 +17,8 @@ import {
     EnvelopeIcon,
     CheckBadgeIcon,
     ExclamationTriangleIcon,
-    TrashIcon
+    TrashIcon,
+    ArrowPathIcon
 } from "@heroicons/react/24/outline";
 import { useState, useEffect, useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -196,8 +197,8 @@ export default function AdminTeachersPage() {
                                             onClick={() => handleApprove(teacher.id, teacher.is_approved)}
                                             disabled={processingId === teacher.id}
                                             className={`col-span-3 h-12 rounded-2xl font-black uppercase text-[11px] tracking-widest transition-all ${teacher.is_approved
-                                                    ? 'bg-slate-100 text-slate-600 hover:bg-rose-600 hover:text-white dark:bg-slate-800 dark:text-slate-400'
-                                                    : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-100 dark:shadow-none'
+                                                ? 'bg-slate-100 text-slate-600 hover:bg-rose-600 hover:text-white dark:bg-slate-800 dark:text-slate-400'
+                                                : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-100 dark:shadow-none'
                                                 }`}
                                         >
                                             {processingId === teacher.id ? <ArrowPathIcon className="w-4 h-4 animate-spin" /> :

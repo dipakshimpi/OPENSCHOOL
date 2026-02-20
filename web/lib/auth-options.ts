@@ -2,18 +2,22 @@ import { NextAuthOptions, DefaultSession } from "next-auth";
 import KeycloakProvider from "next-auth/providers/keycloak";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { jwtDecode } from "jwt-decode";
+import { createSupabaseToken } from "./supabase-token";
+import { createClient } from "@supabase/supabase-js";
 
 declare module "next-auth" {
     interface Session extends DefaultSession {
         user: {
             id: string;
-        } & DefaultSession["user"]
+            role?: string;
+        } & DefaultSession["user"];
+        supabaseAccessToken?: string;
     }
 }
 
 export const authOptions: NextAuthOptions = {
     providers: [
-        // 1. Google Login (Headless - we still use redirect but with direct IDP hint)
+        // 1. Google Login (Headless)
         KeycloakProvider({
             id: "keycloak-google",
             name: "Google",
@@ -27,7 +31,7 @@ export const authOptions: NextAuthOptions = {
                 }
             }
         }),
-        // 2. Custom Email/Password Login (Stay in OpenSchool UI)
+        // 2. Custom Email/Password Login
         CredentialsProvider({
             id: "credentials",
             name: "Email and Password",
@@ -39,7 +43,6 @@ export const authOptions: NextAuthOptions = {
                 if (!credentials?.email || !credentials?.password) return null;
 
                 try {
-                    // Talk directly to Keycloak's token endpoint
                     const tokenURL = `${process.env.KEYCLOAK_ISSUER}/protocol/openid-connect/token`;
                     const response = await fetch(tokenURL, {
                         method: 'POST',
@@ -65,9 +68,6 @@ export const authOptions: NextAuthOptions = {
                     }
 
                     const data = await response.json();
-                    console.log("✅ Keycloak Login Success for:", credentials.email);
-
-                    // Decode the access token to get user info
                     const decoded: any = jwtDecode(data.access_token);
 
                     return {
@@ -83,10 +83,33 @@ export const authOptions: NextAuthOptions = {
         })
     ],
     callbacks: {
-        async jwt({ token, user, account }) {
+        async jwt({ token, user }) {
             if (user) {
                 token.id = user.id;
                 token.email = user.email;
+
+                // 🏢 Fetch user role from Supabase to bake it into the JWT
+                try {
+                    const supabase = createClient(
+                        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                        process.env.SUPABASE_SERVICE_ROLE_KEY!
+                    );
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('role')
+                        .eq('id', user.id)
+                        .single();
+
+                    token.role = profile?.role || 'student';
+                } catch (e) {
+                    token.role = 'student';
+                }
+
+                // 🛡️ Sign the Supabase JWT
+                const supabaseToken = await createSupabaseToken(user.id, token.role as string);
+                if (supabaseToken) {
+                    token.supabaseAccessToken = supabaseToken;
+                }
             }
             return token;
         },
@@ -94,6 +117,8 @@ export const authOptions: NextAuthOptions = {
             if (token && session.user) {
                 session.user.id = token.id as string;
                 session.user.email = token.email as string;
+                session.user.role = token.role as string;
+                session.supabaseAccessToken = token.supabaseAccessToken as string;
             }
             return session;
         },
