@@ -31,33 +31,73 @@ interface Course {
 }
 
 import { authedFetch } from "@/lib/api";
+import { useSession } from "next-auth/react";
 
 export default function TeacherDashboard() {
+    const { status } = useSession();
     const [data, setData] = useState<TeacherStats | null>(null);
     const [courses, setCourses] = useState<Course[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        async function fetchData() {
-            try {
-                const [statsRes, coursesRes] = await Promise.all([
-                    authedFetch("/api/stats"),
-                    authedFetch("/api/courses")
-                ]);
-
-                if (statsRes.ok) setData(await statsRes.json());
-                if (coursesRes.ok) setCourses(await coursesRes.json());
-            } catch (error) {
-                console.error("Dashboard fetch error:", error);
-            } finally {
-                setLoading(false);
-            }
+        if (status === "unauthenticated") {
+            setError("Authentication required.");
+            setLoading(false);
+            return;
         }
-        fetchData();
-    }, []);
+
+        if (status === "authenticated") {
+            fetchData();
+        }
+    }, [status]);
+
+    async function fetchData() {
+        setLoading(true);
+        setError(null);
+        try {
+            const [statsRes, coursesRes] = await Promise.all([
+                authedFetch("/api/stats"),
+                authedFetch("/api/courses")
+            ]);
+
+            if (statsRes.ok) {
+                setData(await statsRes.json());
+            } else {
+                console.error("Stats fetch failed");
+            }
+
+            if (coursesRes.ok) {
+                setCourses(await coursesRes.json());
+            } else {
+                console.error("Courses fetch failed");
+            }
+        } catch (error) {
+            console.error("Dashboard fetch error:", error);
+            setError("Failed to load dashboard data.");
+        } finally {
+            setLoading(false);
+        }
+    }
 
     const stats = data?.stats || { activeCourses: 0, totalStudents: 0, attendanceRate: 100 };
 
+    if (error) {
+        return (
+            <DashboardLayout role="teacher" title="Error">
+                <Card className="border-rose-200 bg-rose-50 p-8 text-center">
+                    <p className="text-rose-600 font-bold">{error}</p>
+                    <Button
+                        variant="outline"
+                        className="mt-4 border-rose-200 text-rose-600 hover:bg-rose-100"
+                        onClick={() => window.location.reload()}
+                    >
+                        Retry Loading
+                    </Button>
+                </Card>
+            </DashboardLayout>
+        );
+    }
     return (
         <DashboardLayout role="teacher" title="Teacher Workspace">
             {/* Welcome Section */}

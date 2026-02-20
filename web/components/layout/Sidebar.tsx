@@ -19,7 +19,7 @@ import {
     TableCellsIcon,
     UserPlusIcon
 } from "@heroicons/react/24/outline";
-import { auth } from "@/lib/firebase/client";
+import { signOut } from "next-auth/react";
 
 interface SidebarProps {
     role: "admin" | "teacher" | "student";
@@ -45,6 +45,7 @@ export function Sidebar({ role }: SidebarProps) {
             { href: "/admin/timetable", label: "Timetable", icon: TableCellsIcon },
             { href: "/admin/announcements", label: "Notices", icon: MegaphoneIcon },
             { href: "/admin/settings", label: "Settings", icon: Cog6ToothIcon },
+            { href: "/admin/profile", label: "My Profile", icon: UserCircleIcon },
         ],
         teacher: [
             { href: "/teacher", label: "Dashboard", icon: HomeIcon },
@@ -102,8 +103,7 @@ export function Sidebar({ role }: SidebarProps) {
             <div className="p-4 border-t border-white/5 bg-slate-950/30">
                 <div
                     onClick={async () => {
-                        await auth.signOut();
-                        window.location.href = "/auth/login";
+                        await signOut({ callbackUrl: "/auth/login" });
                     }}
                     className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-400 hover:text-white cursor-pointer hover:bg-white/5 rounded-lg transition-colors"
                 >

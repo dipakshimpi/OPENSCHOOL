@@ -41,31 +41,45 @@ interface DashboardData {
 }
 
 import { authedFetch } from "@/lib/api";
+import { useSession } from "next-auth/react";
 
 export default function StudentDashboard() {
+    const { status } = useSession();
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        async function fetchStats() {
-            try {
-                const res = await authedFetch("/api/stats");
-                if (!res.ok) {
-                    throw new Error(`Failed to fetch stats: ${res.statusText}`);
-                }
-                const json = await res.json();
-                setData(json);
-            } catch (err) {
-                const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
-                console.error("Stats fetch error:", errorMessage);
-                setError(errorMessage);
-            } finally {
-                setLoading(false);
-            }
+        if (status === "unauthenticated") {
+            setError("Authentication required.");
+            setLoading(false);
+            return;
         }
-        fetchStats();
-    }, []);
+
+        if (status === "authenticated") {
+            fetchStats();
+        }
+    }, [status]);
+
+    async function fetchStats() {
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await authedFetch("/api/stats");
+            if (!res.ok) {
+                const errJson = await res.json().catch(() => ({}));
+                throw new Error(errJson.error || `Failed to fetch stats: ${res.statusText}`);
+            }
+            const json = await res.json();
+            setData(json);
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
+            console.error("Stats fetch error:", errorMessage);
+            setError(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    }
 
     const courses = data?.enrolledCourses || [];
     const stats = data?.stats || { enrolledCount: 0, avgProgress: 0, attendanceRate: 100 };

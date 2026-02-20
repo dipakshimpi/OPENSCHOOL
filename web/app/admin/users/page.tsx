@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/common/PageHeader";
-import { Users, CheckCircle, Clock, Loader2 } from "lucide-react";
+import { Users, Loader2, Trash2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { authedFetch } from "@/lib/api";
+import { useSession } from "next-auth/react";
 
 interface User {
   id: string;
@@ -21,46 +23,30 @@ interface User {
   created_at: string;
 }
 
-import { authedFetch } from "@/lib/api";
-import { auth } from "@/lib/firebase/client";
-import { onAuthStateChanged } from "firebase/auth";
-
 export default function AdminUsersPage() {
+  const { status } = useSession();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [adminSchoolId, setAdminSchoolId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        fetchUsers();
-        fetchAdminProfile();
-      } else {
-        setLoading(false);
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  const fetchAdminProfile = async () => {
+  const fetchAdminProfile = useCallback(async () => {
     try {
       const res = await authedFetch("/api/profile");
-      const data = await res.json();
       if (res.ok) {
+        const data = await res.json();
         setAdminSchoolId(data.school_id);
       }
     } catch (error) {
       console.error("Failed to fetch admin profile", error);
     }
-  };
+  }, []);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const res = await authedFetch("/api/admin/users");
-      const data = await res.json();
       if (res.ok) {
+        const data = await res.json();
         const userList = Array.isArray(data) ? data : (data.users || []);
         setUsers(userList);
       }
@@ -69,7 +55,16 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetchUsers();
+      fetchAdminProfile();
+    } else if (status === "unauthenticated") {
+      setLoading(false);
+    }
+  }, [status, fetchUsers, fetchAdminProfile]);
 
   const handleApprove = async (userId: string, currentStatus: boolean) => {
     setProcessingId(userId);
@@ -84,7 +79,7 @@ export default function AdminUsersPage() {
       });
 
       if (res.ok) {
-        setUsers(users.map(u =>
+        setUsers(prev => prev.map(u =>
           u.id === userId ? {
             ...u,
             is_approved: !currentStatus,
@@ -104,7 +99,7 @@ export default function AdminUsersPage() {
 
   const handleClaim = async (userId: string) => {
     if (!adminSchoolId) {
-      alert("Please configure your school boundary in Settings first to generate a school ID.");
+      alert("Please configure your school ID in Settings first.");
       return;
     }
 
@@ -120,7 +115,7 @@ export default function AdminUsersPage() {
       });
 
       if (res.ok) {
-        setUsers(users.map(u =>
+        setUsers(prev => prev.map(u =>
           u.id === userId ? { ...u, school_id: adminSchoolId } : u
         ));
       } else {
@@ -133,12 +128,34 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleDelete = async (userId: string) => {
+    if (!confirm("Are you sure you want to delete this user profile? This action cannot be undone.")) return;
+
+    setProcessingId(userId);
+    try {
+      const res = await authedFetch(`/api/admin/users?id=${userId}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        setUsers(prev => prev.filter(u => u.id !== userId));
+      } else {
+        const err = await res.json();
+        alert("Failed to delete user: " + (err.error || "Unknown error"));
+      }
+    } catch (error) {
+      console.error("Delete failed", error);
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   return (
     <DashboardLayout title="User Management" role="admin">
       <div className="space-y-6">
         <PageHeader
           title="All Users"
-          description="Manage teacher approvals and student accounts."
+          description="Manage teacher approvals and student accounts across the platform."
         />
 
         <Card className="border-none shadow-xl bg-white/80 backdrop-blur-md">
@@ -151,112 +168,114 @@ export default function AdminUsersPage() {
 
           <CardContent className="p-0">
             {loading ? (
-              <div className="p-8 flex justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+              <div className="p-12 flex flex-col items-center justify-center gap-4">
+                <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
+                <p className="text-sm font-medium text-slate-500">Scanning platform registry...</p>
               </div>
             ) : users.length > 0 ? (
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50/50">
-                    <TableHead className="font-bold text-slate-900">Name</TableHead>
+                    <TableHead className="font-bold text-slate-900">User Identification</TableHead>
                     <TableHead className="font-bold text-slate-900">Role</TableHead>
-                    <TableHead className="font-bold text-slate-900">Assignment</TableHead>
+                    <TableHead className="font-bold text-slate-900">School Scope</TableHead>
                     <TableHead className="font-bold text-slate-900">Status</TableHead>
-                    <TableHead className="font-bold text-slate-900">Joined</TableHead>
-                    <TableHead className="text-right font-bold text-slate-900">Actions</TableHead>
+                    <TableHead className="font-bold text-slate-900">Access date</TableHead>
+                    <TableHead className="text-right font-bold text-slate-900">Management</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {users.map((user) => (
                     <TableRow key={user.id} className="hover:bg-slate-50 transition-colors">
                       <TableCell>
-                        <div>
-                          <p className="font-bold text-slate-900">{user.full_name || "Unknown Name"}</p>
-                          <p className="text-xs text-slate-500">{user.email}</p>
+                        <div className="flex flex-col">
+                          <span className="font-bold text-slate-900 leading-tight">{user.full_name || "New Registry"}</span>
+                          <span className="text-xs text-slate-500 font-mono mt-0.5">{user.email}</span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={`uppercase text-[10px] tracking-widest ${user.role === 'teacher' ? 'bg-purple-50 text-purple-600 border-purple-200' :
-                          user.role === 'admin' ? 'bg-slate-100 text-slate-600 border-slate-200' :
-                            'bg-emerald-50 text-emerald-600 border-emerald-200'
+                        <Badge variant="outline" className={`uppercase text-[10px] font-black tracking-[0.1em] px-2 py-0.5 ${user.role === 'teacher' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                          user.role === 'admin' ? 'bg-slate-100 text-slate-700 border-slate-200' :
+                            'bg-emerald-50 text-emerald-700 border-emerald-200'
                           }`}>
                           {user.role}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         {user.school_id === adminSchoolId ? (
-                          <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 border-indigo-100 text-[10px]">
-                            My School
+                          <Badge className="bg-indigo-600 text-white border-none text-[9px] font-bold uppercase tracking-wider">
+                            Verified Branch
                           </Badge>
                         ) : user.school_id ? (
-                          <div className="text-[10px] text-slate-400 italic">
-                            Other School ({user.school_id.substring(0, 8)}...)
+                          <div className="text-[10px] text-slate-400 font-medium italic">
+                            Org Reference: {user.school_id.substring(0, 8)}...
                           </div>
                         ) : (
-                          <Badge variant="outline" className="text-amber-600 border-amber-200 text-[10px]">
-                            No School
+                          <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50 text-[9px] font-bold uppercase tracking-wider">
+                            Unassigned
                           </Badge>
                         )}
                       </TableCell>
                       <TableCell>
                         {(user.role === 'student' ? (user.is_admin_approved && user.is_teacher_approved) : user.is_approved) ? (
-                          <div className="flex items-center text-emerald-600 text-xs font-bold gap-1">
-                            <CheckCircle className="w-4 h-4" /> Approved
+                          <div className="flex items-center text-emerald-600 text-[10px] font-black uppercase tracking-widest gap-1.5">
+                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> ACTIVE
                           </div>
                         ) : (
-                          <div className="flex items-center text-amber-500 text-xs font-bold gap-1">
-                            <Clock className="w-4 h-4" /> Pending
+                          <div className="flex items-center text-amber-500 text-[10px] font-black uppercase tracking-widest gap-1.5">
+                            <div className="w-2 h-2 rounded-full bg-amber-400" /> PENDING
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="text-slate-500 text-xs">
+                      <TableCell className="text-slate-500 text-[10px] font-bold">
                         {new Date(user.created_at).toLocaleDateString()}
                       </TableCell>
-                      <TableCell className="text-right flex items-center justify-end gap-2">
-                        {user.role !== 'admin' && (
-                          <>
-                            {user.school_id !== adminSchoolId && (
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {user.role !== 'admin' && (
+                            <>
+                              {user.school_id !== adminSchoolId && (
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  className="h-7 px-2.5 text-[10px] font-black tracking-tighter uppercase transition-all"
+                                  onClick={() => handleClaim(user.id)}
+                                  disabled={processingId === user.id}
+                                >
+                                  Claim
+                                </Button>
+                              )}
                               <Button
                                 size="sm"
-                                variant="secondary"
-                                className="h-8 px-3 text-[10px] font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-none"
-                                onClick={() => handleClaim(user.id)}
+                                variant={user.is_approved ? "outline" : "default"}
+                                className={`h-7 px-3 text-[10px] font-black tracking-tighter uppercase transition-all ${user.is_approved
+                                  ? "text-rose-600 hover:text-white hover:bg-rose-600 border-rose-200"
+                                  : "bg-emerald-600 hover:bg-emerald-700 text-white"}`}
+                                onClick={() => handleApprove(user.id, user.is_approved)}
                                 disabled={processingId === user.id}
                               >
-                                {processingId === user.id ? (
-                                  <Loader2 className="w-3 h-3 animate-spin" />
-                                ) : (
-                                  "Claim"
-                                )}
+                                {user.is_approved ? "Revoke" : "Approve"}
                               </Button>
-                            )}
-                            <Button
-                              size="sm"
-                              variant={user.is_approved ? "outline" : "default"}
-                              className={`h-8 px-3 text-[10px] font-bold ${user.is_approved
-                                ? "text-rose-600 hover:text-rose-700 border-rose-200 hover:bg-rose-50"
-                                : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-md border-none"}`}
-                              onClick={() => handleApprove(user.id, user.is_approved)}
-                              disabled={processingId === user.id}
-                            >
-                              {processingId === user.id ? (
-                                <Loader2 className="w-3 h-3 animate-spin" />
-                              ) : user.is_approved ? (
-                                "Revoke"
-                              ) : (
-                                "Approve"
-                              )}
-                            </Button>
-                          </>
-                        )}
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 px-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                                onClick={() => handleDelete(user.id)}
+                                disabled={processingId === user.id}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             ) : (
-              <div className="p-12 text-center text-slate-500">
-                No users found.
+              <div className="p-20 text-center text-slate-400 italic">
+                No users found in the system registry.
               </div>
             )}
           </CardContent>

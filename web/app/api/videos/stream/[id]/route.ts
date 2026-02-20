@@ -9,12 +9,13 @@ export async function GET(
     try {
         const { id } = await params;
 
-        // 1. Check Firebase session
+        // 1. Check Keycloak session via NextAuth
         const session = await verifySession();
         if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const adminClient = createAdminClient();
 
+        // 2. Fetch user profile
         const { data: profile } = await adminClient
             .from('profiles')
             .select('is_approved, role')
@@ -25,22 +26,43 @@ export async function GET(
             return NextResponse.json({ error: "Account pending approval" }, { status: 403 });
         }
 
-        // 2. Fetch video metadata
-        // We use adminClient to bypass RLS since we've already verified the session
+        // 3. Fetch video metadata (includes course_id and teacher_id for access check)
         const { data: video, error } = await adminClient
             .from('videos')
-            .select('peertube_url, title')
+            .select('peertube_url, title, course_id, teacher_id')
             .eq('id', id)
             .single();
 
         if (error || !video) {
-            return NextResponse.json({ error: "Video not found or access denied" }, { status: 404 });
+            return NextResponse.json({ error: "Video not found" }, { status: 404 });
         }
 
-        // 3. Security Layer: Return a "Clean" URL for embedding
-        // Convert watch URL (http://127.0.0.1:9000/w/ID) to embed URL
-        // PeerTube embed format: http://127.0.0.1:9000/videos/embed/ID
+        // 4. 🔒 CRITICAL: Enrollment-based access control
+        // Allow access if:
+        //   a) User is admin
+        //   b) User is the teacher who uploaded this video
+        //   c) User is enrolled in the video's course
+        const isAdmin = profile.role === 'admin';
+        const isTeacher = video.teacher_id === session.uid;
 
+        if (!isAdmin && !isTeacher) {
+            // Check enrollment
+            const { data: enrollment } = await adminClient
+                .from('enrollments')
+                .select('id')
+                .eq('student_id', session.uid)
+                .eq('course_id', video.course_id)
+                .single();
+
+            if (!enrollment) {
+                console.warn(`🚫 Access denied: User ${session.uid} not enrolled in course ${video.course_id} for video ${id}`);
+                return NextResponse.json({ error: "Access denied. You must be enrolled in this course to watch this video." }, { status: 403 });
+            }
+        }
+
+        // 5. Security Layer: Convert stored URL to embed URL
+        // The raw PeerTube URL is NEVER returned to the client
+        // Convert watch URL (http://host/w/ID) to embed URL (http://host/videos/embed/ID)
         const videoIdMatch = video.peertube_url.match(/\/w\/([a-zA-Z0-9_-]+)/);
         if (!videoIdMatch) {
             return NextResponse.json({ error: "Invalid PeerTube URL format" }, { status: 500 });
@@ -48,9 +70,7 @@ export async function GET(
 
         const peertubeId = videoIdMatch[1];
 
-        // Use the public PeerTube URL from environment if available, 
-        // this fixes issues where the stored URL has a wrong port (e.g. 9001) 
-        // or uses an internal Docker hostname (e.g. http://peertube:9000)
+        // Use the public PeerTube URL from environment if available
         const peertubeBaseUrl = process.env.NEXT_PUBLIC_PEERTUBE_URL ?
             process.env.NEXT_PUBLIC_PEERTUBE_URL.replace(/\/$/, "") :
             video.peertube_url.split('/w/')[0].replace(/\/$/, "");
@@ -67,7 +87,6 @@ export async function GET(
         console.error("❌ VIDEO_PROXY_ERROR:", {
             message: error instanceof Error ? error.message : String(error),
             stack: error instanceof Error ? error.stack : undefined,
-            id: (await params).id
         });
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }

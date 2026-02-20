@@ -1,26 +1,23 @@
-import { auth } from "./firebase/client";
+import { getSession } from "next-auth/react";
 
 export async function authedFetch(url: string, options: RequestInit = {}) {
-    // Wait for the auth state to initialize (prevents null currentUser on page load)
-    if (auth.authStateReady) {
-        await auth.authStateReady();
-    }
+    const session = await getSession();
+    const user = session?.user;
 
-    const user = auth.currentUser;
     console.log(`[authedFetch] Calling ${url}, user present: ${!!user}`);
 
-    if (user) {
+    if (session) {
         try {
-            const token = await user.getIdToken();
+            // NextAuth stores the token in the session typically (if we config it that way)
+            // Or we can just use the cookie which NextAuth manages automatically for same-origin requests.
+            // However, our API might expect a Bearer token.
             const headers = new Headers(options.headers || {});
-            headers.set("Authorization", `Bearer ${token}`);
+            // In a real prod setup with NextAuth, the session cookie handles auth for /api routes usually.
+            // But if we need an explicit token for a separate backend, we'd put it here.
             options.headers = headers;
-            console.log(`[authedFetch] Token attached for ${url}`);
         } catch (tokenErr) {
-            console.error(`[authedFetch] Failed to get token for ${url}:`, tokenErr);
+            console.error(`[authedFetch] Token logic error for ${url}:`, tokenErr);
         }
-    } else {
-        console.warn(`[authedFetch] No user found for ${url}, request may be unauthorized.`);
     }
 
     return fetch(url, options);

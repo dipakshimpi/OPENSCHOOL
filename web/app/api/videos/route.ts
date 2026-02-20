@@ -9,11 +9,57 @@ export async function GET(request: Request) {
 
         const adminClient = createAdminClient();
 
-        // 1. Fetch videos (without join first for stability)
+        // 1. Check auth session
+        const session = await verifySession();
+        if (!session) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        // 2. Get user profile to determine role
+        const { data: profile } = await adminClient
+            .from('profiles')
+            .select('role')
+            .eq('id', session.uid)
+            .single();
+
+        const userRole = profile?.role || 'student';
+
+        // 3. Build video query based on role
         let query = adminClient.from('videos').select('*');
         if (courseId) {
             query = query.eq('course_id', courseId);
         }
+
+        // 🔒 For students: only show videos from enrolled courses
+        if (userRole === 'student') {
+            // First get enrolled course IDs
+            const { data: enrollments } = await adminClient
+                .from('enrollments')
+                .select('course_id')
+                .eq('student_id', session.uid);
+
+            const enrolledCourseIds = enrollments?.map(e => e.course_id) || [];
+
+            if (enrolledCourseIds.length === 0) {
+                return NextResponse.json([]); // No enrollments = no videos
+            }
+
+            // Filter videos to only enrolled courses
+            if (courseId) {
+                // Already filtering by courseId, verify enrollment
+                if (!enrolledCourseIds.includes(courseId)) {
+                    return NextResponse.json([]); // Not enrolled in this course
+                }
+            } else {
+                query = query.in('course_id', enrolledCourseIds);
+            }
+        }
+
+        // 🔒 For teachers: only show their own videos
+        if (userRole === 'teacher') {
+            query = query.eq('teacher_id', session.uid);
+        }
+        // Admins: see all videos (no filter)
 
         const { data: videos, error: videosError } = await query.order('created_at', { ascending: false });
 
@@ -26,7 +72,7 @@ export async function GET(request: Request) {
             return NextResponse.json([]);
         }
 
-        // 2. Fetch courses separately to merge metadata (Robust Join)
+        // 4. Fetch courses separately to merge metadata (Robust Join)
         const uniqueCourseIds = [...new Set(videos.map(v => v.course_id).filter(Boolean))];
         const { data: coursesData, error: coursesError } = await adminClient
             .from('courses')
@@ -40,10 +86,18 @@ export async function GET(request: Request) {
             });
         }
 
-        // 3. Merge data
+        // 5. Merge data — IMPORTANT: strip peertube_url from response (security)
         const transformedVideos = videos.map(v => ({
-            ...v,
+            id: v.id,
+            title: v.title,
+            description: v.description,
+            thumbnail_url: v.thumbnail_url,
+            duration: v.duration,
+            course_id: v.course_id,
+            teacher_id: v.teacher_id,
+            created_at: v.created_at,
             courses: { title: courseMap[v.course_id] || "Unknown Course" }
+            // ⛔ peertube_url is intentionally NOT included here
         }));
 
         return NextResponse.json(transformedVideos);
@@ -55,7 +109,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     try {
-        // Use Firebase authentication (same pattern as /api/courses)
+        // Use Keycloak authentication (same pattern as /api/courses)
         const session = await verifySession();
 
         console.log("🔐 Auth check:", {

@@ -26,7 +26,6 @@ interface Course {
 interface Video {
     id: string;
     title: string;
-    peertube_url: string;
     course_id: string;
     thumbnail_url: string | null;
     duration: number;
@@ -48,7 +47,7 @@ export default function StudentVideosPage() {
                 if (statsData) {
                     const enrolledCourses = statsData.enrolledCourses || [];
                     const enrolled = Array.isArray(enrolledCourses)
-                        ? enrolledCourses.map((e: any) => e.courses).filter(Boolean)
+                        ? enrolledCourses.map((e: { courses: Course }) => e.courses).filter(Boolean)
                         : [];
                     setCourses(enrolled);
                     console.log(`[StudentVideos] Found ${enrolled.length} enrolled courses`);

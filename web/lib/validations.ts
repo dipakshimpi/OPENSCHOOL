@@ -5,7 +5,7 @@ export const profileSchema = z.object({
     phone_number: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format").optional().nullable(),
     bio: z.string().max(500, "Bio too long").optional().nullable(),
     department: z.string().max(50, "Department name too long").optional().nullable(),
-    grade: z.string().max(20, "Grade too long").optional().nullable(),
+    grade_level: z.string().max(20, "Grade too long").optional().nullable(),
     address: z.string().max(200, "Address too long").optional().nullable(),
     avatar_url: z.string().url("Invalid image URL").optional().nullable().or(z.literal("")),
 });

@@ -1,59 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AcademicCapIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
-import { supabaseClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
+import { AcademicCapIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
+import Link from "next/link";
 
+/**
+ * Reset Password page — No longer needed since Keycloak handles password resets.
+ * This page is kept as a friendly redirect.
+ */
 export default function ResetPasswordPage() {
-    const router = useRouter();
-    const [isLoading, setIsLoading] = useState(false);
-    const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [isSuccess, setIsSuccess] = useState(false);
-
-    const handleReset = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (password !== confirmPassword) {
-            alert("Passwords do not match");
-            return;
-        }
-
-        setIsLoading(true);
-
-        const { error } = await supabaseClient.auth.updateUser({
-            password: password
-        });
-
-        if (error) {
-            alert(error.message);
-            setIsLoading(false);
-            return;
-        }
-
-        setIsSuccess(true);
-        setTimeout(() => {
-            router.push("/auth/login");
-        }, 2000);
-    };
-
-    if (isSuccess) {
-        return (
-            <div className="w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 p-4">
-                <Card className="w-full max-w-md z-10 shadow-xl border-white/40 bg-white/80 backdrop-blur-xl dark:bg-slate-900/80 dark:border-slate-800 p-8 text-center">
-                    <ShieldCheckIcon className="w-16 h-16 text-emerald-500 mx-auto mb-4 animate-bounce" />
-                    <h2 className="text-2xl font-bold mb-2">Password Updated!</h2>
-                    <p className="text-slate-500">Redirecting you to login...</p>
-                </Card>
-            </div>
-        );
-    }
-
     return (
         <div className="w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 p-4">
             <Card className="w-full max-w-md z-10 shadow-xl border-white/40 bg-white/80 backdrop-blur-xl dark:bg-slate-900/80 dark:border-slate-800">
@@ -62,42 +18,32 @@ export default function ResetPasswordPage() {
                         <AcademicCapIcon className="w-7 h-7 text-primary" />
                     </div>
                     <CardTitle className="text-2xl font-bold tracking-tight">
-                        New Password
+                        Password Reset
                     </CardTitle>
                     <CardDescription>
-                        Please enter your new password below.
+                        Password resets are now handled through our secure identity provider (Keycloak).
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <form onSubmit={handleReset} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="password">New Password</Label>
-                            <Input
-                                id="password"
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="••••••••"
-                                required
-                                className="bg-white/50 dark:bg-slate-950/50"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                            <Input
-                                id="confirmPassword"
-                                type="password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                placeholder="••••••••"
-                                required
-                                className="bg-white/50 dark:bg-slate-950/50"
-                            />
-                        </div>
-                        <Button type="submit" className="w-full bg-primary hover:bg-primary/90 shadow-lg mt-2" disabled={isLoading}>
-                            {isLoading ? "Updating password..." : "Reset Password"}
+                <CardContent className="space-y-4">
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-4 border border-emerald-100 dark:border-emerald-800">
+                        <p className="text-sm text-emerald-700 dark:text-emerald-300 leading-relaxed">
+                            To reset your password, use the &quot;Forgot Password?&quot; link on the login page.
+                            You&apos;ll receive an email with instructions to set a new password.
+                        </p>
+                    </div>
+
+                    <Link href="/auth/login">
+                        <Button className="w-full bg-primary hover:bg-primary/90 shadow-lg h-11">
+                            Go to Login
                         </Button>
-                    </form>
+                    </Link>
+
+                    <div className="flex justify-center pt-2">
+                        <Link href="/auth/forgot-password" className="flex items-center gap-2 text-sm text-slate-500 hover:text-primary transition-colors">
+                            <ArrowLeftIcon className="w-4 h-4" />
+                            Reset password
+                        </Link>
+                    </div>
                 </CardContent>
             </Card>
         </div>

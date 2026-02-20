@@ -126,3 +126,40 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
     }
 }
+
+export async function DELETE(request: Request) {
+    try {
+        const session = await verifySession();
+        if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+        const supabaseAdmin = getSupabaseAdmin();
+
+        // Check if the verified user is an admin
+        const { data: adminProfile } = await supabaseAdmin
+            .from('profiles')
+            .select('role')
+            .eq('id', session.uid)
+            .single();
+
+        if (adminProfile?.role !== 'admin') {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
+        const { searchParams } = new URL(request.url);
+        const id = searchParams.get('id');
+
+        if (!id) return NextResponse.json({ error: "Missing user ID" }, { status: 400 });
+
+        const { error } = await supabaseAdmin
+            .from('profiles')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error("DELETE_USER_ERROR:", error);
+        return NextResponse.json({ error: "Failed to delete user" }, { status: 500 });
+    }
+}

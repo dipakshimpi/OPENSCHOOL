@@ -8,8 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AcademicCapIcon } from "@heroicons/react/24/outline";
-import { auth } from "@/lib/firebase/client";
-import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
+import Link from "next/link";
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -22,7 +21,7 @@ export default function RegisterPage() {
     const [phoneNumber, setPhoneNumber] = useState("");
     const [schoolId, setSchoolId] = useState("");
     const [securityCode, setSecurityCode] = useState("");
-    const [isEmailSent, setIsEmailSent] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const handleRegister = async (e: React.FormEvent) => {
@@ -43,74 +42,59 @@ export default function RegisterPage() {
         }
 
         try {
-            // 1. Create User in Firebase
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-
-            // 2. Sync Profile to Supabase DB via our API
-            const syncResponse = await fetch("/api/auth/register-profile", {
+            // Call our new registration API
+            const response = await fetch("/api/auth/register-profile", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    id: user.uid,
-                    email: user.email,
-                    full_name: `${firstName} ${lastName}`,
-                    role: role,
+                    email,
+                    password,
+                    firstName,
+                    lastName,
+                    role,
                     phone_number: phoneNumber,
                     school_id: schoolId || null,
                 }),
             });
 
-            if (!syncResponse.ok) {
-                const errorData = await syncResponse.json();
-                throw new Error(errorData.error || "Failed to sync profile");
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to create account.");
             }
 
-            // 3. Send Firebase Email Verification
-            await sendEmailVerification(user);
-
-            setIsEmailSent(true);
-        } catch (err: unknown) {
+            setIsSuccess(true);
+            setTimeout(() => {
+                router.push("/auth/login");
+            }, 3000);
+        } catch (err: any) {
             console.error("REGISTER_ERROR:", err);
-            const error = err as { code?: string; message?: string };
-            if (error.code === 'auth/email-already-in-use') {
-                setError("This email is already registered. Please login instead.");
-            } else {
-                setError(error.message || "An unexpected error occurred.");
-            }
+            setError(err.message || "An unexpected error occurred.");
         } finally {
             setIsLoading(false);
         }
     };
 
-    if (isEmailSent) {
+    if (isSuccess) {
         return (
             <div className="w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 p-4">
                 <Card className="w-full max-w-md z-10 shadow-card-hover border-white/40 bg-white/80 backdrop-blur-xl dark:bg-slate-900/80 dark:border-slate-800 text-center">
                     <CardHeader>
                         <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
                             <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                             </svg>
                         </div>
-                        <CardTitle className="text-2xl font-bold">Check your email</CardTitle>
+                        <CardTitle className="text-2xl font-bold">Account Created!</CardTitle>
                         <CardDescription>
-                            We&apos;ve sent a verification link to <span className="font-semibold text-slate-900 dark:text-white">{email}</span>.
+                            Your account has been successfully registered with OpenSchool.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent>
                         <p className="text-sm text-slate-500">
-                            Please click the link in the email to verify your account. Once verified, you can log in to your dashboard.
+                            You are being redirected to the login page. Please sign in with your new credentials.
                         </p>
                     </CardContent>
-                    <CardFooter className="flex flex-col gap-2">
-                        <Button variant="outline" className="w-full" onClick={() => setIsEmailSent(false)}>
-                            Back to Registration
-                        </Button>
-                        <Button variant="link" onClick={() => router.push("/auth/login")}>
-                            Go to Login
-                        </Button>
-                    </CardFooter>
                 </Card>
             </div>
         );
@@ -130,10 +114,10 @@ export default function RegisterPage() {
                         <AcademicCapIcon className="w-7 h-7 text-primary" />
                     </div>
                     <CardTitle className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                        Create an account
+                        Join OpenSchool
                     </CardTitle>
                     <CardDescription className="text-slate-500 dark:text-slate-400">
-                        Join OpenSchool today
+                        Create your account today
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -146,7 +130,7 @@ export default function RegisterPage() {
                     </Tabs>
 
                     {error && (
-                        <div className="mb-4 p-3 bg-rose-50 dark:bg-rose-900/30 border border-rose-200 dark:border-rose-800 rounded-lg text-rose-600 dark:text-rose-400 text-sm font-medium animate-in fade-in slide-in-from-top-1">
+                        <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-600 text-sm font-medium animate-in fade-in">
                             {error}
                         </div>
                     )}
@@ -159,7 +143,7 @@ export default function RegisterPage() {
                                     id="firstName"
                                     placeholder="John"
                                     required
-                                    className="bg-white/50 focus:ring-primary/20"
+                                    className="bg-white/50 border-slate-200"
                                     value={firstName}
                                     onChange={(e) => setFirstName(e.target.value)}
                                 />
@@ -170,7 +154,7 @@ export default function RegisterPage() {
                                     id="lastName"
                                     placeholder="Doe"
                                     required
-                                    className="bg-white/50 focus:ring-primary/20"
+                                    className="bg-white/50 border-slate-200"
                                     value={lastName}
                                     onChange={(e) => setLastName(e.target.value)}
                                 />
@@ -184,7 +168,7 @@ export default function RegisterPage() {
                                 type="email"
                                 placeholder="john@example.com"
                                 required
-                                className="bg-white/50 focus:ring-primary/20"
+                                className="bg-white/50 border-slate-200"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                             />
@@ -192,7 +176,7 @@ export default function RegisterPage() {
 
                         {role !== 'student' && (
                             <div className="space-y-2 animate-in slide-in-from-top-1">
-                                <Label htmlFor="securityCode" className="text-indigo-600 dark:text-indigo-400 font-bold">
+                                <Label htmlFor="securityCode" className="text-indigo-600 font-bold">
                                     {role === 'admin' ? 'Administrator Passcode' : 'Teacher Verification Code'}
                                 </Label>
                                 <Input
@@ -200,11 +184,10 @@ export default function RegisterPage() {
                                     type="password"
                                     placeholder="Enter authorization code"
                                     required
-                                    className="border-indigo-200 bg-indigo-50/30 focus:ring-indigo-500/20"
+                                    className="border-indigo-200 bg-indigo-50/30"
                                     value={securityCode}
                                     onChange={(e) => setSecurityCode(e.target.value)}
                                 />
-                                <p className="text-[10px] text-slate-400 italic">Enter the code provided by your institution.</p>
                             </div>
                         )}
 
@@ -215,7 +198,7 @@ export default function RegisterPage() {
                                     id="phone"
                                     type="tel"
                                     placeholder="+91..."
-                                    className="bg-white/50 focus:ring-primary/20"
+                                    className="bg-white/50 border-slate-200"
                                     value={phoneNumber}
                                     onChange={(e) => setPhoneNumber(e.target.value)}
                                 />
@@ -225,7 +208,7 @@ export default function RegisterPage() {
                                 <Input
                                     id="schoolId"
                                     placeholder="UUID"
-                                    className="bg-white/50 focus:ring-primary/20"
+                                    className="bg-white/50 border-slate-200"
                                     value={schoolId}
                                     onChange={(e) => setSchoolId(e.target.value)}
                                 />
@@ -238,27 +221,26 @@ export default function RegisterPage() {
                                 id="password"
                                 type="password"
                                 required
-                                className="bg-white/50 focus:ring-primary/20"
+                                className="bg-white/50 border-slate-200"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                             />
                         </div>
 
-                        <Button type="submit" className="w-full bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20" disabled={isLoading}>
+                        <Button type="submit" className="w-full bg-primary hover:bg-primary/90 shadow-lg" disabled={isLoading}>
                             {isLoading ? "Creating account..." : "Sign Up"}
                         </Button>
                     </form>
                 </CardContent>
                 <CardFooter className="flex justify-center border-t border-slate-100 dark:border-slate-800 pt-6">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                    <p className="text-sm text-slate-500">
                         Already have an account?{" "}
-                        <a href="/auth/login" className="text-primary font-medium hover:underline">
+                        <Link href="/auth/login" className="text-primary font-medium hover:underline">
                             Sign in
-                        </a>
+                        </Link>
                     </p>
                 </CardFooter>
             </Card>
         </div>
     );
 }
-

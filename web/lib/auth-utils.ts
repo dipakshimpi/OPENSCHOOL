@@ -1,24 +1,16 @@
-import { getAdminAuth } from "@/lib/firebase/admin";
-import { headers } from "next/headers";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth-options";
 
 export async function verifySession() {
-    const authHeader = (await headers()).get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
+    const session = await getServerSession(authOptions);
+
+    if (!session || !session.user) {
         return null;
     }
 
-    const token = authHeader.split(" ")[1];
-    try {
-        const decodedToken = await getAdminAuth().verifyIdToken(token);
-        console.log(`[verifySession] Token verified for UID: ${decodedToken.uid}`);
-        return decodedToken;
-    } catch (err: unknown) {
-        const error = err as { code?: string; message?: string };
-        console.error("FIREBASE_VERIFY_ERROR:", {
-            code: error?.code,
-            message: error?.message,
-            token_sample: token.substring(0, 10) + "..."
-        });
-        return null;
-    }
+    return {
+        uid: session.user.id,
+        email: session.user.email,
+        name: session.user.name,
+    };
 }

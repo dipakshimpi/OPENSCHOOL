@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   description: "Modern open-source school management system",
 };
 
+import { SessionProvider } from "@/components/providers/SessionProvider";
+
 export default function RootLayout({
   children,
 }: {
@@ -14,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen font-sans">
-        {children}
+        <SessionProvider>
+          {children}
+        </SessionProvider>
       </body>
     </html>
   );

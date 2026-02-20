@@ -24,25 +24,6 @@ interface Profile {
     grade_level?: string;
 }
 
-interface EnrollmentWithCourse {
-    progress: number | null;
-    courses: {
-        title: string;
-        profiles: {
-            full_name: string;
-        } | null;
-    } | null;
-}
-
-interface AdminRecentActivity {
-    enrolled_at: string;
-    profiles: {
-        full_name: string;
-    } | null;
-    courses: {
-        title: string;
-    } | null;
-}
 
 export async function GET() {
     try {
@@ -102,16 +83,28 @@ export async function GET() {
                 }
             });
         } else if (userProfile?.role === 'admin') {
-            // Admin stats
+            // Admin stats - GET HIGH FIDELITY INSIGHTS
             const { count: studentCount } = await supabaseAdmin
                 .from('profiles')
                 .select('*', { count: 'exact', head: true })
                 .eq('role', 'student');
 
+            const { count: pendingStudents } = await supabaseAdmin
+                .from('profiles')
+                .select('*', { count: 'exact', head: true })
+                .eq('role', 'student')
+                .or('is_admin_approved.eq.false,is_teacher_approved.eq.false');
+
             const { count: teacherCount } = await supabaseAdmin
                 .from('profiles')
                 .select('*', { count: 'exact', head: true })
                 .eq('role', 'teacher');
+
+            const { count: pendingTeachers } = await supabaseAdmin
+                .from('profiles')
+                .select('*', { count: 'exact', head: true })
+                .eq('role', 'teacher')
+                .eq('is_approved', false);
 
             const { count: courseCount } = await supabaseAdmin
                 .from('courses')
@@ -125,16 +118,14 @@ export async function GET() {
             const presentRecords = attendanceLogs?.filter((a) => a.status === 'present').length || 0;
             const attendanceRate = totalAttendanceRecords > 0
                 ? (presentRecords / totalAttendanceRecords) * 100
-                : 95; // Default if no data yet
+                : 95;
 
-            // Fetch recent activities (enrollments + new courses)
-            const { data: enrollments } = await supabaseAdmin
-                .from('enrollments')
-                .select('enrolled_at, profiles(full_name), courses(title)')
-                .order('enrolled_at', { ascending: false })
+            // Fetch recent activities (enrollments + new profiles)
+            const { data: recentProfiles } = await supabaseAdmin
+                .from('profiles')
+                .select('full_name, role, created_at')
+                .order('created_at', { ascending: false })
                 .limit(5);
-
-            const typedEnrollments = (enrollments as unknown as AdminRecentActivity[]) || [];
 
             return NextResponse.json({
                 role: 'admin',
@@ -143,13 +134,15 @@ export async function GET() {
                     studentCount: studentCount || 0,
                     teacherCount: teacherCount || 0,
                     courseCount: courseCount || 0,
-                    attendanceRate: Math.round(attendanceRate)
+                    attendanceRate: Math.round(attendanceRate),
+                    pendingStudents: pendingStudents || 0,
+                    pendingTeachers: pendingTeachers || 0
                 },
-                recentActivity: typedEnrollments.map((e) => ({
-                    user: e.profiles?.full_name || 'Anonymous',
-                    action: 'enrolled in',
-                    target: e.courses?.title || 'Course',
-                    time: new Date(e.enrolled_at).toLocaleTimeString()
+                recentActivity: (recentProfiles || []).map((p) => ({
+                    user: p.full_name || 'Anonymous',
+                    action: 'registered as',
+                    target: p.role?.toUpperCase() || 'USER',
+                    time: new Date(p.created_at).toLocaleTimeString()
                 }))
             });
         } else {
@@ -166,7 +159,12 @@ export async function GET() {
 
             // 2. Resolve Course Details Manually (to bypass relationship issues)
             const courseIds = [...new Set(enrollments.map(e => e.course_id).filter(Boolean))];
-            let coursesWithDetails: any[] = [];
+            let coursesWithDetails: {
+                progress: number;
+                course_id: string;
+                student_id: string;
+                courses: Record<string, unknown> | null
+            }[] = [];
 
             if (courseIds.length > 0) {
                 const { data: coursesData } = await supabaseAdmin

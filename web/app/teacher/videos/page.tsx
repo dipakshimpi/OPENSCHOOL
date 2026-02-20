@@ -21,7 +21,6 @@ interface Video {
     id: string;
     title: string;
     description: string;
-    peertube_url: string;
     thumbnail_url: string | null;
     duration: number;
     created_at: string;

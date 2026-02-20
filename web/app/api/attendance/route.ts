@@ -115,7 +115,7 @@ export async function POST(request: Request) {
             }
         }
 
-        if (!isInside && !body.adminOverride) {
+        if (!isInside && !adminOverride) {
             return NextResponse.json({
                 error: "Outside school premises",
                 isInside: false,

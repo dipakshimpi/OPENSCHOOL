@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,9 +9,17 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AcademicCapIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 
-import { auth } from "@/lib/firebase/client";
-import { signInWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
+// Google Icon Component
+const GoogleIcon = () => (
+    <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+    </svg>
+);
 
 export default function LoginPage() {
     const router = useRouter();
@@ -20,29 +28,16 @@ export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
-    const [showResend, setShowResend] = useState(false);
-    const [resendStatus, setResendStatus] = useState<string | null>(null);
 
-    useEffect(() => {
-        // Clear any broken sessions when hitting the login page
-        const cleanup = async () => {
-            if (auth.currentUser) {
-                console.log("[Login] Clearing existing session for fresh login...");
-                await auth.signOut();
-            }
-        };
-        cleanup();
-    }, []);
-
-    const handleResendEmail = async () => {
+    const handleGoogleLogin = async () => {
+        setIsLoading(true);
         try {
-            if (auth.currentUser) {
-                await sendEmailVerification(auth.currentUser);
-                setResendStatus("Verification email sent! Please check your inbox.");
-                setShowResend(false);
-            }
-        } catch {
-            setError("Failed to resend email. Please try again later.");
+            document.cookie = `intended_role=${role}; path=/; max-age=3600; SameSite=Lax`;
+            await signIn("keycloak-google", { callbackUrl: `/?intendedRole=${role}` });
+        } catch (error) {
+            console.error("Google Login Error:", error);
+            setError("Failed to initialize Google login.");
+            setIsLoading(false);
         }
     };
 
@@ -50,84 +45,28 @@ export default function LoginPage() {
         e.preventDefault();
         setIsLoading(true);
         setError(null);
-        setShowResend(false);
-        setResendStatus(null);
 
         try {
-            console.log("[Login] Attempting sign-in for:", email, "with role:", role);
-            // 1. Sign in with Firebase
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-            console.log("[Login] Firebase sign-in successful, UID:", user.uid);
-
-            // 2. Security Check: Email Verification
-            if (!user.emailVerified) {
-                console.warn("[Login] Email not verified for UID:", user.uid);
-                setError("Please verify your email before logging in.");
-                setShowResend(true);
-                setIsLoading(false);
-                return;
-            }
-
-            // 3. Get the profile data from Supabase via our secure API
-            console.log("[Login] Fetching profile for UID:", user.uid);
-            const token = await user.getIdToken();
-            const profileResponse = await fetch(`/api/profile`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+            // Call our custom Credentials provider
+            const result = await signIn("credentials", {
+                email,
+                password,
+                redirect: false,
+                callbackUrl: `/?intendedRole=${role}`,
             });
 
-            if (!profileResponse.ok) {
-                console.error("[Login] Profile fetch failed, status:", profileResponse.status);
-                setError("Could not retrieve your profile. Please contact support.");
+            if (result?.error) {
+                setError("Invalid email or password.");
                 setIsLoading(false);
                 return;
             }
 
-            const profile = await profileResponse.json();
-            const actualRole = profile?.role;
-            console.log("[Login] Profile retrieved, role in DB:", actualRole, "matching against selected:", role);
-
-            // 4. Security Check: Enforce Role Match
-            if (actualRole && actualRole !== role) {
-                console.warn("[Login] Role mismatch. Expected:", role, "Actual:", actualRole);
-                await auth.signOut();
-                setError("Unauthorized access for this role.");
-                setIsLoading(false);
-                return;
-            }
-
-            // 5. Approval Checks
-            console.log("[Login] Performing approval checks for:", actualRole);
-            if (actualRole === 'student') {
-                if (!profile?.is_admin_approved) {
-                    console.log("[Login] Student pending admin approval");
-                    router.push("/auth/pending?step=admin");
-                    setIsLoading(false);
-                    return;
-                }
-                if (!profile?.is_teacher_approved) {
-                    console.log("[Login] Student pending teacher approval");
-                    router.push("/auth/pending?step=teacher");
-                    setIsLoading(false);
-                    return;
-                }
-            }
-
-            if (actualRole === 'teacher' && !profile?.is_approved) {
-                console.log("[Login] Teacher pending approval");
-                router.push("/auth/pending?step=admin");
-                setIsLoading(false);
-                return;
-            }
-
-            console.log("[Login] All checks passed, performing hard redirect to:", actualRole);
-            window.location.href = `/${actualRole}`;
-        } catch (authError: unknown) {
+            // Success! Set cookie for role and redirect
+            document.cookie = `intended_role=${role}; path=/; max-age=3600; SameSite=Lax`;
+            router.push(`/?intendedRole=${role}`);
+        } catch (authError) {
             console.error("[Login] Auth Error:", authError);
-            setError("Invalid email or password.");
-        } finally {
+            setError("An unexpected error occurred.");
             setIsLoading(false);
         }
     };
@@ -146,54 +85,31 @@ export default function LoginPage() {
                         <AcademicCapIcon className="w-7 h-7 text-primary" />
                     </div>
                     <CardTitle className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                        Welcome back
+                        Sign in to OpenSchool
                     </CardTitle>
                     <CardDescription className="text-slate-500 dark:text-slate-400">
-                        Sign in to access your OpenSchool dashboard
+                        Access your academic dashboard
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Tabs
                         defaultValue="student"
-                        onValueChange={(val) => {
-                            setRole(val);
-                            setEmail("");
-                            setPassword("");
-                            setError(null);
-                        }}
+                        onValueChange={(val) => setRole(val)}
                         className="w-full"
                     >
                         <TabsList className="grid w-full grid-cols-3 mb-6 bg-slate-100/50 dark:bg-slate-800/50 p-1">
-                            <TabsTrigger value="admin" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-sm transition-all">Admin</TabsTrigger>
-                            <TabsTrigger value="teacher" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-sm transition-all">Teacher</TabsTrigger>
-                            <TabsTrigger value="student" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-sm transition-all">Student</TabsTrigger>
+                            <TabsTrigger value="admin">Admin</TabsTrigger>
+                            <TabsTrigger value="teacher">Teacher</TabsTrigger>
+                            <TabsTrigger value="student">Student</TabsTrigger>
                         </TabsList>
 
                         <form onSubmit={handleLogin} className="space-y-4">
                             {error && (
-                                <div className="p-3 text-sm text-rose-500 bg-rose-50 border border-rose-100 rounded-lg flex flex-col gap-2 animate-in fade-in slide-in-from-top-1">
-                                    <div className="flex items-center gap-2">
-                                        <span className="h-4 w-4 rounded-full bg-rose-100 border border-rose-200 flex items-center justify-center font-bold text-[10px]">!</span>
-                                        {error}
-                                    </div>
-                                    {showResend && (
-                                        <Button
-                                            type="button"
-                                            variant="link"
-                                            className="text-xs text-rose-600 font-bold p-0 h-auto justify-start"
-                                            onClick={handleResendEmail}
-                                        >
-                                            Didn&apos;t receive email? Click here to resend verification.
-                                        </Button>
-                                    )}
+                                <div className="p-3 text-sm text-rose-500 bg-rose-50 border border-rose-100 rounded-lg animate-in fade-in">
+                                    {error}
                                 </div>
                             )}
 
-                            {resendStatus && (
-                                <div className="p-3 text-sm text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-lg animate-in fade-in">
-                                    {resendStatus}
-                                </div>
-                            )}
                             <div className="space-y-2">
                                 <Label htmlFor="email">Email address</Label>
                                 <Input
@@ -201,44 +117,58 @@ export default function LoginPage() {
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    placeholder={role === "admin" ? "admin@openschool.com" : role === "teacher" ? "teacher@openschool.com" : "student@openschool.com"}
-                                    className="bg-white/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus:ring-primary/20"
+                                    placeholder="your@email.com"
+                                    className="bg-white/50 dark:bg-slate-950/50 border-slate-200"
                                     required
                                 />
                             </div>
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
                                     <Label htmlFor="password">Password</Label>
-                                    <Link href="/auth/forgot-password" className="text-xs text-primary hover:text-primary/80 font-medium">Forgot password?</Link>
+                                    <Link href="/auth/forgot-password" className="text-xs text-primary hover:underline font-medium">Forgot password?</Link>
                                 </div>
                                 <Input
                                     id="password"
                                     type="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="bg-white/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus:ring-primary/20"
+                                    className="bg-white/50 dark:bg-slate-950/50 border-slate-200"
+                                    required
                                 />
                             </div>
 
-                            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all duration-300" disabled={isLoading}>
-                                {isLoading ? (
-                                    <span className="flex items-center gap-2">
-                                        <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        Signing in...
-                                    </span>
-                                ) : (
-                                    "Sign In"
-                                )}
+                            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 shadow-lg" disabled={isLoading}>
+                                {isLoading ? "Signing in..." : "Sign In"}
+                            </Button>
+
+                            <div className="relative my-4">
+                                <div className="absolute inset-0 flex items-center">
+                                    <span className="w-full border-t border-slate-200 dark:border-slate-800" />
+                                </div>
+                                <div className="relative flex justify-center text-xs uppercase">
+                                    <span className="bg-white dark:bg-slate-900 px-2 text-slate-500">Or continue with</span>
+                                </div>
+                            </div>
+
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full border-slate-200 hover:bg-slate-50"
+                                onClick={handleGoogleLogin}
+                                disabled={isLoading}
+                            >
+                                <GoogleIcon />
+                                Sign in with Google
                             </Button>
                         </form>
                     </Tabs>
                 </CardContent>
                 <CardFooter className="flex justify-center border-t border-slate-100 dark:border-slate-800 pt-6">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                    <p className="text-sm text-slate-500">
                         Don&apos;t have an account?{" "}
-                        <a href="/auth/register" className="text-primary font-medium hover:underline">
+                        <Link href="/auth/register" className="text-primary font-medium hover:underline">
                             Create account
-                        </a>
+                        </Link>
                     </p>
                 </CardFooter>
             </Card>

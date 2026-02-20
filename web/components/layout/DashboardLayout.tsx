@@ -47,7 +47,7 @@ export function DashboardLayout({ children, role, title = "Dashboard" }: Dashboa
       console.log("[DashboardLayout] Checking user status for role:", role);
       try {
         // 1. Fetch Profile Status (Approval & Class)
-        const profileRes = await authedFetch("/api/profile");
+        const profileRes = await authedFetch(`/api/profile?intendedRole=${role}`);
         console.log("[DashboardLayout] Profile fetch status:", profileRes.status);
         if (profileRes.ok) {
           const profile = await profileRes.json();
@@ -99,7 +99,7 @@ export function DashboardLayout({ children, role, title = "Dashboard" }: Dashboa
         <UrgentNotice />
         <Header title={title} />
         <main className="flex-1 p-6 md:p-8 overflow-y-auto relative">
-          <div className="max-w-7xl mx-auto space-y-6">
+          <div className="space-y-6">
             {isLoading ? (
               <div className="flex items-center justify-center min-h-[400px]">
                 <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />

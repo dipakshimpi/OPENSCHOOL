@@ -19,7 +19,6 @@ interface Video {
     id: string;
     title: string;
     description: string;
-    peertube_url: string;
     course_id: string;
     courses: { title: string };
 }

@@ -1,51 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { AcademicCapIcon, ArrowLeftIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
+import { AcademicCapIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import { supabaseClient } from "@/lib/supabase/client";
 
+/**
+ * Forgot Password page.
+ * Since we use Keycloak, password reset is handled by Keycloak's built-in flow.
+ * This page directs users to Keycloak's login page where they can click "Forgot Password".
+ */
 export default function ForgotPasswordPage() {
-    const [isLoading, setIsLoading] = useState(false);
-    const [email, setEmail] = useState("");
-    const [isSubmitted, setIsSubmitted] = useState(false);
+    const keycloakIssuer = process.env.NEXT_PUBLIC_KEYCLOAK_ISSUER || "";
 
-    const handleResetRequest = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
-
-        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-            redirectTo: `${window.location.origin}/auth/reset-password`,
-        });
-
-        if (error) {
-            alert(error.message);
-            setIsLoading(false);
-            return;
-        }
-
-        setIsSubmitted(true);
-        setIsLoading(false);
+    // Build Keycloak's account page URL (for password reset)
+    // Keycloak login page has a "Forgot Password?" link built in
+    const handleResetRedirect = () => {
+        // Redirect to Keycloak login page — user can click "Forgot Password?" there
+        window.location.href = `${keycloakIssuer}/protocol/openid-connect/auth?client_id=${process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID}&response_type=code&scope=openid&redirect_uri=${encodeURIComponent(window.location.origin + "/api/auth/callback/keycloak")}&kc_action=UPDATE_PASSWORD`;
     };
-
-    if (isSubmitted) {
-        return (
-            <div className="w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 p-4">
-                <Card className="w-full max-w-md z-10 shadow-xl border-white/40 bg-white/80 backdrop-blur-xl dark:bg-slate-900/80 dark:border-slate-800 p-8 text-center">
-                    <CheckCircleIcon className="w-16 h-16 text-emerald-500 mx-auto mb-4 animate-bounce" />
-                    <h2 className="text-2xl font-bold mb-2">Check your email</h2>
-                    <p className="text-slate-500 mb-6">We&apos;ve sent a password reset link to <span className="font-bold">{email}</span></p>
-                    <Link href="/auth/login">
-                        <Button variant="outline" className="w-full">Back to login</Button>
-                    </Link>
-                </Card>
-            </div>
-        );
-    }
 
     return (
         <div className="w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 p-4">
@@ -58,34 +31,31 @@ export default function ForgotPasswordPage() {
                         Reset password
                     </CardTitle>
                     <CardDescription>
-                        Enter your email address and we&apos;ll send you a link to reset your password.
+                        Password management is handled securely through our identity provider.
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <form onSubmit={handleResetRequest} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Email address</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="name@example.com"
-                                className="bg-white/50 dark:bg-slate-950/50"
-                                required
-                            />
-                        </div>
-                        <Button type="submit" className="w-full bg-primary hover:bg-primary/90 shadow-lg" disabled={isLoading}>
-                            {isLoading ? "Sending link..." : "Send Reset Link"}
-                        </Button>
-                    </form>
+                <CardContent className="space-y-4">
+                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-100 dark:border-blue-800">
+                        <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed">
+                            You will be redirected to our secure login page where you can reset your password.
+                            If you signed in with Google, your password is managed by Google.
+                        </p>
+                    </div>
+
+                    <Button
+                        onClick={handleResetRedirect}
+                        className="w-full bg-primary hover:bg-primary/90 shadow-lg h-11"
+                    >
+                        Reset My Password
+                    </Button>
+
+                    <div className="flex justify-center border-t border-slate-100 dark:border-slate-800 pt-4">
+                        <Link href="/auth/login" className="flex items-center gap-2 text-sm text-slate-500 hover:text-primary transition-colors">
+                            <ArrowLeftIcon className="w-4 h-4" />
+                            Back to login
+                        </Link>
+                    </div>
                 </CardContent>
-                <CardFooter className="flex justify-center border-t border-slate-100 dark:border-slate-800 pt-6">
-                    <Link href="/auth/login" className="flex items-center gap-2 text-sm text-slate-500 hover:text-primary transition-colors">
-                        <ArrowLeftIcon className="w-4 h-4" />
-                        Back to login
-                    </Link>
-                </CardFooter>
             </Card>
         </div>
     );

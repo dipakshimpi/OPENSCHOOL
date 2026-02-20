@@ -91,9 +91,9 @@ export async function proxy(request: NextRequest) {
             }
         )
 
-        // Note: We are using Firebase for auth. Supabase session management via cookies 
+        // Note: We are using Keycloak for auth. Supabase session management via cookies 
         // is kept for compatibility, but the Client-side DashboardLayout and 
-        // API verifySession handle the core security using Firebase ID tokens.
+        // API verifySession handle the core security using Keycloak/NextAuth sessions.
 
         return response;
     } catch (globalErr) {

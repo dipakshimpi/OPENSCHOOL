@@ -121,20 +121,11 @@ function UploadVideoContent() {
             const videoDuration = videoData.video.duration || 0;
 
             setUploadStatus("Linking to Course...");
-
-            // Get Firebase ID token for authentication
-            const { auth } = await import("@/lib/firebase/client");
-            const currentUser = auth.currentUser;
-            if (!currentUser) throw new Error("User not authenticated");
-
-            const idToken = await currentUser.getIdToken();
-
             // 4. Save metadata to Supabase (via existing server action, but just for DB)
             const saveRes = await fetch("/api/videos", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${idToken}`
                 },
                 body: JSON.stringify({
                     title,
