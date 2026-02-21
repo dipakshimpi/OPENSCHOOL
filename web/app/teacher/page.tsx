@@ -16,13 +16,24 @@ import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnnouncementsWidget } from "@/components/common/AnnouncementsWidget";
 
+interface TimetableSlot {
+    id: string;
+    class_grade: string;
+    section: string;
+    subject: string;
+    period_number: number;
+    start_time: string;
+    end_time: string;
+}
+
 interface TeacherStats {
     fullName: string;
     stats: {
         activeCourses: number;
         totalStudents: number;
         attendanceRate: number;
-    }
+    };
+    upcomingClasses: TimetableSlot[];
 }
 
 interface Course {
@@ -127,6 +138,48 @@ export default function TeacherDashboard() {
                 {/* Decor */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
                 <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-400/20 rounded-full blur-2xl -translate-x-1/2 translate-y-1/2" />
+            </div>
+
+            {/* 🔥 TODAY'S SCHEDULE / UPCOMING CLASSES */}
+            <div className="mb-8">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                        <div className="w-2 h-6 bg-indigo-600 rounded-full" />
+                        <h3 className="text-xl font-bold text-slate-800">Today&apos;s Schedule</h3>
+                    </div>
+                </div>
+                {loading ? (
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 rounded-2xl" />)}
+                    </div>
+                ) : data?.upcomingClasses && data.upcomingClasses.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        {data.upcomingClasses.map((slot) => (
+                            <Card key={slot.id} className="border-none shadow-sm hover:shadow-md transition-all bg-white border border-slate-100 overflow-hidden group">
+                                <div className={`absolute top-0 left-0 w-1 h-full ${slot.period_number <= 2 ? 'bg-indigo-500' : 'bg-purple-500'}`} />
+                                <CardContent className="p-4 flex items-center gap-4">
+                                    <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-slate-50 flex flex-col items-center justify-center border border-slate-100 group-hover:bg-indigo-50 group-hover:border-indigo-100 transition-colors">
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase">Period</span>
+                                        <span className="text-xl font-black text-indigo-600">{slot.period_number}</span>
+                                    </div>
+                                    <div className="flex-grow min-w-0">
+                                        <h4 className="font-bold text-slate-900 truncate">{slot.subject}</h4>
+                                        <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                                            <Badge variant="secondary" className="px-1.5 py-0 bg-slate-100 text-slate-600 font-bold">
+                                                Class {slot.class_grade}-{slot.section}
+                                            </Badge>
+                                            <span className="truncate">{slot.start_time || "N/A"}</span>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="bg-slate-50/50 border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center">
+                        <p className="text-slate-500 text-sm font-medium">No classes scheduled for today. Enjoy your break!</p>
+                    </div>
+                )}
             </div>
 
             {/* 🔥 FACULTY NOTICES / ANNOUNCEMENTS */}

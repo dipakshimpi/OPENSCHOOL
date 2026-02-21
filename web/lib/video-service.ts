@@ -22,11 +22,10 @@ export class VideoService {
             throw new Error("Ant Media Server URL not configured");
         }
 
-        // FUTURE: call Ant Media REST API to generate a playback token here
-        // const token = await getAMSPlaybackToken(streamId);
-
-        // For now, using the secure play.html provided by AMS
-        return `${this.amsBaseUrl}/${this.appName}/play.html?name=${streamId}&autoplay=true`;
+        // 🚀 FORCING VOD MODE: 
+        // We add &playOrder=vod to tell Ant Media to play the recorded file 
+        // instead of waiting for a live stream.
+        return `${this.amsBaseUrl}/${this.appName}/play.html?id=${streamId}&playOrder=vod&autoplay=true`;
     }
 
     /**

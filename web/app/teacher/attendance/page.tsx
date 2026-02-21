@@ -10,16 +10,38 @@ import {
   AlertCircle,
   CheckCircle2
 } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import { calculateDistance } from "@/lib/geo";
 import { motion, AnimatePresence } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { authedFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
-export default function TeacherAttendance() {
+export default function TeacherAttendancePage() {
+  return (
+    <Suspense fallback={
+      <DashboardLayout title="Attendance" role="teacher">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="w-10 h-10 animate-spin text-indigo-600" />
+        </div>
+      </DashboardLayout>
+    }>
+      <TeacherAttendance />
+    </Suspense>
+  );
+}
+
+interface Student {
+  id: string;
+  full_name: string;
+  email: string;
+  status: 'present' | 'absent' | 'pending';
+}
+
+function TeacherAttendance() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasAttendedToday, setHasAttendedToday] = useState(false);
@@ -29,14 +51,14 @@ export default function TeacherAttendance() {
   useEffect(() => {
     // Check if already attended today
     authedFetch("/api/attendance")
-      .then(res => res.json())
-      .then(data => {
+      .then((res: Response) => res.json())
+      .then((data: { hasAttended: boolean; lastAttendance?: { timestamp: string } }) => {
         if (data.hasAttended) {
           setHasAttendedToday(true);
-          setAttendanceTime(data.lastAttendance?.timestamp);
+          setAttendanceTime(data.lastAttendance?.timestamp || null);
         }
       })
-      .catch(err => console.error("Error checking attendance:", err))
+      .catch((err: Error) => console.error("Error checking attendance:", err))
       .finally(() => setLoadingLegacy(false));
   }, []);
 
@@ -118,16 +140,9 @@ export default function TeacherAttendance() {
     );
   };
 
-  interface Student {
-    id: string;
-    full_name: string;
-    email: string;
-    status: 'present' | 'absent' | 'pending';
-  }
-
   const [studentSyncing, setStudentSyncing] = useState(false);
-  const [selectedGrade, setSelectedGrade] = useState("");
-  const [selectedSection, setSelectedSection] = useState("");
+  const [selectedGrade, setSelectedGrade] = useState(searchParams.get('grade') || "");
+  const [selectedSection, setSelectedSection] = useState(searchParams.get('section') || "");
   const [students, setStudents] = useState<Student[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(false);
 

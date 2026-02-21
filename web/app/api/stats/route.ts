@@ -22,6 +22,7 @@ interface Profile {
     role: 'admin' | 'teacher' | 'student';
     full_name: string;
     grade_level?: string;
+    section?: string;
 }
 
 
@@ -73,6 +74,15 @@ export async function GET() {
                 ? (presentRecords / totalAttendanceRecords) * 100
                 : 100;
 
+            // Fetch today's classes for the teacher
+            const today = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(new Date());
+            const { data: todayClasses } = await supabaseAdmin
+                .from('timetables')
+                .select('*')
+                .eq('teacher_id', userId)
+                .eq('day_of_week', today)
+                .order('period_number', { ascending: true });
+
             return NextResponse.json({
                 role: 'teacher',
                 fullName: userProfile.full_name,
@@ -80,7 +90,8 @@ export async function GET() {
                     activeCourses: courseCount || 0,
                     totalStudents: studentCount || 0,
                     attendanceRate: Math.round(attendanceRate * 10) / 10
-                }
+                },
+                upcomingClasses: todayClasses || []
             });
         } else if (userProfile?.role === 'admin') {
             // Admin stats - GET HIGH FIDELITY INSIGHTS
@@ -213,6 +224,21 @@ export async function GET() {
                 ? (presentCount / totalAttendance) * 100
                 : 100; // Default to 100% if no records yet
 
+            // Fetch today's classes for the student
+            const today = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(new Date());
+            let todayClasses = [];
+
+            if (userProfile?.grade_level && userProfile.section) {
+                const { data: timetable } = await supabaseAdmin
+                    .from('timetables')
+                    .select('*, teacher:profiles(full_name)')
+                    .eq('class_grade', userProfile.grade_level)
+                    .eq('section', userProfile.section)
+                    .eq('day_of_week', today)
+                    .order('period_number', { ascending: true });
+                todayClasses = timetable || [];
+            }
+
             return NextResponse.json({
                 role: 'student',
                 fullName: userProfile?.full_name || 'Student',
@@ -222,7 +248,8 @@ export async function GET() {
                     enrolledCount: enrollments.length,
                     avgProgress: Math.round(avgProgress),
                     attendanceRate: Math.round(attendanceRate)
-                }
+                },
+                upcomingClasses: todayClasses
             });
         }
     } catch (error) {

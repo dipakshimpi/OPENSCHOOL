@@ -1,6 +1,8 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 import { verifySession } from "@/lib/auth-utils";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth-options";
 
 export async function GET(request: Request) {
     try {
@@ -109,21 +111,11 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     try {
-        // Use Keycloak authentication (same pattern as /api/courses)
-        const session = await verifySession();
+        const session = await getServerSession(authOptions);
 
-        console.log("🔐 Auth check:", {
-            hasSession: !!session,
-            userId: session?.uid,
-            userEmail: session?.email
-        });
-
-        if (!session) {
-            console.error("❌ No authenticated user found");
+        if (!session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
-
-        const userId = session.uid;
 
         const body = await request.json();
         const { title, description, peertube_url, course_id, thumbnail_url, duration } = body;
@@ -132,39 +124,30 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
-        // Match various formats:
-        // http://localhost:9001/w/shortUUID
-        // https://example.com/w/shortUUID
-        // http://127.0.0.1:9001/w/shortUUID
-        const urlMatch = peertube_url.match(/\/w\/([a-zA-Z0-9_-]+)/);
-
-        if (!urlMatch) {
-            console.error("Invalid URL Format:", peertube_url);
-            return NextResponse.json({ error: "Invalid PeerTube URL format. Expected format: .../w/VIDEO_ID" }, { status: 400 });
+        // Support both old PeerTube and new AMS format
+        let videoId: string;
+        if (peertube_url.startsWith('ams:')) {
+            videoId = peertube_url.replace('ams:', '');
+        } else {
+            const urlMatch = peertube_url.match(/\/w\/([a-zA-Z0-9_-]+)/);
+            if (!urlMatch) {
+                return NextResponse.json({ error: "Invalid URL Format" }, { status: 400 });
+            }
+            videoId = urlMatch[1];
         }
-        const videoId = urlMatch[1];
 
-        // Use admin client for database operations (bypasses RLS)
         const adminClient = createAdminClient();
 
-        // Log the data being inserted for debugging
         const videoData = {
-            id: videoId,  // Use PeerTube ID as primary key
+            id: videoId,
             title,
             description,
             peertube_url,
             thumbnail_url,
             duration,
             course_id,
-            teacher_id: userId
+            teacher_id: session.user.id
         };
-
-        console.log("📹 Attempting to save video:", {
-            videoId,
-            title,
-            courseId: course_id,
-            teacherId: userId
-        });
 
         const { data, error } = await adminClient
             .from('videos')
@@ -176,23 +159,6 @@ export async function POST(request: Request) {
         return NextResponse.json(data);
     } catch (error) {
         console.error("VIDEO_METADATA_SAVE_ERROR:", error);
-
-        // Type-safe error details extraction
-        interface DatabaseError {
-            code?: string;
-            message?: string;
-            details?: string;
-            hint?: string;
-        }
-
-        const dbError = error as DatabaseError;
-        console.error("Error details:", {
-            message: error instanceof Error ? error.message : String(error),
-            code: dbError.code,
-            details: dbError.details,
-            hint: dbError.hint,
-            stack: error instanceof Error ? error.stack : undefined
-        });
         return NextResponse.json({ error: error instanceof Error ? error.message : "Internal Server Error" }, { status: 500 });
     }
 }

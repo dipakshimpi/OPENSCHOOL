@@ -1,24 +1,24 @@
-import { isPeerTubeAvailable } from "@/lib/peertube";
+import { isAntMediaAvailable } from "@/lib/antmedia";
 import { NextResponse } from "next/server";
 
 /**
- * Health check endpoint for PeerTube service
+ * Health check endpoint for Ant Media service
  */
 export async function GET() {
     try {
-        const isAvailable = await isPeerTubeAvailable();
+        const isAvailable = await isAntMediaAvailable();
 
         if (isAvailable) {
             return NextResponse.json({
                 status: "healthy",
-                service: "peertube",
-                message: "Video server is running"
+                service: "antmedia",
+                message: "Ant Media Server is running"
             });
         } else {
             return NextResponse.json({
                 status: "unhealthy",
-                service: "peertube",
-                message: "Video server is offline"
+                service: "antmedia",
+                message: "Ant Media Server is offline"
             }, { status: 503 });
         }
     } catch (error) {

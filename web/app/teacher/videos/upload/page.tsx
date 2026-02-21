@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowUpTrayIcon, VideoCameraIcon, FilmIcon } from "@heroicons/react/24/outline";
-import { getUploadToken } from "@/app/actions/get-upload-token";
 
 interface Course {
     id: string;
@@ -72,72 +71,21 @@ function UploadVideoContent() {
         }
 
         setIsUploading(true);
-        setUploadStatus("Authenticating...");
+        setUploadStatus("Processing & Uploading Video...");
 
         try {
-            // 1. Get Auth Token from Server (Secure)
-            const { token, error } = await getUploadToken();
-            if (error || !token) throw new Error(error || "Failed to get auth token");
-
-            // 2. Prepare Direct Upload to PeerTube
-            setUploadStatus("Uploading directly to Video Server...");
             const formData = new FormData();
-            formData.append("videofile", file);
-            formData.append("channelId", "1");
-            formData.append("name", title);
-            formData.append("privacy", "1");
-            if (description) formData.append("description", description);
+            formData.append("file", file);
+            formData.append("title", title);
+            formData.append("description", description || "");
+            formData.append("courseId", selectedCourse);
 
-            // 3. Send to PeerTube (Bypassing Vercel Limit)
-            const peerTubeUrl = process.env.NEXT_PUBLIC_PEERTUBE_URL || "http://localhost:9000";
-            // Check if we are using the proxied API route or direct
-            // We need to hit the PeerTube API directly to avoid Vercel Limits
-            // AND we need to use the public URL (ngrok)
+            const { uploadVideoAction } = await import("@/app/actions/upload-video");
+            const result = await uploadVideoAction(formData);
 
-            const uploadRes = await fetch(`${peerTubeUrl}/api/v1/videos/upload`, {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "ngrok-skip-browser-warning": "true"
-                },
-                body: formData
-            });
-
-            if (!uploadRes.ok) {
-                const errText = await uploadRes.text();
-                throw new Error(`Upload Failed: ${errText}`);
+            if (result?.error) {
+                throw new Error(result.error);
             }
-
-            const videoData = await uploadRes.json();
-
-            // PeerTube returns thumbnailPath like /static/thumbnails/uuid.jpg
-            const peerTubePublicUrl = process.env.NEXT_PUBLIC_PEERTUBE_URL || "http://localhost:9001";
-            // Construct the public URL for the video player
-            const videoUrl = `${peerTubePublicUrl}/w/${videoData.video.shortUUID}`;
-
-            const thumbnailFullUrl = videoData.video.thumbnailPath
-                ? `${peerTubePublicUrl}${videoData.video.thumbnailPath}`
-                : null;
-            const videoDuration = videoData.video.duration || 0;
-
-            setUploadStatus("Linking to Course...");
-            // 4. Save metadata to Supabase (via existing server action, but just for DB)
-            const saveRes = await fetch("/api/videos", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    title,
-                    description,
-                    course_id: selectedCourse,
-                    peertube_url: videoUrl,
-                    thumbnail_url: thumbnailFullUrl,
-                    duration: videoDuration
-                })
-            });
-
-            if (!saveRes.ok) throw new Error("Failed to save video to course database");
 
             setUploadStatus("Success! Redirecting...");
             setTimeout(() => {

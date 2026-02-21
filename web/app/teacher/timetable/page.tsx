@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabaseClient } from "@/lib/supabase/client";
+import { useSession } from "next-auth/react";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const PERIODS = Array.from({ length: 8 }, (_, i) => i + 1);
@@ -20,15 +20,15 @@ interface TimetableEntry {
 }
 
 export default function TeacherTimetablePage() {
+    const { data: session, status } = useSession();
     const [timetable, setTimetable] = useState<TimetableEntry[]>([]);
 
     useEffect(() => {
         async function fetchMyTimetable() {
-            try {
-                const { data: { user } } = await supabaseClient.auth.getUser();
-                if (!user) return;
+            if (status !== "authenticated" || !session?.user?.id) return;
 
-                const res = await fetch(`/api/timetable?teacher_id=${user.id}`);
+            try {
+                const res = await fetch(`/api/timetable?teacher_id=${session.user.id}`);
                 if (res.ok) {
                     const data = await res.json();
                     setTimetable(data);
@@ -38,7 +38,7 @@ export default function TeacherTimetablePage() {
             }
         }
         fetchMyTimetable();
-    }, []);
+    }, [session, status]);
 
     function getSlot(day: string, period: number) {
         return timetable.find(t => t.day_of_week === day && t.period_number === period);

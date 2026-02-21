@@ -17,7 +17,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { authedFetch } from "@/lib/api";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 
 interface AdminStats {
     stats: {
@@ -35,19 +34,26 @@ interface AdminStats {
         time: string;
     }>;
 }
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function AdminDashboard() {
-    const { status: authStatus } = useSession();
+    const { data: session, status: authStatus } = useSession();
+    const router = useRouter();
     const [data, setData] = useState<AdminStats | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (authStatus === "authenticated") {
+            if (session?.user?.role !== 'admin') {
+                router.push('/student');
+                return;
+            }
             fetchStats();
         } else if (authStatus === "unauthenticated") {
             setLoading(false);
         }
-    }, [authStatus]);
+    }, [authStatus, session, router]);
 
     async function fetchStats() {
         try {
@@ -170,7 +176,7 @@ export default function AdminDashboard() {
                             <p className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.3em] mt-1">Live Telemetry Transmissions</p>
                         </CardHeader>
                         <CardContent className="p-10 space-y-10">
-                            {data.recentActivity.length > 0 ? (
+                            {data.recentActivity?.length > 0 ? (
                                 data.recentActivity.map((item, i) => (
                                     <div key={i} className="flex items-start gap-6 group relative">
                                         <div className="w-1.5 h-full absolute -left-4 bg-indigo-600 rounded-full opacity-0 group-hover:opacity-100 transition-all" />

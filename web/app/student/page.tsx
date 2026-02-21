@@ -30,6 +30,17 @@ interface EnrolledCourse {
     }
 }
 
+interface TimetableSlot {
+    id: string;
+    class_grade: string;
+    section: string;
+    subject: string;
+    period_number: number;
+    start_time: string;
+    end_time: string;
+    teacher: { full_name: string } | null;
+}
+
 interface DashboardData {
     fullName: string;
     enrolledCourses: EnrolledCourse[];
@@ -38,6 +49,7 @@ interface DashboardData {
         avgProgress: number;
         attendanceRate?: number;
     };
+    upcomingClasses: TimetableSlot[];
 }
 
 import { authedFetch } from "@/lib/api";
@@ -148,6 +160,62 @@ export default function StudentDashboard() {
 
                     <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-600/20 rounded-full blur-[120px] translate-x-1/2 -translate-y-1/2 pointer-events-none" />
                     <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-600/20 rounded-full blur-[100px] -translate-x-1/2 translate-y-1/2 pointer-events-none" />
+                </motion.div>
+
+                {/* 🔥 TODAY'S SCHEDULE */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="space-y-4"
+                >
+                    <div className="flex items-center gap-3">
+                        <div className="w-1.5 h-8 bg-indigo-600 rounded-full shadow-glow" />
+                        <h3 className="text-2xl font-black text-slate-800 dark:text-white">Today&apos;s Schedule</h3>
+                    </div>
+
+                    {loading ? (
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28 rounded-[1.5rem]" />)}
+                        </div>
+                    ) : data?.upcomingClasses && data.upcomingClasses.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            {data.upcomingClasses.map((slot, idx) => (
+                                <motion.div
+                                    key={slot.id}
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: idx * 0.05 }}
+                                >
+                                    <div className="relative border-none shadow-lg hover:shadow-xl transition-all rounded-[1.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 overflow-hidden group">
+                                        <div className={`absolute top-0 right-0 w-16 h-16 opacity-5 -translate-y-8 translate-x-8 rounded-full ${slot.period_number <= 2 ? 'bg-indigo-500' : 'bg-purple-500'}`} />
+                                        <div className="p-5 flex items-center gap-4">
+                                            <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 flex flex-col items-center justify-center border border-indigo-100 dark:border-indigo-500/20 group-hover:bg-indigo-600 group-hover:border-indigo-600 transition-all duration-300">
+                                                <span className="text-[10px] font-black text-indigo-400 dark:text-indigo-300 uppercase tracking-widest group-hover:text-white transition-colors">Period</span>
+                                                <span className="text-2xl font-black text-indigo-700 dark:text-indigo-400 group-hover:text-white transition-colors">{slot.period_number}</span>
+                                            </div>
+                                            <div className="flex-grow min-w-0">
+                                                <h4 className="font-black text-slate-800 dark:text-white truncate text-lg leading-tight">{slot.subject}</h4>
+                                                <p className="text-xs font-bold text-slate-400 dark:text-slate-500 mt-1 truncate">
+                                                    with {slot.teacher?.full_name || "Assigned Teacher"}
+                                                </p>
+                                                <div className="flex items-center gap-2 mt-2">
+                                                    <Badge className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-none font-black text-[9px] px-2">
+                                                        {slot.start_time || "N/A"}
+                                                    </Badge>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="bg-slate-50/50 dark:bg-slate-900/50 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[2rem] p-8 text-center">
+                            <ClockIcon className="w-8 h-8 text-slate-300 mx-auto mb-3" />
+                            <p className="text-slate-500 dark:text-slate-400 font-bold">No classes scheduled for today.</p>
+                        </div>
+                    )}
                 </motion.div>
 
                 <div className="grid lg:grid-cols-3 gap-8">

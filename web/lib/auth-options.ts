@@ -94,13 +94,37 @@ export const authOptions: NextAuthOptions = {
                         process.env.NEXT_PUBLIC_SUPABASE_URL!,
                         process.env.SUPABASE_SERVICE_ROLE_KEY!
                     );
+
+                    // 1. Try to find existing profile
                     const { data: profile } = await supabase
                         .from('profiles')
                         .select('role')
                         .eq('id', user.id)
                         .single();
 
-                    token.role = profile?.role || 'student';
+                    if (profile) {
+                        token.role = profile.role;
+                    } else {
+                        // 2. If no profile exists, check if this is the FIRST user in the system
+                        const { count } = await supabase
+                            .from('profiles')
+                            .select('*', { count: 'exact', head: true });
+
+                        const isFirstUser = count === 0;
+                        const initialRole = isFirstUser ? 'admin' : 'student';
+
+                        // 3. Create the profile automatically
+                        await supabase
+                            .from('profiles')
+                            .insert({
+                                id: user.id,
+                                email: user.email,
+                                role: initialRole,
+                                full_name: user.name
+                            });
+
+                        token.role = initialRole;
+                    }
                 } catch (e) {
                     token.role = 'student';
                 }

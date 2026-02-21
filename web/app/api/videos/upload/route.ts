@@ -1,37 +1,23 @@
 import { createClient } from "@/lib/supabase/server";
-import { uploadToPeerTube } from "@/lib/peertube";
+import { VideoService } from "@/lib/video-service";
 import { NextResponse, NextRequest } from "next/server";
 import { videoSchema } from "@/lib/validations";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth-options";
 
 export async function POST(request: NextRequest) {
     try {
-        console.log("🚀 Starting Video Upload Process...");
+        console.log("🚀 Starting Ant Media Video Upload Process (API)...");
 
-        // 1. Authenticate User
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        // 1. Authenticate User via NextAuth
+        const session = await getServerSession(authOptions);
 
-        if (!user) {
+        if (!session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { data: profile } = await supabase
-            .from("profiles")
-            .select("role")
-            .eq("id", user.id)
-            .single();
-
-        if (!profile || (profile.role !== "teacher" && profile.role !== "admin")) {
+        if (session.user.role !== "teacher" && session.user.role !== "admin") {
             return NextResponse.json({ error: "Forbidden: Only teachers can upload videos" }, { status: 403 });
-        }
-
-        // DEBUG: Check Request Headers
-        const contentType = request.headers.get("content-type") || "";
-        const contentLength = request.headers.get("content-length") || "0";
-        console.log(`📡 Incoming Request: ${request.method} | Type: ${contentType} | Size: ${contentLength} bytes`);
-
-        if (!contentType.includes("multipart/form-data")) {
-            return NextResponse.json({ error: "Invalid Content-Type. Must be multipart/form-data." }, { status: 400 });
         }
 
         // 2. Parse and Validate Form Data
@@ -57,42 +43,32 @@ export async function POST(request: NextRequest) {
 
         const { title, description, courseId } = result.data;
 
-        console.log(`📂 Received file: ${file.name} (${file.size} bytes) for Course: ${courseId}`);
-
-        // 3. Upload to PeerTube (The "Magic" Step)
-        // This runs on the server, so the teacher's browser isn't uploading to PeerTube directly.
-        // The file goes Browser -> Next.js Server -> PeerTube Server.
-        let peerTubeVideo;
+        // 3. Upload to Ant Media Server
+        let uploadedVideo;
         try {
-            peerTubeVideo = await uploadToPeerTube(file, title, description || "");
+            uploadedVideo = await VideoService.upload(file, title, description || "");
         } catch (uploadError: unknown) {
-            const errorMessage = uploadError instanceof Error ? uploadError.message : "Unknown PeerTube Error";
-            console.error("❌ PeerTube Upload Failed:", uploadError);
-            return NextResponse.json({ error: `PeerTube Error: ${errorMessage}` }, { status: 502 });
+            const errorMessage = uploadError instanceof Error ? uploadError.message : "Unknown AMS Error";
+            console.error("❌ AMS Upload Failed:", uploadError);
+            return NextResponse.json({ error: `Ant Media Error: ${errorMessage}` }, { status: 502 });
         }
 
-        console.log("✅ PeerTube Upload Success. ID:", peerTubeVideo.shortUUID);
-
         // 4. Save Metadata to Database
-        // We use the PeerTube ID as the primary key or just store it in the URL field
-        // Our schema uses 'id' (TEXT) as primary key, which matches PeerTube's UUID or ShortUUID
+        const supabase = await createClient();
         const { data: videoRecord, error: dbError } = await supabase
             .from("videos")
             .insert({
-                id: peerTubeVideo.shortUUID, // Using PeerTube ID as our ID
+                id: uploadedVideo.id, // Stream ID
                 course_id: courseId,
-                teacher_id: user.id,
+                teacher_id: session.user.id,
                 title: title,
                 description: description || "",
-                peertube_url: peerTubeVideo.url, // Store the full URL/Link
+                peertube_url: uploadedVideo.url,
             })
             .select()
             .single();
 
         if (dbError) {
-            console.error("❌ Database Insert Failed:", dbError);
-            // Optional: Try to delete the video from PeerTube if DB fails to keep consistency?
-            // For now, let's just error out.
             return NextResponse.json({ error: "Database Error: " + dbError.message }, { status: 500 });
         }
 
@@ -100,7 +76,6 @@ export async function POST(request: NextRequest) {
 
     } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : "Unknown Error";
-        console.error("💥 Critical Upload Error:", error);
         return NextResponse.json({ error: "Internal Server Error: " + errorMessage }, { status: 500 });
     }
 }

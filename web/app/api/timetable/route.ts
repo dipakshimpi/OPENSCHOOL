@@ -37,18 +37,12 @@ export async function POST(request: Request) {
         const session = await verifySession();
         if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        const supabase = await createClient();
-
-        // Check Admin
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', session.uid)
-            .single();
-
-        if (profile?.role !== 'admin') {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        if (session.role !== 'admin') {
+            return NextResponse.json({ error: "Forbidden: Admin access required" }, { status: 403 });
         }
+
+        const { createAdminClient } = await import("@/lib/supabase/admin");
+        const adminClient = createAdminClient();
 
         const body = await request.json();
         const { class_grade, section, day_of_week, period_number, subject, teacher_id, start_time, end_time } = body;
@@ -61,7 +55,7 @@ export async function POST(request: Request) {
         // Upsert based on unique constraint (class, section, day, period)
         // We first check if one exists to handle conflicts or use upsert if we defined the constraint right
         // Upsert based on the unique_class_slot constraint
-        const { data, error } = await supabase
+        const { data, error } = await adminClient
             .from('timetables')
             .upsert({
                 class_grade,
