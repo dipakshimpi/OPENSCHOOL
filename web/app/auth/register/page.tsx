@@ -67,9 +67,10 @@ export default function RegisterPage() {
             setTimeout(() => {
                 router.push("/auth/login");
             }, 3000);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("REGISTER_ERROR:", err);
-            setError(err.message || "An unexpected error occurred.");
+            const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred.";
+            setError(errorMessage);
         } finally {
             setIsLoading(false);
         }

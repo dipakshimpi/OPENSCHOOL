@@ -3,21 +3,20 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   MapPin,
   ShieldCheck,
   Loader2,
   AlertCircle,
-  CheckCircle2,
-  Clock
+  CheckCircle2
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { calculateDistance } from "@/lib/geo";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 
 import { authedFetch } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 export default function TeacherAttendance() {
   const router = useRouter();
@@ -119,22 +118,23 @@ export default function TeacherAttendance() {
     );
   };
 
+  interface Student {
+    id: string;
+    full_name: string;
+    email: string;
+    status: 'present' | 'absent' | 'pending';
+  }
+
   const [studentSyncing, setStudentSyncing] = useState(false);
   const [selectedGrade, setSelectedGrade] = useState("");
   const [selectedSection, setSelectedSection] = useState("");
-  const [students, setStudents] = useState<any[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(false);
 
   const GRADES = Array.from({ length: 12 }, (_, i) => (i + 1).toString());
   const SECTIONS = ["A", "B", "C", "D", "E"];
 
-  useEffect(() => {
-    if (hasAttendedToday && selectedGrade && selectedSection) {
-      fetchStudents();
-    }
-  }, [hasAttendedToday, selectedGrade, selectedSection]);
-
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
     setLoadingStudents(true);
     try {
       const res = await authedFetch(`/api/teacher/students-by-class?grade=${selectedGrade}&section=${selectedSection}`);
@@ -147,7 +147,13 @@ export default function TeacherAttendance() {
     } finally {
       setLoadingStudents(false);
     }
-  };
+  }, [selectedGrade, selectedSection]);
+
+  useEffect(() => {
+    if (hasAttendedToday && selectedGrade && selectedSection) {
+      fetchStudents();
+    }
+  }, [hasAttendedToday, selectedGrade, selectedSection, fetchStudents]);
 
   const toggleStudentStatus = (studentId: string) => {
     setStudents(prev => prev.map(s => {
@@ -400,7 +406,7 @@ export default function TeacherAttendance() {
   );
 }
 
-function UsersIcon(props: any) {
+function UsersIcon(props: React.ComponentProps<"svg">) {
   return (
     <svg
       {...props}
