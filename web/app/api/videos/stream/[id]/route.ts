@@ -60,27 +60,18 @@ export async function GET(
             }
         }
 
-        // 5. Security Layer: Convert stored URL to embed URL
-        // The raw PeerTube URL is NEVER returned to the client
-        // Convert watch URL (http://host/w/ID) to embed URL (http://host/videos/embed/ID)
-        const videoIdMatch = video.peertube_url.match(/\/w\/([a-zA-Z0-9_-]+)/);
-        if (!videoIdMatch) {
-            return NextResponse.json({ error: "Invalid PeerTube URL format" }, { status: 500 });
-        }
+        // 5. Security Layer: Use VideoService to generate the AMS URL
+        const { VideoService } = await import("@/lib/video-service");
 
-        const peertubeId = videoIdMatch[1];
-
-        // Use the public PeerTube URL from environment if available
-        const peertubeBaseUrl = process.env.NEXT_PUBLIC_PEERTUBE_URL ?
-            process.env.NEXT_PUBLIC_PEERTUBE_URL.replace(/\/$/, "") :
-            video.peertube_url.split('/w/')[0].replace(/\/$/, "");
-
-        const embedUrl = `${peertubeBaseUrl}/videos/embed/${peertubeId}`;
+        // Extract Stream ID (remove 'ams:' prefix if it exists)
+        const streamId = video.peertube_url.replace('ams:', '');
+        const streamUrl = await VideoService.getStreamUrl(streamId);
 
         return NextResponse.json({
-            stream_url: embedUrl,
+            stream_url: streamUrl,
             title: video.title,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            provider: 'antmedia'
         });
 
     } catch (error) {

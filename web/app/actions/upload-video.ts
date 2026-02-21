@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { uploadToPeerTube } from "@/lib/peertube";
 
 export async function uploadVideoAction(formData: FormData) {
     try {
@@ -36,26 +35,27 @@ export async function uploadVideoAction(formData: FormData) {
             return { error: "Forbidden" };
         }
 
-        // 2. Upload to PeerTube
-        let peerTubeVideo;
+        // 2. Upload using VideoService (Provider-Aware)
+        const { VideoService } = await import("@/lib/video-service");
+        let uploadedVideo;
         try {
-            peerTubeVideo = await uploadToPeerTube(file, title, description || "");
+            uploadedVideo = await VideoService.upload(file, title, description || "");
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : "Unknown PeerTube Error";
-            console.error("PeerTube Error:", error);
-            return { error: `PeerTube Upload Failed: ${errorMessage}` };
+            const errorMessage = error instanceof Error ? error.message : "Upload Error";
+            console.error("Video Upload Error:", error);
+            return { error: `Upload Failed: ${errorMessage}` };
         }
 
         // 3. Save to Supabase
         const { error: dbError } = await supabase
             .from("videos")
             .insert({
-                id: peerTubeVideo.shortUUID,
+                id: uploadedVideo.id,
                 course_id: courseId,
                 teacher_id: user.id,
                 title: title,
                 description: description || "",
-                peertube_url: peerTubeVideo.url,
+                peertube_url: uploadedVideo.url,
             });
 
         if (dbError) {

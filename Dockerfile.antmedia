@@ -1,0 +1,35 @@
+# Ant Media Server Community Edition - Coolify Build
+FROM ubuntu:20.04
+
+# Avoid prompts
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    wget \
+    unzip \
+    openjdk-11-jdk \
+    iproute2 \
+    libcap2 \
+    pciutils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Use version 2.10.0 (Stable Community)
+ARG AMS_VERSION=2.10.0
+ARG AMS_FILE=ant-media-server-community-2.10.0.zip
+
+# Download and Extract Ant Media Server
+RUN wget https://github.com/ant-media/Ant-Media-Server/releases/download/v${AMS_VERSION}/${AMS_FILE} -O /tmp/ams.zip \
+    && unzip /tmp/ams.zip -d /usr/local/ \
+    && mv /usr/local/ant-media-server /usr/local/antmedia \
+    && rm /tmp/ams.zip
+
+WORKDIR /usr/local/antmedia
+
+# Permissions
+RUN chmod +x start.sh
+
+# Web Dashboard, RTMP, HTTPS
+EXPOSE 5080 1935 5443
+
+CMD ["./start.sh"]

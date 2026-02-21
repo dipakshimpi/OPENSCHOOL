@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  antmedia:
+    image: antmedia/ant-media-server-community:latest
+    container_name: antmedia
+    restart: always
+    network_mode: host # Required for WebRTC and port management in AMS
+    volumes:
+      - ams_data:/usr/local/antmedia/webapps
+    environment:
+      - SERVER_NAME=184.72.154.201
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  ams_data:
