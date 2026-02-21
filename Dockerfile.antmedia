@@ -1,5 +1,5 @@
 # Ant Media Server Community Edition - Coolify Build
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 # Avoid prompts
 ENV DEBIAN_FRONTEND=noninteractive
@@ -8,20 +8,23 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     wget \
     unzip \
-    openjdk-11-jdk \
+    openjdk-17-jdk \
     iproute2 \
-    libcap2 \
+    libcap2-bin \
     pciutils \
+    ffmpeg \
+    net-tools \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Use version 2.10.0 (Stable Community)
-ARG AMS_VERSION=2.10.0
-ARG AMS_FILE=ant-media-server-community-2.10.0.zip
+# Use version 2.17.1 (Latest Community)
+ARG AMS_VERSION=2.17.1
+ARG AMS_FILE=ant-media-server-community-2.17.1.zip
 
 # Download and Extract Ant Media Server
-RUN wget https://github.com/ant-media/Ant-Media-Server/releases/download/v${AMS_VERSION}/${AMS_FILE} -O /tmp/ams.zip \
+RUN wget https://github.com/ant-media/Ant-Media-Server/releases/download/ams-v${AMS_VERSION}/${AMS_FILE} -O /tmp/ams.zip \
     && unzip /tmp/ams.zip -d /usr/local/ \
-    && mv /usr/local/ant-media-server /usr/local/antmedia \
+    && mv /usr/local/ant-media-server* /usr/local/antmedia \
     && rm /tmp/ams.zip
 
 WORKDIR /usr/local/antmedia
