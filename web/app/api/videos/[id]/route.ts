@@ -1,5 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
+import { verifySession } from "@/lib/auth-utils";
 
 export async function DELETE(
     request: Request,
@@ -7,14 +8,16 @@ export async function DELETE(
 ) {
     try {
         const { id } = await params;
-        const supabase = await createClient();
+        const adminClient = createAdminClient();
 
-        // 1. Check authentication
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        // 1. Check authentication via verifySession (Identity Bridge)
+        const session = await verifySession();
+        if (!session) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
 
         // 2. Fetch video to check ownership
-        const { data: video, error: fetchError } = await supabase
+        const { data: video, error: fetchError } = await adminClient
             .from('videos')
             .select('teacher_id')
             .eq('id', id)
@@ -24,27 +27,31 @@ export async function DELETE(
             return NextResponse.json({ error: "Video not found" }, { status: 404 });
         }
 
-        // 3. Check if user is the teacher who uploaded the video or an admin
-        const { data: profile } = await supabase
+        // 3. Fetch user role from profile
+        const { data: profile } = await adminClient
             .from('profiles')
             .select('role')
-            .eq('id', user.id)
+            .eq('id', session.uid)
             .single();
 
         const isAdmin = profile?.role === 'admin';
-        const isOwner = video.teacher_id === user.id;
+        const isOwner = video.teacher_id === session.uid;
 
         if (!isAdmin && !isOwner) {
+            console.warn(`🚫 Deletion denied: User ${session.uid} is not owner of video ${id}`);
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
-        // 4. Delete the video
-        const { error: deleteError } = await supabase
+        // 4. Delete the video metadata from database
+        const { error: deleteError } = await adminClient
             .from('videos')
             .delete()
             .eq('id', id);
 
-        if (deleteError) throw deleteError;
+        if (deleteError) {
+            console.error("❌ Delete operation failed:", deleteError);
+            throw deleteError;
+        }
 
         return NextResponse.json({ success: true });
     } catch (error) {

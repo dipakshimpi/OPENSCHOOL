@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 // Use ONLY for server-side operations that need to bypass RLS
 export function createAdminClient() {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const serviceRoleKey = process.env.SERVICE_SUPABASESERVICE_KEY;
 
     if (!supabaseUrl || !serviceRoleKey) {
         throw new Error('Missing Supabase admin credentials');

@@ -111,7 +111,8 @@ export const config = {
          * - _next/image (image optimization files)
          * - favicon.ico (favicon file)
          * - /api/videos/upload (bypass middleware for uploads)
+         * - /api/videos/proxy (bypass middleware for performance)
          */
-        '/((?!_next/static|_next/image|favicon.ico|api/videos/upload|teacher/videos/upload).*)',
+        '/((?!_next/static|_next/image|favicon.ico|api/videos/upload|api/videos/proxy|teacher/videos/upload).*)',
     ],
 }

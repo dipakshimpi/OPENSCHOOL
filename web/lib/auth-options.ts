@@ -15,6 +15,14 @@ declare module "next-auth" {
     }
 }
 
+interface KeycloakToken {
+    sub: string;
+    email?: string;
+    name?: string;
+    preferred_username?: string;
+    [key: string]: unknown;
+}
+
 export const authOptions: NextAuthOptions = {
     providers: [
         // 1. Google Login (Headless)
@@ -68,7 +76,7 @@ export const authOptions: NextAuthOptions = {
                     }
 
                     const data = await response.json();
-                    const decoded: any = jwtDecode(data.access_token);
+                    const decoded = jwtDecode<KeycloakToken>(data.access_token);
 
                     return {
                         id: decoded.sub,
@@ -92,7 +100,7 @@ export const authOptions: NextAuthOptions = {
                 try {
                     const supabase = createClient(
                         process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                        process.env.SUPABASE_SERVICE_ROLE_KEY!
+                        process.env.SERVICE_SUPABASESERVICE_KEY!
                     );
 
                     // 1. Try to find existing profile
@@ -104,6 +112,13 @@ export const authOptions: NextAuthOptions = {
 
                     if (profile) {
                         token.role = profile.role;
+
+                        // 🔐 MASTER ADMIN SAFETY NET: 
+                        // If this is the master admin email, ensure they get the admin role 
+                        // regardless of what the database says (e.g. if they were testing student flow)
+                        if (user.email?.toLowerCase() === process.env.ADMIN_EMAIL?.toLowerCase()) {
+                            token.role = 'admin';
+                        }
                     } else {
                         // 2. If no profile exists, check if this is the FIRST user in the system
                         const { count } = await supabase
@@ -125,7 +140,7 @@ export const authOptions: NextAuthOptions = {
 
                         token.role = initialRole;
                     }
-                } catch (e) {
+                } catch {
                     token.role = 'student';
                 }
 

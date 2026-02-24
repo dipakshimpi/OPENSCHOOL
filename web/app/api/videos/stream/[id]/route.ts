@@ -60,15 +60,18 @@ export async function GET(
             }
         }
 
-        // 5. Security Layer: Use VideoService to generate the AMS URL
+        // 5. Security Layer: Use VideoService to generate the Signed Proxy URL
         const { VideoService } = await import("@/lib/video-service");
 
         // Extract Stream ID (remove 'ams:' prefix if it exists)
         const streamId = video.peertube_url.replace('ams:', '');
-        const streamUrl = await VideoService.getStreamUrl(streamId);
+
+        // 🛡️ SMART PROXY: Generate a local signed path for Enterprise-level security 
+        // on a Community Edition server.
+        const secureProxyUrl = VideoService.getProxyUrl(streamId, session.uid);
 
         return NextResponse.json({
-            stream_url: streamUrl,
+            stream_url: secureProxyUrl,
             title: video.title,
             timestamp: Date.now(),
             provider: 'antmedia'

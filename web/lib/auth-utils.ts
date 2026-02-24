@@ -13,5 +13,6 @@ export async function verifySession() {
         email: session.user.email,
         name: session.user.name,
         role: session.user.role,
+        supabaseAccessToken: session.supabaseAccessToken,
     };
 }

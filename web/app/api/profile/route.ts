@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 // Helper to get supabase admin client lazily
 function getSupabaseAdmin() {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const key = process.env.SERVICE_SUPABASESERVICE_KEY;
 
     if (!url || !key) {
         throw new Error("Missing Supabase admin environment variables");
@@ -26,49 +26,71 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const intendedRole = searchParams.get('intendedRole') || undefined;
 
-        // Check allowlist (passing the intended role from the client)
+        // Check allowlist
         const { allowed, role: allowedRole } = await isEmailAllowed(session.email, intendedRole);
         if (!allowed) {
             return NextResponse.json({ error: "Access denied. Your email is not on the institution allowlist." }, { status: 403 });
         }
 
         const userId = session.uid;
-        const supabaseAdmin = getSupabaseAdmin();
-        const { data: profile, error } = await supabaseAdmin
+        const supabase = getSupabaseAdmin();
+
+        // 1. Try to fetch existing profile
+        const { data: profile, error } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', userId)
             .single();
 
-        if (error) {
-            console.error("SUPABASE_PROFILE_FETCH_ERROR:", {
-                userId,
-                error
-            });
+        // 2. If missing, Auto-Heal (Create Profile)
+        if (error && error.code === 'PGRST116') {
+            console.log(`[Profile API] Profile missing for ${userId}. Auto-creating with service role...`);
 
-            if (error.code === 'PGRST116') {
-                // AUTO-HEAL: Create profile with role from allowlist
-                const is_admin = allowedRole === 'admin';
+            const is_admin = allowedRole === 'admin';
+            const newProfileData = {
+                id: userId,
+                email: session.email,
+                full_name: session.name || session.email.split('@')[0],
+                role: allowedRole || 'student',
+                is_approved: is_admin,
+                is_admin_approved: is_admin,
+                is_teacher_approved: is_admin,
+                updated_at: new Date().toISOString()
+            };
 
-                const { data: newProfile, error: createError } = await supabaseAdmin
-                    .from('profiles')
-                    .insert({
-                        id: userId,
-                        full_name: session.name || session.email.split('@')[0],
-                        role: allowedRole || 'student',
-                        // Safety: Admins are auto-approved. Others need manual approval.
-                        is_approved: is_admin,
-                        is_admin_approved: is_admin,
-                        is_teacher_approved: is_admin,
-                        updated_at: new Date().toISOString()
-                    })
-                    .select()
-                    .single();
+            const { data: createdProfile, error: createError } = await supabase
+                .from('profiles')
+                .upsert(newProfileData)
+                .select()
+                .single();
 
-                if (createError) throw createError;
-                return NextResponse.json(newProfile);
+            if (createError) {
+                console.warn("[Profile API] Profile creation failed:", createError.message);
+                // Return a graceful fallback instead of 500
+                return NextResponse.json({
+                    id: userId,
+                    email: session.email,
+                    full_name: session.name || 'User',
+                    role: allowedRole || 'student',
+                    is_approved: false,
+                    _pending: true
+                });
             }
-            throw error;
+
+            return NextResponse.json(createdProfile);
+        }
+
+        if (error) {
+            console.error("[Profile API] Fetch error:", error.message);
+            // Graceful fallback
+            return NextResponse.json({
+                id: userId,
+                email: session.email,
+                full_name: session.name || 'User',
+                role: allowedRole || 'student',
+                is_approved: false,
+                _pending: true
+            });
         }
 
         return NextResponse.json(profile);

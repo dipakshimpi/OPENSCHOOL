@@ -1,6 +1,5 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
 import { VideoService } from "@/lib/video-service";
@@ -35,8 +34,6 @@ export async function uploadVideoAction(formData: FormData) {
             return { error: "Forbidden" };
         }
 
-        const supabase = await createClient();
-
         // 2. Upload using VideoService (Provider-Aware)
         let uploadedVideo;
         try {
@@ -49,8 +46,11 @@ export async function uploadVideoAction(formData: FormData) {
             return { error: `Upload Failed: ${errorMessage}` };
         }
 
-        // 3. Save to Supabase
-        const { error: dbError } = await supabase
+        // 3. Save to Supabase (Use Admin Client to avoid JWT expiry during long uploads)
+        const { createAdminClient } = await import("@/lib/supabase/admin");
+        const adminSupabase = createAdminClient();
+
+        const { error: dbError } = await adminSupabase
             .from("videos")
             .insert({
                 id: uploadedVideo.id,

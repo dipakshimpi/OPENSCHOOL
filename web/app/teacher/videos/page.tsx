@@ -67,13 +67,16 @@ function TeacherVideosContent() {
 
         try {
             const res = await fetch(`/api/videos/${id}`, { method: "DELETE" });
+            const data = await res.json();
+
             if (res.ok) {
                 setVideos(videos.filter(v => v.id !== id));
             } else {
-                alert("Failed to delete video");
+                alert(`Failed to delete: ${data.error || "Please try again later."}`);
             }
         } catch (error) {
             console.error("Delete error:", error);
+            alert("A network error occurred. Please check your connection.");
         }
     };
 

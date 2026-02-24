@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 // Helper to get supabase admin client lazily
 function getSupabaseAdmin() {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const key = process.env.SERVICE_SUPABASESERVICE_KEY;
 
     if (!url || !key) {
         throw new Error("Missing Supabase admin environment variables");
@@ -35,11 +35,57 @@ export async function GET() {
         const userId = session.uid;
 
         // Get user profile for name/role
-        const { data: profile } = await supabaseAdmin
+        const profileResult = await supabaseAdmin
             .from('profiles')
             .select('*')
             .eq('id', userId)
             .single();
+        let profile = profileResult.data;
+        const profileError = profileResult.error;
+
+        // AUTO-HEAL: If profile is missing, create it on the fly
+        if (profileError && profileError.code === 'PGRST116') {
+            console.log(`[Stats API] Profile missing for ${userId}. Auto-creating...`);
+            const { data: newProfile, error: createErr } = await supabaseAdmin
+                .from('profiles')
+                .upsert({
+                    id: userId,
+                    email: session.email,
+                    full_name: session.name || session.email?.split('@')[0] || 'Student',
+                    role: 'student',
+                    is_approved: false,
+                    is_admin_approved: false,
+                    is_teacher_approved: false,
+                    updated_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+
+            if (createErr) {
+                console.warn("[Stats API] Could not auto-create profile:", createErr.message);
+                // Return graceful fallback instead of crashing
+                return NextResponse.json({
+                    role: 'student',
+                    fullName: session.name || 'Student',
+                    gradeLevel: null,
+                    enrolledCourses: [],
+                    stats: { enrolledCount: 0, avgProgress: 0, attendanceRate: 100 },
+                    upcomingClasses: []
+                });
+            }
+            profile = newProfile;
+        } else if (profileError) {
+            console.error("[Stats API] Profile fetch error:", profileError.message);
+            // Return graceful fallback
+            return NextResponse.json({
+                role: 'student',
+                fullName: session.name || 'Student',
+                gradeLevel: null,
+                enrolledCourses: [],
+                stats: { enrolledCount: 0, avgProgress: 0, attendanceRate: 100 },
+                upcomingClasses: []
+            });
+        }
 
         const userProfile = profile as Profile;
 
@@ -213,16 +259,21 @@ export async function GET() {
                 : 0;
 
             // Fetch real attendance rate for this student
-            const { data: attendanceRecords } = await supabaseAdmin
-                .from('student_attendance')
-                .select('status')
-                .eq('student_id', userId);
+            // Wrapped in try/catch so a missing table doesn't crash the whole endpoint
+            let attendanceRate = 100;
+            try {
+                const { data: attendanceRecords, error: attErr } = await supabaseAdmin
+                    .from('student_attendance')
+                    .select('status')
+                    .eq('student_id', userId);
 
-            const totalAttendance = attendanceRecords?.length || 0;
-            const presentCount = attendanceRecords?.filter((a) => a.status === 'present').length || 0;
-            const attendanceRate = totalAttendance > 0
-                ? (presentCount / totalAttendance) * 100
-                : 100; // Default to 100% if no records yet
+                if (!attErr && attendanceRecords && attendanceRecords.length > 0) {
+                    const presentCount = attendanceRecords.filter((a) => a.status === 'present').length;
+                    attendanceRate = (presentCount / attendanceRecords.length) * 100;
+                }
+            } catch {
+                // Table may not exist yet — default to 100%
+            }
 
             // Fetch today's classes for the student
             const today = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(new Date());

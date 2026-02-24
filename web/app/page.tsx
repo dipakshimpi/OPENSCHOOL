@@ -4,7 +4,8 @@ import { isEmailAllowed } from "@/lib/user-roles";
 import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 
-export default async function Home({ searchParams }: { searchParams: { intendedRole?: string } }) {
+export default async function Home({ searchParams: searchParamsPromise }: { searchParams: Promise<{ intendedRole?: string }> }) {
+  const searchParams = await searchParamsPromise;
   const session = await verifySession();
   const cookieStore = await cookies();
 
@@ -19,7 +20,7 @@ export default async function Home({ searchParams }: { searchParams: { intendedR
   // 1. Check if user already has a profile (to get their actual role)
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SERVICE_SUPABASESERVICE_KEY!
   );
 
   const { data: profile } = await supabaseAdmin
@@ -28,14 +29,30 @@ export default async function Home({ searchParams }: { searchParams: { intendedR
     .eq('id', session.uid)
     .single();
 
+  const isMasterAdmin = session.email?.toLowerCase() === (process.env.ADMIN_EMAIL || "").toLowerCase();
+
+  // For master admin, priority is: URL Param > 'admin' (ignoring sticky cookies)
+  // For others: URL Param > Cookie > Default
+  const requestedRole = searchParams.intendedRole || (isMasterAdmin ? 'admin' : cookieStore.get('intended_role')?.value);
+
+  // If profile exists, check if we need to sync/override role (critical for Master Admin)
   if (profile?.role) {
+    if (isMasterAdmin && requestedRole && requestedRole !== profile.role && (requestedRole === 'teacher' || requestedRole === 'student' || requestedRole === 'admin')) {
+      console.log(`[Home] Syncing Admin role: ${profile.role} -> ${requestedRole}`);
+      await supabaseAdmin
+        .from('profiles')
+        .update({ role: requestedRole })
+        .eq('id', session.uid);
+
+      return redirect(`/${requestedRole}`);
+    }
+
     console.log(`[Home] Existing profile found. Redirecting to: /${profile.role}`);
     return redirect(`/${profile.role}`);
   }
 
   // 2. New User: Determine role and auto-create profile
-  // Priority: Query Param > Cookie > Default(student)
-  const intendedRole = searchParams.intendedRole || cookieStore.get('intended_role')?.value;
+  const intendedRole = requestedRole; // Use the same logic we calculated above
 
   console.log("[Home] New user detected. Checking access for:", session.email);
 

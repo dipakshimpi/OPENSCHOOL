@@ -129,3 +129,29 @@
   background-color: rgb(24 24 27 / 0.8);
   border-color: rgb(39 39 42);
 }
+
+@keyframes float {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+
+  25% {
+    transform: translate(10%, 10%) rotate(1deg);
+  }
+
+  50% {
+    transform: translate(5%, 15%) rotate(-1deg);
+  }
+
+  75% {
+    transform: translate(15%, 5%) rotate(1deg);
+  }
+
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+.animate-float {
+  animation: float 15s infinite ease-in-out;
+}

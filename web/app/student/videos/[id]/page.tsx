@@ -23,9 +23,12 @@ interface Video {
     courses: { title: string };
 }
 
+import { useSession } from "next-auth/react";
+
 export default function VideoWatchPage() {
     const params = useParams();
     const router = useRouter();
+    const { data: session } = useSession();
     const [video, setVideo] = useState<Video | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -82,9 +85,8 @@ export default function VideoWatchPage() {
                         Back to Library
                     </Button>
 
-                    {/* Secure Video Player - Uses Proxy API */}
                     <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black shadow-2xl">
-                        <VideoPlayer videoId={video.id} />
+                        <VideoPlayer videoId={video.id} userEmail={session?.user?.email || undefined} />
                     </div>
 
                     <div className="space-y-4">
