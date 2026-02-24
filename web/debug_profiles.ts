@@ -1,12 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
-import path from "path";
 
 dotenv.config({ path: ".env.local" });
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SERVICE_SUPABASESERVICE_KEY!
 );
 
 async function checkAdmin() {
@@ -16,14 +15,23 @@ async function checkAdmin() {
     const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('email', email); // Wait, profiles might not have email column, usually they use id
+        .eq('email', email);
 
-    // Let's try fetching by email in Keycloak or just search profiles
+    if (error) {
+        console.error("Error fetching profile by email:", error);
+    } else {
+        console.log("Profile by email result:", data);
+    }
+
     const { data: profiles, error: pError } = await supabase
         .from('profiles')
         .select('*');
 
-    console.log("Profiles in DB:", profiles?.map(p => ({ id: p.id, role: p.role, name: p.full_name })));
+    if (pError) {
+        console.error("Error fetching all profiles:", pError);
+    }
+
+    console.log("Profiles in DB:", profiles?.map(p => ({ id: p.id, role: p.role, name: p.full_name, email: p.email })));
 }
 
 checkAdmin();

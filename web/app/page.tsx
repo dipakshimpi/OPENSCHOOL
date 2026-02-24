@@ -35,13 +35,29 @@ export default async function Home({ searchParams: searchParamsPromise }: { sear
   // For others: URL Param > Cookie > Default
   const requestedRole = searchParams.intendedRole || (isMasterAdmin ? 'admin' : cookieStore.get('intended_role')?.value);
 
-  // If profile exists, check if we need to sync/override role (critical for Master Admin)
+  // If profile exists, check if we need to sync/override role
   if (profile?.role) {
-    if (isMasterAdmin && requestedRole && requestedRole !== profile.role && (requestedRole === 'teacher' || requestedRole === 'student' || requestedRole === 'admin')) {
-      console.log(`[Home] Syncing Admin role: ${profile.role} -> ${requestedRole}`);
+    const validRoles = ['teacher', 'student', 'admin'];
+    const requestedRoleValid = requestedRole && validRoles.includes(requestedRole);
+    const isRoleChange = requestedRoleValid && requestedRole !== profile.role;
+
+    if (isRoleChange) {
+      // 🛡️ SECURITY: Block non-admins from escalating to 'admin'
+      if (requestedRole === 'admin' && !isMasterAdmin) {
+        console.warn(`[Home] Unauthorized admin escalation attempt blocked for: ${session.email}`);
+        return redirect(`/${profile.role}`);
+      }
+
+      console.log(`[Home] Role update requested for ${session.email}: ${profile.role} -> ${requestedRole}`);
+
+      // Update the profile with the new role
       await supabaseAdmin
         .from('profiles')
-        .update({ role: requestedRole })
+        .update({
+          role: requestedRole,
+          // If switching TO teacher, require manual approval
+          ...(requestedRole === 'teacher' ? { is_approved: false } : { is_approved: true })
+        })
         .eq('id', session.uid);
 
       return redirect(`/${requestedRole}`);
