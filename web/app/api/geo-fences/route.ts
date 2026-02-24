@@ -72,19 +72,42 @@ export async function POST(request: Request) {
 
         let schoolId = profile?.school_id;
 
-        // Self-healing: If admin is missing a school_id, generate one for them
+        // Self-healing: If admin is missing a school_id, ensure a school exists and link it
         if (!schoolId) {
-            const newSchoolId = crypto.randomUUID();
+            console.log(`[GeoFence] Admin ${userId} missing school_id. Initializing...`);
+
+            // 1. Check if ANY school exists
+            const { data: schools } = await supabaseAdmin.from('schools').select('id').limit(1);
+            let targetSchoolId;
+
+            if (schools && schools.length > 0) {
+                targetSchoolId = schools[0].id;
+            } else {
+                // 2. Create a default school if none exists
+                const { data: newSchool, error: schoolError } = await supabaseAdmin
+                    .from('schools')
+                    .insert({ name: 'Main Campus' })
+                    .select()
+                    .single();
+
+                if (schoolError) {
+                    console.error("Failed to create default school:", schoolError);
+                    return NextResponse.json({ error: "Institutional setup failed" }, { status: 500 });
+                }
+                targetSchoolId = newSchool.id;
+            }
+
+            // 3. Link admin to this school
             const { error: updateError } = await supabaseAdmin
                 .from('profiles')
-                .update({ school_id: newSchoolId })
+                .update({ school_id: targetSchoolId })
                 .eq('id', userId);
 
             if (updateError) {
-                console.error("Failed to auto-assign school_id:", updateError);
+                console.error("Failed to link admin to school:", updateError);
                 return NextResponse.json({ error: "Failed to initialize school profile" }, { status: 500 });
             }
-            schoolId = newSchoolId;
+            schoolId = targetSchoolId;
         }
 
         const body = await request.json();
