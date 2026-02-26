@@ -58,7 +58,7 @@ export async function uploadVideoAction(formData: FormData) {
                 teacher_id: session.user.id,
                 title: title,
                 description: description || "",
-                peertube_url: uploadedVideo.url,
+                video_url: uploadedVideo.url,
             });
 
         if (dbError) {

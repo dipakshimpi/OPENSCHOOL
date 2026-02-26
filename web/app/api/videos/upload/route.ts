@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
                 teacher_id: session.user.id,
                 title: title,
                 description: description || "",
-                peertube_url: uploadedVideo.url,
+                video_url: uploadedVideo.url,
             })
             .select()
             .single();

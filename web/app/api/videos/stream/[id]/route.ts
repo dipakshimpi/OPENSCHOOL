@@ -26,10 +26,10 @@ export async function GET(
             return NextResponse.json({ error: "Account pending approval" }, { status: 403 });
         }
 
-        // 3. Fetch video metadata (includes course_id and teacher_id for access check)
+        // 3. Fetch video metadata
         const { data: video, error } = await adminClient
             .from('videos')
-            .select('peertube_url, title, course_id, teacher_id')
+            .select('video_url, title, course_id, teacher_id')
             .eq('id', id)
             .single();
 
@@ -37,16 +37,11 @@ export async function GET(
             return NextResponse.json({ error: "Video not found" }, { status: 404 });
         }
 
-        // 4. 🔒 CRITICAL: Enrollment-based access control
-        // Allow access if:
-        //   a) User is admin
-        //   b) User is the teacher who uploaded this video
-        //   c) User is enrolled in the video's course
+        // 4. Enrollment access control
         const isAdmin = profile.role === 'admin';
         const isTeacher = video.teacher_id === session.uid;
 
         if (!isAdmin && !isTeacher) {
-            // Check enrollment
             const { data: enrollment } = await adminClient
                 .from('enrollments')
                 .select('id')
@@ -55,7 +50,6 @@ export async function GET(
                 .single();
 
             if (!enrollment) {
-                console.warn(`🚫 Access denied: User ${session.uid} not enrolled in course ${video.course_id} for video ${id}`);
                 return NextResponse.json({ error: "Access denied. You must be enrolled in this course to watch this video." }, { status: 403 });
             }
         }
@@ -64,7 +58,7 @@ export async function GET(
         const { VideoService } = await import("@/lib/video-service");
 
         // Extract Stream ID (remove 'ams:' prefix if it exists)
-        const streamId = video.peertube_url.replace('ams:', '');
+        const streamId = video.video_url.replace('ams:', '');
 
         // 🛡️ SMART PROXY: Generate a local signed path for Enterprise-level security 
         // on a Community Edition server.

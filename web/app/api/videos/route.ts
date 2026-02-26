@@ -88,7 +88,7 @@ export async function GET(request: Request) {
             });
         }
 
-        // 5. Merge data — IMPORTANT: strip peertube_url from response (security)
+        // 5. Merge data — IMPORTANT: strip video_url from response (security)
         const transformedVideos = videos.map(v => ({
             id: v.id,
             title: v.title,
@@ -99,7 +99,7 @@ export async function GET(request: Request) {
             teacher_id: v.teacher_id,
             created_at: v.created_at,
             courses: { title: courseMap[v.course_id] || "Unknown Course" }
-            // ⛔ peertube_url is intentionally NOT included here
+            // ⛔ video_url is intentionally NOT included here
         }));
 
         return NextResponse.json(transformedVideos);
@@ -118,22 +118,19 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json();
-        const { title, description, peertube_url, course_id, thumbnail_url, duration } = body;
+        const { title, description, video_url, course_id, thumbnail_url, duration } = body;
 
-        if (!title || !peertube_url || !course_id) {
+        if (!title || !video_url || !course_id) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
-        // Support both old PeerTube and new AMS format
+        // Support Ant Media Server IDs
         let videoId: string;
-        if (peertube_url.startsWith('ams:')) {
-            videoId = peertube_url.replace('ams:', '');
+        if (video_url.startsWith('ams:')) {
+            videoId = video_url.replace('ams:', '');
         } else {
-            const urlMatch = peertube_url.match(/\/w\/([a-zA-Z0-9_-]+)/);
-            if (!urlMatch) {
-                return NextResponse.json({ error: "Invalid URL Format" }, { status: 400 });
-            }
-            videoId = urlMatch[1];
+            // Assume it's already a clean stream ID from AMS
+            videoId = video_url;
         }
 
         const adminClient = createAdminClient();
@@ -142,7 +139,7 @@ export async function POST(request: Request) {
             id: videoId,
             title,
             description,
-            peertube_url,
+            video_url,
             thumbnail_url,
             duration,
             course_id,

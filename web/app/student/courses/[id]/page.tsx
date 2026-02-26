@@ -23,7 +23,7 @@ interface VideoData {
     id: string;
     title: string;
     description: string;
-    peertube_url: string;
+    video_url: string;
     thumbnail_url: string | null;
     duration: number;
 }

@@ -1,33 +1,4 @@
 services:
-  # --- DATABASE (For PeerTube) ---
-  postgres:
-    image: postgres:13-alpine
-    env_file: ./peertube/.env
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    restart: always
-
-  # --- CACHE (For PeerTube) ---
-  redis:
-    image: redis:6-alpine
-    volumes:
-      - redisdata:/data
-    restart: always
-
-  # --- VIDEO ENGINE (PeerTube) ---
-  peertube:
-    image: chocobozzz/peertube:production-bookworm
-    env_file: ./peertube/.env
-    ports:
-      - "9000:9000"
-    volumes:
-      - ./peertube/data:/data
-      - ./peertube/config:/config
-    depends_on:
-      - postgres
-      - redis
-    restart: always
-
   # --- THE WEB APP (Next.js) ---
   web:
     build:
@@ -37,8 +8,6 @@ services:
         - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
         - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-        # THIS IS FOR THE BROWSER (Windows)
-        - NEXT_PUBLIC_PEERTUBE_URL=${NEXT_PUBLIC_PEERTUBE_URL}
         - NEXT_PUBLIC_FIREBASE_API_KEY=${NEXT_PUBLIC_FIREBASE_API_KEY}
         - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
         - NEXT_PUBLIC_FIREBASE_PROJECT_ID=${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
@@ -47,15 +16,6 @@ services:
         - NEXT_PUBLIC_FIREBASE_APP_ID=${NEXT_PUBLIC_FIREBASE_APP_ID}
     ports:
       - "3000:3000"
-    environment:
-      # THIS IS FOR THE SERVER (Inside Docker)
-      - PEERTUBE_API_URL=http://peertube:9000
     env_file:
       - .env
-    depends_on:
-      - peertube
     restart: always
-
-volumes:
-  pgdata:
-  redisdata:
