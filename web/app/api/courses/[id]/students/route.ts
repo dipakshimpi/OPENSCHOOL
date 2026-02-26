@@ -1,3 +1,4 @@
+import { verifySession } from "@/lib/auth-utils";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -6,27 +7,30 @@ export async function GET(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const session = await verifySession();
+        if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
         const supabase = await createClient();
         const { id: courseId } = await params;
 
-        // Verify the teacher owns this course (optional but good for security)
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
+        // Verify the teacher owns this course
         const { data: course, error: courseError } = await supabase
             .from('courses')
             .select('instructor_id')
             .eq('id', courseId)
             .single();
 
-        if (courseError || course.instructor_id !== user.id) {
-            return NextResponse.json({ error: "Forbidden or Course not found" }, { status: 403 });
+        if (courseError || course.instructor_id !== session.uid) {
+            // Check if user is admin (admins can see all)
+            if (session.role !== 'admin') {
+                return NextResponse.json({ error: "Forbidden or Course not found" }, { status: 403 });
+            }
         }
 
         // Get enrollments with profile names
         const { data: enrollments, error: enrollError } = await supabase
             .from('enrollments')
-            .select('student_id, profiles(full_name)')
+            .select('student_id, profiles!student_id(full_name)')
             .eq('course_id', courseId);
 
         if (enrollError) throw enrollError;

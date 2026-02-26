@@ -1,4 +1,3 @@
-import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { verifySession } from "@/lib/auth-utils";
 
@@ -9,12 +8,11 @@ export async function GET(request: Request) {
         const section = searchParams.get('section');
         const teacherId = searchParams.get('teacher_id');
 
-        const supabase = await createClient();
+        const { createAdminClient } = await import("@/lib/supabase/admin");
+        const supabase = createAdminClient();
 
-        let query = supabase.from('timetables').select(`
-            *,
-            teacher:profiles(full_name)
-        `);
+        // 1. Fetch raw timetables (avoiding complex joins that cause PGRST200)
+        let query = supabase.from('timetables').select('*');
 
         if (classGrade && section) {
             query = query.eq('class_grade', classGrade).eq('section', section);
@@ -22,10 +20,35 @@ export async function GET(request: Request) {
             query = query.eq('teacher_id', teacherId);
         }
 
-        const { data, error } = await query.order('period_number', { ascending: true });
+        const { data: timetables, error } = await query.order('period_number', { ascending: true });
 
         if (error) throw error;
-        return NextResponse.json(data);
+        if (!timetables || timetables.length === 0) return NextResponse.json([]);
+
+        // 2. Fetch teacher profiles manually to resolve names
+        const uniqueTeacherIds = [...new Set(timetables.map(t => t.teacher_id).filter(Boolean))];
+        const teacherMap: Record<string, { full_name: string }> = {};
+
+        if (uniqueTeacherIds.length > 0) {
+            const { data: profiles, error: pError } = await supabase
+                .from('profiles')
+                .select('id, full_name')
+                .in('id', uniqueTeacherIds);
+
+            if (!pError && profiles) {
+                profiles.forEach(p => {
+                    teacherMap[p.id] = { full_name: p.full_name };
+                });
+            }
+        }
+
+        // 3. Merge profiles back into timetable data
+        const enrichedTimetables = timetables.map(t => ({
+            ...t,
+            teacher: teacherMap[t.teacher_id] || { full_name: 'Unknown Teacher' }
+        }));
+
+        return NextResponse.json(enrichedTimetables);
     } catch (error) {
         console.error("FETCH_TIMETABLE_ERROR:", error);
         return NextResponse.json({ error: "Failed to fetch timetable" }, { status: 500 });

@@ -1,46 +1,43 @@
-# OpenSchool Frontend Polish
+# 🏫 OPENSCHOOL: Next-Generation LMS
+OPENSCHOOL is a high-performance Learning Management System (LMS) built for the modern educational ecosystem. It features a sophisticated "Identity Bridge" between Keycloak and Supabase to provide enterprise-grade security with developer-friendly data management.
 
-This project has been transformed from a basic administrative interface into a **rich, modern Learning Management System (LMS)** frontend.
+## 📖 Essential Documentation
+For deep technical details, setup guides, and architectural decisions, please refer to:
+👉 **[PROJECT_ARCH_DOC.md](./PROJECT_ARCH_DOC.md)** (Read this first!)
 
-## 🎨 UI/UX Transformation
-The design now follows a "premium SaaS" aesthetic, inspired by platforms like Coursera and Udemy.
-- **Rich Color Palette**: Replaced flat whites with layered backgrounds (Slate/Indigo), glassmorphism effects, and semantic colors.
-- **Visual Hierarchy**: Content is organized into cards with distinct shadows and rounded corners.
-- **Interactive Elements**: Hover states, smooth transitions, and dynamic tab/form components.
+## 🎨 Design Philosophy
+The design follows a "premium SaaS" aesthetic:
+- **Rich Visuals**: Layered backgrounds (Slate/Indigo), glassmorphism, and semantic color systems.
+- **Responsive Layouts**: Seamless transitions between desktop and mobile via a robust `DashboardLayout`.
+- **Micro-Animations**: Subtle feedback transitions using Framer Motion (where applicable) and Tailwind.
 
-## 🛠 Tech Stack Enhancements
-- **Tailwind CSS**: Upgraded configuration to use HSL variables for dynamic theming (Dark Mode ready).
-- **shadcn/ui**: Integrated key components (`Card`, `Tabs`, `Button`, `Input`, `Badge`, `Progress`) with custom styling.
-- **Heroicons**: Replaced generic text/scaffolding with consistent, high-quality SVG icons.
-- **Layouts**: Created a robust `DashboardLayout` with a responsive sidebar and glassmorphic header.
+## 🛠 Tech Stack
+- **Framework**: Next.js 15+ (App Router)
+- **Identity**: Keycloak (OIDC, Credentials, Google OAuth)
+- **Database**: Supabase (Postgres + Row Level Security)
+- **Server**: PostgREST + Custom Next.js API Routes
+- **Styling**: Tailwind CSS + shadcn/ui
 
-## 🚀 Key Features Implemented (Frontend Only)
+## 🚀 Key Modules
+1.  **Authentication Bridge**: Proxies Keycloak users into Supabase profiles automatically.
+2.  **Timetable Engine**: Indian School Style (Day/Period/Subject) with collision detection.
+3.  **Geo-Attendance**: Satellite-verified attendance capture using circular geo-fences.
+4.  **Admin Control**: Approval-based registration system and institutional anchoring.
+5.  **Video LMS**: Secure video playback and course content delivery.
 
-### 1. Authentication
-- **Login & Register**: Rich split-screen layouts with animated backgrounds and role selection (Admin/Teacher/Student).
-- **Mock Auth**: Simulates login delays and redirects to appropriate dashboards.
-
-### 2. Role-Based Dashboards
-- **Admin**: Revenue charts (visual), user activity feeds, and KPI cards.
-- **Teacher**: Class schedules with status indicators, quick action buttons, and attendance metrics.
-- **Student**: Course progress tracking, "Next Lesson" prompts, and visual course grids.
-
-### 3. Polish & Details
-- **Profile Pages**: Rich header with avatars and editable form sections.
-- **Attendance**: clean, badge-based status indicators instead of raw tables.
-- **Navigation**: Persistent, collapsible sidebar with active state highlighting.
-
-## 📦 How to Run
-1. Install dependencies:
+## 📦 Getting Started
+1. **Environment Config**:
+   Copy `.env.local` and configure your Supabase and Keycloak keys.
+2. **Install**:
    ```bash
    npm install
    ```
-2. Start the development server:
+3. **Run**:
    ```bash
    npm run dev
    ```
-3. Open [http://localhost:3000](http://localhost:3000)
 
-## ⚠️ Notes
-- This is a **pure frontend implementation**. No real backend logic or database is connected.
-- Data is mocked/static for demonstration purposes.
+## ⚠️ Internal Security Note
+- Row Level Security (RLS) is enabled on critical tables (using broad anon or app-level filtering).
+- **NEVER** expose the `SERVICE_SUPABASESERVICE_KEY` to the client.
+

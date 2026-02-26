@@ -2,7 +2,6 @@ import { NextAuthOptions, DefaultSession } from "next-auth";
 import KeycloakProvider from "next-auth/providers/keycloak";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { jwtDecode } from "jwt-decode";
-import { createSupabaseToken } from "./supabase-token";
 import { createClient } from "@supabase/supabase-js";
 
 declare module "next-auth" {
@@ -11,7 +10,6 @@ declare module "next-auth" {
             id: string;
             role?: string;
         } & DefaultSession["user"];
-        supabaseAccessToken?: string;
     }
 }
 
@@ -144,11 +142,6 @@ export const authOptions: NextAuthOptions = {
                     token.role = 'student';
                 }
 
-                // 🛡️ Sign the Supabase JWT
-                const supabaseToken = await createSupabaseToken(user.id, token.role as string);
-                if (supabaseToken) {
-                    token.supabaseAccessToken = supabaseToken;
-                }
             }
             return token;
         },
@@ -157,7 +150,6 @@ export const authOptions: NextAuthOptions = {
                 session.user.id = token.id as string;
                 session.user.email = token.email as string;
                 session.user.role = token.role as string;
-                session.supabaseAccessToken = token.supabaseAccessToken as string;
             }
             return session;
         },

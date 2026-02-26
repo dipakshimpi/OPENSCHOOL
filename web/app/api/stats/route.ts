@@ -282,12 +282,30 @@ export async function GET() {
             if (userProfile?.grade_level && userProfile.section) {
                 const { data: timetable } = await supabaseAdmin
                     .from('timetables')
-                    .select('*, teacher:profiles(full_name)')
+                    .select('*')
                     .eq('class_grade', userProfile.grade_level)
                     .eq('section', userProfile.section)
                     .eq('day_of_week', today)
                     .order('period_number', { ascending: true });
-                todayClasses = timetable || [];
+
+                if (timetable && timetable.length > 0) {
+                    const tTeacherIds = [...new Set(timetable.map(t => t.teacher_id).filter(Boolean))];
+                    const tTeacherMap: Record<string, string> = {};
+
+                    if (tTeacherIds.length > 0) {
+                        const { data: tProfiles } = await supabaseAdmin
+                            .from('profiles')
+                            .select('id, full_name')
+                            .in('id', tTeacherIds);
+
+                        tProfiles?.forEach(p => tTeacherMap[p.id] = p.full_name);
+                    }
+
+                    todayClasses = timetable.map(t => ({
+                        ...t,
+                        teacher: { full_name: tTeacherMap[t.teacher_id] || "Unknown Teacher" }
+                    }));
+                }
             }
 
             return NextResponse.json({
