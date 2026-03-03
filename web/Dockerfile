@@ -2,12 +2,21 @@
 FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
+
+# Force NODE_ENV=development so npm ci installs devDependencies
+# (tailwindcss, postcss, etc.) even if Coolify injects NODE_ENV=production
+ENV NODE_ENV=development
+
 COPY package.json package-lock.json* ./
 RUN npm ci
 
 # Stage 2: Build the application
 FROM node:20-alpine AS builder
 WORKDIR /app
+
+# Ensure NODE_ENV is not production during build so Tailwind CSS compiles
+ENV NODE_ENV=development
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
