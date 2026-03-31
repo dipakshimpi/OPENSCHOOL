@@ -1,26 +1,23 @@
-# Stage 1: Install dependencies
+# Stage 1: Install dependencies (including devDependencies for Tailwind/PostCSS)
 FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Force NODE_ENV=development so npm ci installs devDependencies
-# (tailwindcss, postcss, etc.) even if Coolify injects NODE_ENV=production
-ENV NODE_ENV=development
-
 COPY package.json package-lock.json* ./
-RUN npm ci
+# Install ALL dependencies (including devDependencies like tailwindcss, postcss)
+RUN npm ci --include=dev
 
 # Stage 2: Build the application
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Ensure NODE_ENV is not production during build so Tailwind CSS compiles
-ENV NODE_ENV=development
+# NODE_ENV=production ensures Next.js builds correctly (no non-standard warning)
+ENV NODE_ENV=production
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Environment variables for build time
+# Environment variables for build time (NEXT_PUBLIC_ vars get baked into client JS)
 ARG NEXT_PUBLIC_SUPABASE_URL
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
 ARG NEXT_PUBLIC_API_URL
@@ -33,7 +30,7 @@ ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_ANT_MEDIA_URL=$NEXT_PUBLIC_ANT_MEDIA_URL
 ENV NEXT_PUBLIC_KEYCLOAK_ISSUER=$NEXT_PUBLIC_KEYCLOAK_ISSUER
-
+ENV NEXT_PUBLIC_KEYCLOAK_CLIENT_ID=$NEXT_PUBLIC_KEYCLOAK_CLIENT_ID
 
 RUN npm run build
 
@@ -41,7 +38,7 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
@@ -53,7 +50,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 USER nextjs
 
 EXPOSE 3000
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
 CMD ["node", "server.js"]
