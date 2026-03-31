@@ -1,9 +1,8 @@
 # 🏫 OPENSCHOOL: Next-Generation LMS
 OPENSCHOOL is a high-performance Learning Management System (LMS) built for the modern educational ecosystem. It features a sophisticated "Identity Bridge" between Keycloak and Supabase to provide enterprise-grade security with developer-friendly data management.
 
-## 📖 Essential Documentation
-For deep technical details, setup guides, and architectural decisions, please refer to:
-👉 **[PROJECT_ARCH_DOC.md](./PROJECT_ARCH_DOC.md)** (Read this first!)
+## 📖 Getting Started
+Follow the instructions below to set up your local development environment. For architectural decisions, refer to the source code and inline comments.
 
 ## 🎨 Design Philosophy
 The design follows a "premium SaaS" aesthetic:
@@ -25,14 +24,15 @@ The design follows a "premium SaaS" aesthetic:
 4.  **Admin Control**: Approval-based registration system and institutional anchoring.
 5.  **Video LMS**: Secure video playback and course content delivery.
 
-## 📦 Getting Started
 1. **Environment Config**:
-   Copy `.env.local` and configure your Supabase and Keycloak keys.
-2. **Install**:
+   Copy `.env.example` to `.env.local` and populate it with your Supabase, Keycloak, and Ant Media Server keys.
+2. **Setup Database**:
+   Apply the migrations provided in the database layer to your Supabase instance.
+3. **Install Dependencies**:
    ```bash
    npm install
    ```
-3. **Run**:
+4. **Launch Application**:
    ```bash
    npm run dev
    ```

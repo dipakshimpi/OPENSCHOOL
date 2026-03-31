@@ -108,7 +108,10 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
+    
             NEXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }}
             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
-            NEXT_PUBLIC_PEERTUBE_URL=${{ secrets.NEXT_PUBLIC_PEERTUBE_URL }}
+            NEXT_PUBLIC_ANT_MEDIA_URL=${{ secrets.NEXT_PUBLIC_ANT_MEDIA_URL }}
+            NEXT_PUBLIC_KEYCLOAK_ISSUER=${{ secrets.NEXT_PUBLIC_KEYCLOAK_ISSUER }}
+            NEXT_PUBLIC_KEYCLOAK_CLIENT_ID=${{ secrets.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID }}
