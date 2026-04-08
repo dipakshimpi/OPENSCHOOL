@@ -73,7 +73,7 @@ export function Header({ title }: { title: string }) {
     }, []);
 
     return (
-        <header className="sticky top-0 z-[100] h-16 px-6 flex items-center justify-between bg-background border-b border-border shadow-sm">
+        <header className="sticky top-0 z-[100] h-16 px-6 flex items-center justify-between bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 shadow-sm">
             {/* Left: Page Title */}
             <div className="flex items-center gap-4">
                 <h1 className="text-lg font-bold text-foreground tracking-tight hidden md:block">
@@ -166,30 +166,31 @@ export function Header({ title }: { title: string }) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent 
                         align="end" 
-                        sideOffset={8}
-                        className="w-56 p-2 rounded-2xl shadow-2xl border-border bg-popover text-popover-foreground z-[99999]"
+                        sideOffset={12}
+                        className="w-56 p-1.5 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl text-foreground z-[99999]"
                     >
-                        <div className="px-3 py-3 border-b border-border mb-1 text-center md:text-left">
-                            <p className="text-xs font-bold text-foreground truncate uppercase tracking-tight">{userName}</p>
+                        <div className="px-3 py-3 border-b border-slate-100 dark:border-white/5 mb-1">
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">Signed in as</p>
+                            <p className="text-xs font-bold text-foreground truncate uppercase tracking-tighter">{userName}</p>
                         </div>
                         <DropdownMenuItem asChild>
-                            <a href={`/${userRole}/profile`} className="flex items-center gap-3 cursor-pointer py-2 px-3 rounded-xl hover:bg-accent hover:text-accent-foreground transition-all text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                                <UserCircle className="w-4 h-4 text-primary" />
+                            <a href={`/${userRole}/profile`} className="flex items-center gap-3 cursor-pointer py-2 px-3 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-all text-[10px] font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 group">
+                                <UserCircle className="w-4 h-4 text-indigo-500 group-hover:scale-110 transition-transform" />
                                 My Profile
                             </a>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                            <a href={`/${userRole}/settings`} className="flex items-center gap-3 cursor-pointer py-2 px-3 rounded-xl hover:bg-accent hover:text-accent-foreground transition-all text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                                <Settings className="w-4 h-4 text-primary" />
+                            <a href={`/${userRole}/settings`} className="flex items-center gap-3 cursor-pointer py-2 px-3 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-all text-[10px] font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 group">
+                                <Settings className="w-4 h-4 text-indigo-500 group-hover:scale-110 transition-transform" />
                                 Settings
                             </a>
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator className="my-1 bg-border" />
+                        <DropdownMenuSeparator className="my-1.5 bg-slate-100 dark:bg-white/5" />
                         <DropdownMenuItem
-                            className="flex items-center gap-3 py-2 px-3 rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive cursor-pointer text-xs font-bold uppercase tracking-widest"
+                            className="flex items-center gap-3 py-2 px-3 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 hover:text-rose-600 cursor-pointer text-[10px] font-bold uppercase tracking-widest group"
                             onClick={() => signOut({ callbackUrl: "/auth/login" })}
                         >
-                            <LogOut className="w-4 h-4" />
+                            <LogOut className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                             Sign Out
                         </DropdownMenuItem>
                     </DropdownMenuContent>

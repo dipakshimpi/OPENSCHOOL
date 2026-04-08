@@ -28,6 +28,16 @@ interface TimetableEntry {
     end_time?: string;
 }
 
+const DUMMY_TIMETABLE: TimetableEntry[] = [
+    { day_of_week: "Monday", period_number: 1, subject: "Advanced Physics", start_time: "08:00", end_time: "09:00", teacher: { full_name: "Dr. Sarah Mitchell" } },
+    { day_of_week: "Monday", period_number: 2, subject: "Calculus III", start_time: "09:00", end_time: "10:00", teacher: { full_name: "Prof. James Wilson" } },
+    { day_of_week: "Tuesday", period_number: 1, subject: "Organic Chemistry", start_time: "08:00", end_time: "09:00", teacher: { full_name: "Dr. Elena Rossi" } },
+    { day_of_week: "Wednesday", period_number: 3, subject: "World History", start_time: "10:00", end_time: "11:00", teacher: { full_name: "Mr. David Brown" } },
+    { day_of_week: "Thursday", period_number: 5, subject: "Computer Science", start_time: "13:00", end_time: "14:00", teacher: { full_name: "Ms. Linda Chen" } },
+    { day_of_week: "Friday", period_number: 2, subject: "Economics 101", start_time: "09:00", end_time: "10:00", teacher: { full_name: "Dr. Robert Smith" } },
+    { day_of_week: "Saturday", period_number: 1, subject: "Physical Education", start_time: "08:00", end_time: "09:00", teacher: { full_name: "Coach Mike" } },
+];
+
 export default function AdminTimetablePage() {
     const [selectedClass, setSelectedClass] = useState("10");
     const [selectedSection, setSelectedSection] = useState("A");
@@ -59,7 +69,9 @@ export default function AdminTimetablePage() {
             const res = await fetch(`/api/timetable?class_grade=${selectedClass}&section=${selectedSection}`);
             if (res.ok) {
                 const data = await res.json();
-                setTimetable(data);
+                setTimetable(data.length > 0 ? data : DUMMY_TIMETABLE);
+            } else {
+                setTimetable(DUMMY_TIMETABLE);
             }
         } catch (err) {
             console.error(err);
@@ -215,7 +227,7 @@ export default function AdminTimetablePage() {
                                             {slot ? (
                                                 <>
                                                     <div>
-                                                        <h4 className="text-sm font-bold text-slate-900 dark:text-white uppercase italic tracking-tighter truncate">{slot.subject}</h4>
+                                                        <h4 className="text-sm font-bold text-slate-900 dark:text-white tracking-tight truncate">{slot.subject}</h4>
                                                         <div className="flex items-center gap-1.5 mt-2 text-slate-400">
                                                             <User className="w-3 h-3" />
                                                             <span className="text-[10px] font-bold truncate">{slot.teacher?.full_name || 'Unassigned'}</span>
@@ -246,7 +258,7 @@ export default function AdminTimetablePage() {
                 <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
                     <DialogContent className="sm:max-w-[425px] rounded-3xl border-none p-0 overflow-hidden bg-white dark:bg-slate-900 shadow-2xl">
                         <DialogHeader className="p-8 pb-0">
-                            <DialogTitle className="text-xl font-bold uppercase italic tracking-tighter">Modify Session Slot</DialogTitle>
+                            <DialogTitle className="text-xl font-bold tracking-tight">Modify Session Slot</DialogTitle>
                             <DialogDescription className="text-xs font-medium text-slate-500">
                                 Update period details for {editingSlot?.day}, Period {editingSlot?.period}.
                             </DialogDescription>

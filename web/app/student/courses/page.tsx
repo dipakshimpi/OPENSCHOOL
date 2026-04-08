@@ -147,8 +147,8 @@ export default function StudentCourses() {
           <TabsContent value="available" className="mt-0">
              <AnimatePresence mode="wait">
                {loading ? (
-                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
-                   {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-96 rounded-[3rem]" />)}
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                   {[1, 2, 3, 4, 5, 8].map(i => <Skeleton key={i} className="h-80 rounded-2xl" />)}
                  </div>
                ) : availableCoursesList.length === 0 ? (
                  <div className="py-32 text-center space-y-8 bg-white/50 dark:bg-slate-900/50 rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-white/5">
@@ -199,8 +199,8 @@ function CourseCard({ course, isEnrolled, isLoading, onEnroll, idx }: { course: 
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         >
-            <Card className="group relative border-none bg-white dark:bg-slate-900 rounded-[3rem] overflow-hidden shadow-2xl hover:shadow-3xl transition-all duration-700 hover:-translate-y-3">
-                <div className="h-56 relative overflow-hidden bg-slate-100 dark:bg-slate-800">
+            <Card className="group relative border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1">
+                <div className="h-40 relative overflow-hidden bg-slate-100 dark:bg-slate-800">
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     {course.thumbnail_url ? (
                         <Image 
@@ -211,8 +211,8 @@ function CourseCard({ course, isEnrolled, isLoading, onEnroll, idx }: { course: 
                             unoptimized
                         />
                     ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-indigo-500/10 to-purple-500/10 flex items-center justify-center p-12">
-                            <BookOpen className="w-20 h-20 text-indigo-500/20 group-hover:scale-110 group-hover:text-indigo-500/40 transition-all duration-700" />
+                        <div className="w-full h-full bg-gradient-to-br from-indigo-500/10 to-purple-500/10 flex items-center justify-center p-6">
+                            <BookOpen className="w-12 h-12 text-indigo-500/20 group-hover:scale-110 group-hover:text-indigo-500/40 transition-all duration-700" />
                         </div>
                     )}
                     <Badge className="absolute top-6 left-6 z-20 bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-white border-none font-black text-[9px] px-4 py-1.5 rounded-xl uppercase tracking-widest backdrop-blur-md shadow-lg shadow-black/5">
@@ -220,23 +220,23 @@ function CourseCard({ course, isEnrolled, isLoading, onEnroll, idx }: { course: 
                     </Badge>
                 </div>
 
-                <CardContent className="p-10 space-y-6">
+                <CardContent className="p-6 space-y-4">
                     <div className="space-y-4">
                         <div className="flex items-center gap-2">
                              <div className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.8)]" />
                              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Stream Validated</span>
                         </div>
-                        <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight uppercase italic tracking-tighter truncate group-hover:text-indigo-600 transition-colors uppercase italic">
+                        <h2 className="text-lg font-bold text-slate-900 dark:text-white leading-tight tracking-tight truncate group-hover:text-indigo-600 transition-colors">
                             {course.title}
                         </h2>
-                        <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest line-clamp-2 leading-relaxed">
+                        <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
                             {course.description || "Synthesizing advanced core concepts through rigorous institutional research and global sync protocols."}
                         </p>
                     </div>
 
                     <div className="flex items-center justify-between pt-4 border-t border-slate-50 dark:border-white/5">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-indigo-600 font-black text-sm">
+                            <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-indigo-600 font-bold text-xs uppercase">
                                 {course.profiles?.full_name?.charAt(0) || "T"}
                             </div>
                             <div className="flex flex-col">
@@ -250,7 +250,7 @@ function CourseCard({ course, isEnrolled, isLoading, onEnroll, idx }: { course: 
                     </div>
                 </CardContent>
 
-                <CardFooter className="px-10 pb-10 pt-0">
+                <CardFooter className="px-6 pb-6 pt-0">
                     {isEnrolled ? (
                         <Link href={`/student/courses/${course.id}`} className="w-full">
                             <Button className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-[1.5rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-xl shadow-emerald-500/20 transition-all flex items-center justify-center gap-3 border-none shadow-none">
@@ -262,7 +262,7 @@ function CourseCard({ course, isEnrolled, isLoading, onEnroll, idx }: { course: 
                         <Button 
                             onClick={() => onEnroll?.(course.id)}
                             disabled={isLoading}
-                            className="w-full h-14 bg-slate-900 dark:bg-indigo-600 hover:bg-black dark:hover:bg-indigo-700 text-white rounded-[1.5rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-xl shadow-indigo-500/20 transition-all flex items-center justify-center gap-3 border-none shadow-none group/btn relative overflow-hidden"
+                            className="w-full h-11 bg-slate-900 dark:bg-indigo-600 hover:bg-black dark:hover:bg-indigo-700 text-white rounded-xl font-bold uppercase text-[10px] tracking-widest shadow-lg shadow-indigo-500/10 transition-all flex items-center justify-center gap-2 border-none group/btn relative overflow-hidden"
                         >
                             {isLoading ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />

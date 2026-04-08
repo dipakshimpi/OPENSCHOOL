@@ -207,7 +207,7 @@ export default function AdminUsersPage() {
                                 {user.full_name?.charAt(0)}
                              </div>
                              <div>
-                               <div className="font-bold text-slate-900 dark:text-white uppercase italic tracking-tighter">{user.full_name || "Guest Account"}</div>
+                               <div className="font-bold text-slate-900 dark:text-white tracking-tight">{user.full_name || "Guest Account"}</div>
                                <div className="text-[10px] text-slate-400 font-medium">{user.email}</div>
                              </div>
                           </div>

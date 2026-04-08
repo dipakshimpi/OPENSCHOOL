@@ -228,7 +228,7 @@ export default function AdminTeachersPage() {
                                                             {teacher.full_name?.charAt(0)}
                                                         </div>
                                                         <div>
-                                                            <div className="font-bold text-slate-900 dark:text-white uppercase italic tracking-tighter">{teacher.full_name}</div>
+                                                            <div className="font-bold text-slate-900 dark:text-white tracking-tight">{teacher.full_name}</div>
                                                             <div className="text-[10px] text-slate-400 font-medium">Verified Instructor</div>
                                                         </div>
                                                     </div>
@@ -282,7 +282,7 @@ export default function AdminTeachersPage() {
                                             {teacher.full_name?.charAt(0)}
                                         </div>
                                         <div>
-                                            <h4 className="font-bold text-slate-900 dark:text-white leading-tight uppercase italic">{teacher.full_name}</h4>
+                                            <h4 className="font-bold text-slate-900 dark:text-white leading-tight tracking-tight">{teacher.full_name}</h4>
                                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">{teacher.email}</p>
                                         </div>
                                         <div className="flex items-center justify-center gap-2 pt-2">

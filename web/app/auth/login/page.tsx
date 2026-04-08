@@ -36,7 +36,7 @@ export default function LoginPage() {
         setIsLoading(true);
         try {
             document.cookie = `intended_role=${role}; path=/; max-age=3600; SameSite=Lax`;
-            await signIn("keycloak-google", { callbackUrl: `/?intendedRole=${role}` });
+            await signIn("google", { callbackUrl: `/?intendedRole=${role}` });
         } catch (error) {
             console.error("Google Login Error:", error);
             setError("Sync failed.");
@@ -82,31 +82,36 @@ export default function LoginPage() {
                 />
             </div>
 
-            {/* 🪪 MAIN LOGIN CARD - Ultra-Compact Minimal Square */}
+            {/* 🛡️ MAIN LOGIN CARD - Cosmic Glass Aesthetic */}
             <motion.div
-                initial={{ opacity: 0, scale: 0.85, y: 30 }}
+                initial={{ opacity: 0, scale: 0.9, y: 40 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-                className="relative z-10 w-full max-w-[360px] group transition-transform duration-500 hover:scale-[1.02]"
+                transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                className="relative z-10 w-full max-w-[400px] group transition-all duration-700"
             >
-                <div className="bg-background/40 backdrop-blur-2xl text-card-foreground rounded-[2.5rem] shadow-[0_60px_120px_rgba(0,0,0,0.5)] border-2 border-primary/10 p-8 flex flex-col items-center ring-1 ring-white/10">
+                {/* Glow layer behind card */}
+                <div className="absolute inset-0 bg-indigo-500/10 blur-[100px] rounded-full scale-110 pointer-events-none group-hover:bg-indigo-500/20 transition-all duration-700" />
+                
+                <div className="relative bg-[#0c0c14]/40 backdrop-blur-[40px] text-white rounded-[2.5rem] shadow-[0_40px_100px_rgba(0,0,0,0.8)] border border-white/10 p-10 flex flex-col items-center ring-1 ring-white/5 overflow-hidden">
+                    {/* Subtle top light effect */}
+                    <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent" />
                     
                     {/* 🛡️ Brand Logo (OpenSchool) */}
-                    <div className="mb-8 flex flex-col items-center text-center">
-                        <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-xl shadow-primary/20 mb-4 group ring-4 ring-secondary">
-                             <GraduationCap className="w-7 h-7 text-primary-foreground" strokeWidth={2.5} />
+                    <div className="mb-10 flex flex-col items-center text-center">
+                        <div className="w-14 h-14 rounded-[1.25rem] bg-indigo-600 flex items-center justify-center shadow-[0_0_30px_rgba(79,70,229,0.4)] mb-4 ring-2 ring-indigo-400/20 group-hover:scale-110 transition-transform duration-500">
+                             <GraduationCap className="w-8 h-8 text-white" strokeWidth={2} />
                         </div>
-                        <h1 className="text-xl font-black text-foreground tracking-tighter uppercase italic">OpenSchool</h1>
+                        <h1 className="text-2xl font-bold text-white tracking-tight drop-shadow-sm">OpenSchool</h1>
+                        <p className="text-[10px] font-bold text-indigo-300/60 uppercase tracking-[0.3em] mt-2">Next Gen Learning Protocol</p>
                     </div>
 
-                    {/* 🎛️ Tabs Grid (Google / Email) */}
                     <Tabs defaultValue="google" className="w-full">
-                        <TabsList className="grid grid-cols-2 w-full h-11 p-1 bg-white/5 backdrop-blur-md rounded-xl mb-6 border border-white/10">
-                            <TabsTrigger value="google" className="rounded-lg font-bold text-[9px] data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all uppercase tracking-widest">
+                        <TabsList className="grid grid-cols-2 w-full h-12 p-1 bg-white/5 backdrop-blur-md rounded-xl mb-8 border border-white/10">
+                            <TabsTrigger value="google" className="rounded-lg font-bold text-[10px] data-[state=active]:bg-indigo-600 data-[state=active]:text-white transition-all uppercase tracking-widest gap-2">
                                 <GoogleIcon /> login
                             </TabsTrigger>
-                            <TabsTrigger value="email" className="rounded-lg font-bold text-[9px] data-[state=active]:bg-primary/20 data-[state=active]:shadow-sm transition-all text-muted-foreground data-[state=active]:text-primary uppercase tracking-widest">
-                                <Mail className="w-3.5 h-3.5 mr-2" /> Email
+                            <TabsTrigger value="email" className="rounded-lg font-bold text-[10px] data-[state=active]:bg-indigo-600 data-[state=active]:text-white transition-all text-indigo-300 data-[state=active]:shadow-sm uppercase tracking-widest gap-2">
+                                <Mail className="w-3.5 h-3.5" /> Email
                             </TabsTrigger>
                         </TabsList>
 
@@ -114,7 +119,7 @@ export default function LoginPage() {
                             <Button 
                                 onClick={handleGoogleLogin}
                                 disabled={isLoading}
-                                className="w-full h-12 bg-white/5 hover:bg-white/10 text-foreground border border-white/10 rounded-xl font-black text-[10px] shadow-sm transition-all flex items-center justify-center gap-2 hover:shadow-lg active:scale-95 uppercase tracking-widest backdrop-blur-sm"
+                                className="w-full h-14 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl font-bold text-[10px] shadow-sm transition-all flex items-center justify-center gap-3 hover:shadow-indigo-500/10 active:scale-95 uppercase tracking-widest backdrop-blur-sm"
                             >
                                 <GoogleIcon />
                                 Institutional Authenticate
@@ -124,22 +129,22 @@ export default function LoginPage() {
                         <TabsContent value="email" className="animate-in fade-in slide-in-from-bottom-6 duration-500">
                             <form onSubmit={handleLogin} className="space-y-4">
                                 <div className="space-y-1.5">
-                                    <Label className="text-[8px] font-bold uppercase tracking-[0.2em] text-muted-foreground ml-1">Identity</Label>
+                                    <Label className="text-[9px] font-bold uppercase tracking-[0.2em] text-indigo-300/60 ml-1">Identity</Label>
                                     <Input
                                         type="email"
                                         placeholder="user@domain.edu"
-                                        className="h-11 rounded-xl bg-white/5 border border-white/10 focus-visible:ring-2 focus-visible:ring-primary/50 font-bold text-xs px-4 backdrop-blur-sm"
+                                        className="h-12 rounded-xl bg-white/5 border border-white/10 focus-visible:ring-2 focus-visible:ring-indigo-500/50 font-bold text-xs px-4 backdrop-blur-sm text-white placeholder:text-white/20"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         required
                                     />
                                 </div>
-                                <div className="space-y-1.5">
-                                    <Label className="text-[8px] font-bold uppercase tracking-[0.2em] text-muted-foreground ml-1">Password</Label>
+                                <div className="space-y-2">
+                                    <Label className="text-[9px] font-bold uppercase tracking-[0.2em] text-indigo-300/60 ml-1">Secret Key</Label>
                                     <Input
                                         type="password"
                                         placeholder="••••••••"
-                                        className="h-11 rounded-xl bg-white/5 border border-white/10 focus-visible:ring-2 focus-visible:ring-primary/50 font-bold text-xs px-4 backdrop-blur-sm"
+                                        className="h-12 rounded-xl bg-white/5 border border-white/10 focus-visible:ring-2 focus-visible:ring-indigo-500/50 font-bold text-xs px-4 backdrop-blur-sm text-white placeholder:text-white/20"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         required
@@ -153,18 +158,17 @@ export default function LoginPage() {
                                 <Button 
                                     type="submit"
                                     disabled={isLoading}
-                                    className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-black text-[10px] transition-all shadow-xl active:scale-95 uppercase tracking-widest"
+                                    className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-[10px] transition-all shadow-xl shadow-indigo-500/20 active:scale-95 uppercase tracking-widest"
                                 >
-                                    Proceed
+                                    Proceed into Void
                                 </Button>
                             </form>
                         </TabsContent>
                     </Tabs>
 
-                    {/* 🛡️ Combined Access Selectors - Compact & Hierarchical */}
-                    <div className="mt-8 pt-6 border-t border-border w-full flex flex-col items-center">
-                        <p className="text-[8px] font-black uppercase tracking-[0.3em] text-muted-foreground mb-4">Protocol Role</p>
-                        <div className="flex gap-1.5 p-1 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10">
+                    <div className="mt-10 pt-8 border-t border-white/10 w-full flex flex-col items-center">
+                        <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-indigo-300/60 mb-5">Interface Protocol</p>
+                        <div className="flex gap-2 p-1.5 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10">
                             {[
                                 { id: "admin", icon: ShieldCheck },
                                 { id: "teacher", icon: GraduationCap },
@@ -174,14 +178,14 @@ export default function LoginPage() {
                                     key={r.id}
                                     onClick={() => setRole(r.id)}
                                     className={cn(
-                                        "px-2.5 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+                                        "px-4 py-2.5 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all speed-500 flex items-center gap-2",
                                         role === r.id 
-                                        ? "bg-primary/20 text-primary shadow-md ring-1 ring-primary/30" 
-                                        : "text-muted-foreground hover:text-foreground hover:bg-white/5 text-[9px]"
+                                        ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 ring-1 ring-white/20" 
+                                        : "text-indigo-300/70 hover:text-white hover:bg-white/5"
                                     )}
                                 >
-                                    <r.icon className="w-3 h-3" />
-                                    {r.id === "admin" ? "Admin" : r.id === "teacher" ? "Teacher" : "Student"}
+                                    <r.icon className="w-3.5 h-3.5" />
+                                    {r.id.charAt(0).toUpperCase() + r.id.slice(1)}
                                 </button>
                             ))}
                         </div>

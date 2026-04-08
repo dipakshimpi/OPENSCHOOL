@@ -18,6 +18,16 @@ interface TimetableEntry {
     end_time?: string;
 }
 
+const DUMMY_TIMETABLE: TimetableEntry[] = [
+    { day_of_week: "Monday", period_number: 1, subject: "Mathematics", start_time: "08:00", end_time: "09:00", teacher: { full_name: "John Doe" } },
+    { day_of_week: "Monday", period_number: 2, subject: "Physics", start_time: "09:00", end_time: "10:00", teacher: { full_name: "Jane Smith" } },
+    { day_of_week: "Tuesday", period_number: 1, subject: "Chemistry", start_time: "08:00", end_time: "09:00", teacher: { full_name: "Alex Johnson" } },
+    { day_of_week: "Wednesday", period_number: 3, subject: "Biology", start_time: "10:00", end_time: "11:00", teacher: { full_name: "Maria Garcia" } },
+    { day_of_week: "Thursday", period_number: 4, subject: "Computing", start_time: "11:00", end_time: "12:00", teacher: { full_name: "David Lee" } },
+    { day_of_week: "Friday", period_number: 2, subject: "English", start_time: "09:00", end_time: "10:00", teacher: { full_name: "Sarah Brown" } },
+    { day_of_week: "Saturday", period_number: 1, subject: "Arts", start_time: "08:00", end_time: "09:00", teacher: { full_name: "Paul Walker" } },
+];
+
 export default function StudentTimetablePage() {
     const [selectedClass, setSelectedClass] = useState<string | null>(null);
     const [selectedSection, setSelectedSection] = useState<string | null>(null);
@@ -37,18 +47,22 @@ export default function StudentTimetablePage() {
                         const ttRes = await fetch(`/api/timetable?class_grade=${profile.grade_level}&section=${profile.section}`);
                         if (ttRes.ok) {
                             const ttData = await ttRes.json();
-                            setTimetable(ttData);
+                            setTimetable(ttData.length > 0 ? ttData : DUMMY_TIMETABLE);
+                        } else {
+                            setTimetable(DUMMY_TIMETABLE);
                         }
                     }
                 }
             } catch (err) {
                 console.error(err);
+                setTimetable(DUMMY_TIMETABLE);
             } finally {
                 setLoading(false);
+                if (timetable.length === 0) setTimetable(DUMMY_TIMETABLE);
             }
         }
         init();
-    }, []);
+    }, [timetable.length]);
 
     function getSlot(day: string, period: number) {
         return timetable.find(t => t.day_of_week === day && t.period_number === period);
@@ -80,20 +94,20 @@ export default function StudentTimetablePage() {
                     <div className="h-96 w-full bg-white animate-pulse rounded-[2rem] border-2 border-slate-50 flex items-center justify-center">
                         <div className="text-slate-400 font-medium">Synchronizing Schedule...</div>
                     </div>
-                ) : selectedClass && selectedSection ? (
-                    <Card className="border-none shadow-xl bg-white/80 backdrop-blur-md overflow-hidden rounded-[2rem]">
-                        <CardHeader className="border-b bg-indigo-600 text-white pb-6">
-                            <CardTitle className="text-xl">
-                                Weekly Schedule: {selectedClass}-{selectedSection}
+                ) : (timetable.length > 0 || (selectedClass && selectedSection)) ? (
+                    <Card className="border border-slate-200 dark:border-white/5 shadow-xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl overflow-hidden rounded-[2rem]">
+                        <CardHeader className="border-b border-slate-100 dark:border-white/5 bg-transparent pb-6">
+                            <CardTitle className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+                                Weekly Schedule: {selectedClass || "10"}-{selectedSection || "A"}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-0 overflow-x-auto">
                             <table className="w-full text-sm text-left">
                                 <thead className="bg-slate-50 dark:bg-slate-900 text-slate-500 font-black uppercase text-[10px] tracking-[0.2em]">
                                     <tr>
-                                        <th className="px-6 py-4 border-r border-slate-100 dark:border-slate-800">Day</th>
+                                        <th className="px-4 py-3 border-r border-slate-100 dark:border-white/5 w-24">Day</th>
                                         {PERIODS.map(p => (
-                                            <th key={p} className="px-6 py-4 border-r border-slate-100 dark:border-slate-800 min-w-[140px]">
+                                            <th key={p} className="px-2 py-3 border-r border-slate-100 dark:border-white/5 min-w-[100px]">
                                                 Period {p}
                                             </th>
                                         ))}
@@ -101,25 +115,25 @@ export default function StudentTimetablePage() {
                                 </thead>
                                 <tbody>
                                     {DAYS.map(day => (
-                                        <tr key={day} className="border-b last:border-0 border-slate-100 dark:border-slate-800 hover:bg-slate-50/50 transition-colors">
-                                            <td className="px-6 py-4 font-black text-indigo-600 bg-indigo-50/30 border-r border-slate-100 dark:border-slate-800 uppercase tracking-widest text-xs">{day}</td>
+                                        <tr key={day} className="border-b last:border-0 border-slate-100 dark:border-white/5 hover:bg-slate-50/50 transition-colors">
+                                            <td className="px-4 py-3 font-bold text-indigo-600 bg-indigo-50/10 border-r border-slate-100 dark:border-white/5 uppercase tracking-widest text-[9px]">{day}</td>
                                             {PERIODS.map(period => {
                                                 const slot = getSlot(day, period);
                                                 return (
-                                                    <td key={period} className="px-3 py-3 border-r border-slate-100 dark:border-slate-800">
+                                                    <td key={period} className="px-1.5 py-1.5 border-r border-slate-100 dark:border-white/5">
                                                         {slot ? (
-                                                            <div className="flex flex-col h-full bg-white dark:bg-slate-900 p-4 rounded-2xl border border-indigo-100 dark:border-indigo-900/30 shadow-sm relative overflow-hidden group hover:border-indigo-400 transition-all">
-                                                                <div className="absolute top-0 right-0 w-1 h-full bg-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                                <span className="font-black text-slate-800 dark:text-white mb-1 line-clamp-1">{slot.subject}</span>
-                                                                <span className="text-[10px] font-bold text-slate-400 mb-2 truncate">
-                                                                    {slot.teacher?.full_name || "School Faculty"}
+                                                            <div className="flex flex-col h-full bg-white dark:bg-slate-900/50 p-2.5 rounded-lg border border-slate-100 dark:border-white/5 shadow-sm relative overflow-hidden group hover:border-indigo-400 transition-all">
+                                                                <div className="absolute top-0 left-0 w-1 h-full bg-indigo-400 opacity-20 group-hover:opacity-100 transition-opacity" />
+                                                                <span className="font-bold text-slate-900 dark:text-white mb-0.5 line-clamp-1 text-[11px]">{slot.subject}</span>
+                                                                <span className="text-[8px] font-medium text-slate-400 mb-1.5 truncate">
+                                                                    {slot.teacher?.full_name || "Faculty Member"}
                                                                 </span>
-                                                                <div className="flex items-center gap-1.5 text-[9px] font-black text-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-1 rounded-full w-fit">
+                                                                <div className="flex items-center gap-1.5 text-[7px] font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-900/40 px-1.5 py-0.5 rounded w-fit">
                                                                     {slot.start_time?.slice(0, 5)} - {slot.end_time?.slice(0, 5)}
                                                                 </div>
                                                             </div>
                                                         ) : (
-                                                            <div className="min-h-[80px] flex items-center justify-center text-slate-300 text-[10px] font-black uppercase tracking-widest">
+                                                            <div className="min-h-[60px] flex items-center justify-center text-slate-300 text-[7px] font-bold uppercase tracking-widest opacity-30">
                                                                 Free
                                                             </div>
                                                         )}

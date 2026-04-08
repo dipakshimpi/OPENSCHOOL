@@ -134,10 +134,10 @@ export default function AdminCoursesPage() {
               {courses.map((course) => (
                 <Card 
                   key={course.id} 
-                  className="group border-none shadow-xl bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden hover:shadow-2xl transition-all duration-500 border border-transparent hover:border-indigo-500/20"
+                  className="group border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900 rounded-xl overflow-hidden hover:shadow-xl transition-all duration-500 hover:-translate-y-1"
                 >
                   {/* Thumbnail / Header */}
-                  <div className="h-44 relative overflow-hidden bg-slate-100 dark:bg-slate-800">
+                  <div className="h-36 relative overflow-hidden bg-slate-100 dark:bg-slate-800">
                     {course.thumbnail_url ? (
                         <Image 
                             src={course.thumbnail_url} 
@@ -157,7 +157,7 @@ export default function AdminCoursesPage() {
                   </div>
 
                   <CardContent className="p-6 space-y-4">
-                    <h3 className="text-lg font-black text-slate-900 dark:text-white leading-tight uppercase italic tracking-tighter truncate">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight tracking-tight truncate">
                         {course.title}
                     </h3>
 
@@ -174,7 +174,7 @@ export default function AdminCoursesPage() {
                   </CardContent>
 
                   <CardFooter className="px-6 pb-6 pt-0 border-t border-slate-50 dark:border-white/5 flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-slate-400 mt-4">
+                        <div className="flex items-center gap-2 text-slate-400 mt-2">
                             <Clock className="w-3 h-3" />
                             <span className="text-[9px] font-bold uppercase tracking-wider">{new Date(course.created_at).toLocaleDateString()}</span>
                         </div>

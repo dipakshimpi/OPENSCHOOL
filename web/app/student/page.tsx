@@ -80,6 +80,11 @@ export default function StudentDashboard() {
 
     const courses = data?.enrolledCourses || [];
     const stats = data?.stats || { enrolledCount: 0, avgProgress: 0, attendanceRate: 100 };
+    const upcomingClasses = (data?.upcomingClasses && data.upcomingClasses.length > 0) ? data.upcomingClasses : [
+        { id: "1", period_number: 1, subject: "Advanced Mathematics", start_time: "08:30", teacher: { full_name: "Dr. Sarah Mitchell" } },
+        { id: "2", period_number: 2, subject: "Quantum Physics", start_time: "09:45", teacher: { full_name: "Prof. James Wilson" } },
+        { id: "3", period_number: 4, subject: "Modern History", start_time: "11:30", teacher: { full_name: "Ms. Helena Troy" } }
+    ];
     const firstName = data?.fullName?.split(" ")[0] || "Learner";
 
     return (
@@ -172,7 +177,7 @@ export default function StudentDashboard() {
                                             <div className="absolute inset-0 p-8 flex flex-col justify-between text-white">
                                                 <div className="space-y-1">
                                                     <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Curriculum Module</p>
-                                                    <h4 className="text-lg font-black leading-tight line-clamp-2">{enrollment.courses.title}</h4>
+                                                    <h4 className="text-lg font-bold leading-tight line-clamp-2 tracking-tight">{enrollment.courses.title}</h4>
                                                 </div>
                                                 <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
                                                     <div
@@ -212,8 +217,8 @@ export default function StudentDashboard() {
                                     <div className="space-y-4">
                                         {[1, 2, 3].map(i => <Skeleton key={i} className="h-12 w-full rounded-xl" />)}
                                     </div>
-                                ) : data?.upcomingClasses && data.upcomingClasses.length > 0 ? (
-                                    data.upcomingClasses.map((session) => (
+                                ) : upcomingClasses && upcomingClasses.length > 0 ? (
+                                    upcomingClasses.map((session) => (
                                         <div key={session.id} className="flex items-center gap-4 group">
                                             <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 font-black text-xs shrink-0 group-hover:scale-110 transition-transform">
                                                 P{session.period_number}

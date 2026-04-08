@@ -71,7 +71,7 @@ export function DashboardLayout({ children, role, title = "Dashboard" }: Dashboa
   const showAttendanceLock = false;
 
   return (
-    <div className="min-h-screen bg-background flex font-sans selection:bg-primary/20 selection:text-primary">
+    <div className="min-h-screen bg-white dark:bg-slate-950 flex font-sans selection:bg-primary/20 selection:text-primary">
       <Sidebar role={role} />
       <div className="flex-1 ml-64 flex flex-col min-h-screen transition-all duration-300 ease-in-out relative">
         {/* Gradient Grid Background */}

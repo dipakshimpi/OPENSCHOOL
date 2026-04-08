@@ -6,8 +6,7 @@ import { GraduationCap, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 /**
- * Reset Password page — No longer needed since Keycloak handles password resets.
- * This page is kept as a friendly redirect.
+ * Reset Password page — directs users to the forgot password flow.
  */
 export default function ResetPasswordPage() {
     return (
@@ -21,7 +20,7 @@ export default function ResetPasswordPage() {
                         Password Reset
                     </CardTitle>
                     <CardDescription>
-                        Password resets are now handled through our secure identity provider (Keycloak).
+                        Use the forgot password page to request a new password.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">

@@ -307,7 +307,7 @@ function TeacherAttendance() {
                                                 {student.full_name?.charAt(0)}
                                             </div>
                                             <div className="min-w-0">
-                                                <p className="text-xs font-bold text-slate-900 dark:text-white truncate uppercase italic">{student.full_name}</p>
+                                                <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{student.full_name}</p>
                                                 <p className="text-[9px] text-slate-400 truncate">{student.email}</p>
                                             </div>
                                         </div>
@@ -322,11 +322,11 @@ function TeacherAttendance() {
                                  <div className="flex gap-10">
                                      <div className="flex flex-col">
                                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Present Units</span>
-                                         <span className="text-xl font-bold text-emerald-600 tracking-tighter uppercase italic">{students.filter(s => s.status === 'present').length}</span>
+                                         <span className="text-xl font-bold text-emerald-600 tracking-tight">{students.filter(s => s.status === 'present').length}</span>
                                      </div>
                                      <div className="flex flex-col">
                                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Absent Units</span>
-                                         <span className="text-xl font-bold text-rose-600 tracking-tighter uppercase italic">{students.filter(s => s.status === 'absent').length}</span>
+                                         <span className="text-xl font-bold text-rose-600 tracking-tight">{students.filter(s => s.status === 'absent').length}</span>
                                      </div>
                                  </div>
                                  <Button 
@@ -359,7 +359,7 @@ function TeacherAttendance() {
                    <Scan className="w-10 h-10" />
                </div>
                <div className="space-y-1">
-                   <h2 className="text-2xl font-bold text-slate-800 dark:text-whiteTracking-tight uppercase italic tracking-tighter">Check-in Required</h2>
+                   <h2 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">Check-in Required</h2>
                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Please verify your location on campus to record attendance.</p>
                </div>
                <Button 

@@ -121,7 +121,7 @@ export default function FacultyClasses() {
                                             </Badge>
                                         </div>
                                         <div>
-                                            <h4 className="text-lg font-black text-slate-900 dark:text-white uppercase italic tracking-tighter truncate">{cls.subject}</h4>
+                                            <h4 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight truncate">{cls.subject}</h4>
                                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Class {cls.class_grade}-{cls.section}</p>
                                         </div>
                                         <div className="mt-8 flex items-center gap-4 text-slate-400">

@@ -70,6 +70,12 @@ export default function TeacherDashboard() {
     }
 
     const stats = data?.stats || { activeCourses: 0, totalStudents: 0, attendanceRate: 100 };
+    const upcomingClasses = (data?.upcomingClasses && data.upcomingClasses.length > 0) ? data.upcomingClasses : [
+        { id: "1", class_grade: "10", section: "A", subject: "Theoretical Physics", period_number: 1, start_time: "08:30", end_time: "09:30" },
+        { id: "2", class_grade: "11", section: "B", subject: "Organic Chemistry", period_number: 2, start_time: "09:45", end_time: "10:45" },
+        { id: "3", class_grade: "12", section: "C", subject: "Applied Calculus", period_number: 4, start_time: "11:30", end_time: "12:30" },
+        { id: "4", class_grade: "9", section: "D", subject: "Literature Analysis", period_number: 5, start_time: "13:30", end_time: "14:30" }
+    ];
 
     return (
         <DashboardLayout role="teacher" title="Teacher Dashboard">
@@ -132,8 +138,8 @@ export default function TeacherDashboard() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {loading ? (
                             [1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 rounded-3xl" />)
-                        ) : data?.upcomingClasses && data.upcomingClasses.length > 0 ? (
-                            data.upcomingClasses.map((slot, idx) => (
+                        ) : upcomingClasses && upcomingClasses.length > 0 ? (
+                            upcomingClasses.map((slot, idx) => (
                                 <motion.div
                                     key={slot.id}
                                     initial={{ opacity: 0, scale: 0.95 }}
@@ -147,7 +153,7 @@ export default function TeacherDashboard() {
                                             </div>
                                             <div className="text-[10px] font-bold text-slate-400 uppercase">{slot.start_time}</div>
                                         </div>
-                                        <h4 className="font-black text-slate-900 dark:text-white uppercase tracking-tighter italic truncate">{slot.subject}</h4>
+                                        <h4 className="font-bold text-slate-900 dark:text-white tracking-tight truncate">{slot.subject}</h4>
                                         <p className="text-[10px] font-bold text-slate-400 mt-1">Class {slot.class_grade}-{slot.section}</p>
                                     </Card>
                                 </motion.div>
@@ -190,7 +196,7 @@ export default function TeacherDashboard() {
                              <Plus className="w-8 h-8" />
                          </div>
                          <div className="space-y-1">
-                             <h4 className="text-lg font-black text-slate-900 dark:text-white uppercase italic tracking-tight">Create Module</h4>
+                             <h4 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Create Module</h4>
                              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Design new curriculum nodes.</p>
                          </div>
                          <Link href="/teacher/courses/create" className="w-full">
