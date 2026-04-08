@@ -87,9 +87,9 @@ export default function LoginPage() {
                 initial={{ opacity: 0, scale: 0.85, y: 30 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-                className="relative z-10 w-full max-w-[360px]"
+                className="relative z-10 w-full max-w-[360px] group transition-transform duration-500 hover:scale-[1.02]"
             >
-                <div className="bg-card text-card-foreground rounded-[2.5rem] shadow-[0_60px_120px_rgba(0,0,0,0.5)] border-2 border-border p-8 flex flex-col items-center">
+                <div className="bg-background/40 backdrop-blur-2xl text-card-foreground rounded-[2.5rem] shadow-[0_60px_120px_rgba(0,0,0,0.5)] border-2 border-primary/10 p-8 flex flex-col items-center ring-1 ring-white/10">
                     
                     {/* 🛡️ Brand Logo (OpenSchool) */}
                     <div className="mb-8 flex flex-col items-center text-center">
@@ -101,11 +101,11 @@ export default function LoginPage() {
 
                     {/* 🎛️ Tabs Grid (Google / Email) */}
                     <Tabs defaultValue="google" className="w-full">
-                        <TabsList className="grid grid-cols-2 w-full h-11 p-1 bg-muted rounded-xl mb-6 border border-border">
-                            <TabsTrigger value="google" className="rounded-lg font-bold text-[9px] data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all uppercase tracking-widest">
+                        <TabsList className="grid grid-cols-2 w-full h-11 p-1 bg-white/5 backdrop-blur-md rounded-xl mb-6 border border-white/10">
+                            <TabsTrigger value="google" className="rounded-lg font-bold text-[9px] data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all uppercase tracking-widest">
                                 <GoogleIcon /> login
                             </TabsTrigger>
-                            <TabsTrigger value="email" className="rounded-lg font-bold text-[9px] data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all text-muted-foreground data-[state=active]:text-foreground uppercase tracking-widest">
+                            <TabsTrigger value="email" className="rounded-lg font-bold text-[9px] data-[state=active]:bg-primary/20 data-[state=active]:shadow-sm transition-all text-muted-foreground data-[state=active]:text-primary uppercase tracking-widest">
                                 <Mail className="w-3.5 h-3.5 mr-2" /> Email
                             </TabsTrigger>
                         </TabsList>
@@ -114,7 +114,7 @@ export default function LoginPage() {
                             <Button 
                                 onClick={handleGoogleLogin}
                                 disabled={isLoading}
-                                className="w-full h-12 bg-card hover:bg-muted text-foreground border border-border rounded-xl font-black text-[10px] shadow-sm transition-all flex items-center justify-center gap-2 hover:shadow-lg active:scale-95 uppercase tracking-widest"
+                                className="w-full h-12 bg-white/5 hover:bg-white/10 text-foreground border border-white/10 rounded-xl font-black text-[10px] shadow-sm transition-all flex items-center justify-center gap-2 hover:shadow-lg active:scale-95 uppercase tracking-widest backdrop-blur-sm"
                             >
                                 <GoogleIcon />
                                 Institutional Authenticate
@@ -128,7 +128,7 @@ export default function LoginPage() {
                                     <Input
                                         type="email"
                                         placeholder="user@domain.edu"
-                                        className="h-11 rounded-xl bg-muted border-none focus-visible:ring-2 focus-visible:ring-ring font-bold text-xs px-4"
+                                        className="h-11 rounded-xl bg-white/5 border border-white/10 focus-visible:ring-2 focus-visible:ring-primary/50 font-bold text-xs px-4 backdrop-blur-sm"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         required
@@ -139,7 +139,7 @@ export default function LoginPage() {
                                     <Input
                                         type="password"
                                         placeholder="••••••••"
-                                        className="h-11 rounded-xl bg-muted border-none focus-visible:ring-2 focus-visible:ring-ring font-bold text-xs px-4"
+                                        className="h-11 rounded-xl bg-white/5 border border-white/10 focus-visible:ring-2 focus-visible:ring-primary/50 font-bold text-xs px-4 backdrop-blur-sm"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         required
@@ -164,7 +164,7 @@ export default function LoginPage() {
                     {/* 🛡️ Combined Access Selectors - Compact & Hierarchical */}
                     <div className="mt-8 pt-6 border-t border-border w-full flex flex-col items-center">
                         <p className="text-[8px] font-black uppercase tracking-[0.3em] text-muted-foreground mb-4">Protocol Role</p>
-                        <div className="flex gap-1.5 p-1 bg-muted rounded-2xl border border-border">
+                        <div className="flex gap-1.5 p-1 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10">
                             {[
                                 { id: "admin", icon: ShieldCheck },
                                 { id: "teacher", icon: GraduationCap },
@@ -176,8 +176,8 @@ export default function LoginPage() {
                                     className={cn(
                                         "px-2.5 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
                                         role === r.id 
-                                        ? "bg-card text-primary shadow-md ring-1 ring-border" 
-                                        : "text-muted-foreground hover:text-foreground"
+                                        ? "bg-primary/20 text-primary shadow-md ring-1 ring-primary/30" 
+                                        : "text-muted-foreground hover:text-foreground hover:bg-white/5 text-[9px]"
                                     )}
                                 >
                                     <r.icon className="w-3 h-3" />

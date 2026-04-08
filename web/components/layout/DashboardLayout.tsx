@@ -74,11 +74,32 @@ export function DashboardLayout({ children, role, title = "Dashboard" }: Dashboa
     <div className="min-h-screen bg-background flex font-sans selection:bg-primary/20 selection:text-primary">
       <Sidebar role={role} />
       <div className="flex-1 ml-64 flex flex-col min-h-screen transition-all duration-300 ease-in-out relative">
-        {/* Background Mesh/Pattern */}
-        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-40 dark:opacity-20">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px] animate-pulse" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px] animate-pulse delay-700" />
-        </div>
+        {/* Gradient Grid Background */}
+        <div
+          className="absolute inset-0 z-0 pointer-events-none"
+          style={{
+            backgroundImage: `
+              linear-gradient(to right, rgba(229,231,235,0.5) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(229,231,235,0.5) 1px, transparent 1px),
+              radial-gradient(circle 600px at 0% 0%, rgba(139,92,246,0.15), transparent),
+              radial-gradient(circle 600px at 100% 100%, rgba(59,130,246,0.12), transparent)
+            `,
+            backgroundSize: "48px 48px, 48px 48px, 100% 100%, 100% 100%",
+          }}
+        />
+        {/* Dark mode overlay - hides grid in dark mode */}
+        <div
+          className="absolute inset-0 z-0 pointer-events-none hidden dark:block"
+          style={{
+            backgroundImage: `
+              linear-gradient(to right, rgba(30,30,40,0.3) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(30,30,40,0.3) 1px, transparent 1px),
+              radial-gradient(circle 600px at 0% 0%, rgba(139,92,246,0.08), transparent),
+              radial-gradient(circle 600px at 100% 100%, rgba(59,130,246,0.06), transparent)
+            `,
+            backgroundSize: "48px 48px, 48px 48px, 100% 100%, 100% 100%",
+          }}
+        />
 
         <div className="relative z-10 flex-1 flex flex-col">
           <UrgentNotice />
