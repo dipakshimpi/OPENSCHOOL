@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarIcon } from "@heroicons/react/24/outline";
+import { Calendar } from "lucide-react";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const PERIODS = Array.from({ length: 8 }, (_, i) => i + 1);
@@ -134,7 +134,7 @@ export default function StudentTimetablePage() {
                     </Card>
                 ) : (
                     <div className="py-20 text-center bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200">
-                        <CalendarIcon className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                        <Calendar className="w-16 h-16 text-slate-300 mx-auto mb-4" />
                         <h3 className="text-xl font-bold text-slate-700">Schedule Unavailable</h3>
                         <p className="text-slate-500">Please make sure you are assigned to a Class and Section by the administrator.</p>
                     </div>

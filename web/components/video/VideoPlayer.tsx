@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LockClosedIcon, ShieldCheckIcon, ExclamationCircleIcon } from "@heroicons/react/24/solid";
+import { Lock, ShieldCheck, AlertCircle } from "lucide-react";
 import { authedFetch } from "@/lib/api";
 
 interface VideoPlayerProps {
@@ -63,7 +63,7 @@ export function VideoPlayer({ videoId, userEmail }: VideoPlayerProps) {
     if (error) {
         return (
             <div className="w-full aspect-video bg-slate-950 rounded-3xl flex flex-col items-center justify-center p-8 text-center border border-white/5">
-                <ExclamationCircleIcon className="w-12 h-12 text-rose-500 mb-4 opacity-80" />
+                <AlertCircle className="w-12 h-12 text-rose-500 mb-4 opacity-80" />
                 <h3 className="text-xl font-black text-white mb-2">Playback Error</h3>
                 <p className="text-slate-400 text-sm font-medium max-w-xs">{error}</p>
             </div>
@@ -73,7 +73,7 @@ export function VideoPlayer({ videoId, userEmail }: VideoPlayerProps) {
     if (!absoluteUrl) {
         return (
             <div className="w-full aspect-video bg-slate-950 rounded-3xl flex items-center justify-center border border-white/5">
-                <LockClosedIcon className="w-10 h-10 text-slate-700" />
+                <Lock className="w-10 h-10 text-slate-700" />
             </div>
         );
     }
@@ -103,7 +103,7 @@ export function VideoPlayer({ videoId, userEmail }: VideoPlayerProps) {
 
             {/* Security Badge */}
             <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/50 backdrop-blur-xl px-3 py-1.5 rounded-xl border border-white/10 pointer-events-none">
-                <ShieldCheckIcon className="w-3.5 h-3.5 text-emerald-400" />
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                 <span className="text-[10px] font-black text-white uppercase tracking-widest">
                     Secure Stream
                 </span>

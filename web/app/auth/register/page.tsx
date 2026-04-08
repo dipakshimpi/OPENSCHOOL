@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AcademicCapIcon } from "@heroicons/react/24/outline";
+import { GraduationCap } from "lucide-react";
 import Link from "next/link";
 
 export default function RegisterPage() {
@@ -112,7 +112,7 @@ export default function RegisterPage() {
             <Card className="w-full max-w-md z-10 shadow-card-hover border-white/40 bg-white/80 backdrop-blur-xl dark:bg-slate-900/80 dark:border-slate-800 transition-all duration-300">
                 <CardHeader className="text-center space-y-2">
                     <div className="mx-auto w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-2">
-                        <AcademicCapIcon className="w-7 h-7 text-primary" />
+                        <GraduationCap className="w-7 h-7 text-primary" />
                     </div>
                     <CardTitle className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
                         Join OpenSchool

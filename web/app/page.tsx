@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/auth-utils";
 import { isEmailAllowed } from "@/lib/user-roles";
 import { cookies } from "next/headers";
-import { createClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export default async function Home({ searchParams: searchParamsPromise }: { searchParams: Promise<{ intendedRole?: string }> }) {
   const searchParams = await searchParamsPromise;
@@ -18,10 +18,7 @@ export default async function Home({ searchParams: searchParamsPromise }: { sear
   }
 
   // 1. Check if user already has a profile (to get their actual role)
-  const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SERVICE_SUPABASESERVICE_KEY!
-  );
+  const supabaseAdmin = createAdminClient();
 
   const { data: profile } = await supabaseAdmin
     .from('profiles')

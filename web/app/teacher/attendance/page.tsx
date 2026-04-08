@@ -1,20 +1,21 @@
 "use client";
 
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   MapPin,
-  ShieldCheck,
   Loader2,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  RefreshCw,
+  Scan,
+  ShieldCheck
 } from "lucide-react";
 import { Suspense, useState, useEffect, useCallback } from "react";
 import { calculateDistance } from "@/lib/geo";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
-
 import { authedFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -23,7 +24,7 @@ export default function TeacherAttendancePage() {
     <Suspense fallback={
       <DashboardLayout title="Attendance" role="teacher">
         <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="w-10 h-10 animate-spin text-indigo-600" />
+          <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
         </div>
       </DashboardLayout>
     }>
@@ -45,20 +46,19 @@ function TeacherAttendance() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasAttendedToday, setHasAttendedToday] = useState(false);
-  const [loadingLegacy, setLoadingLegacy] = useState(true);
   const [attendanceTime, setAttendanceTime] = useState<string | null>(null);
+  const [loadingLegacy, setLoadingLegacy] = useState(true);
 
   useEffect(() => {
-    // Check if already attended today
     authedFetch("/api/attendance")
-      .then((res: Response) => res.json())
+      .then((res) => res.json())
       .then((data: { hasAttended: boolean; lastAttendance?: { timestamp: string } }) => {
         if (data.hasAttended) {
           setHasAttendedToday(true);
           setAttendanceTime(data.lastAttendance?.timestamp || null);
         }
       })
-      .catch((err: Error) => console.error("Error checking attendance:", err))
+      .catch((err) => console.error("Error checking attendance:", err))
       .finally(() => setLoadingLegacy(false));
   }, []);
 
@@ -67,7 +67,7 @@ function TeacherAttendance() {
     setError(null);
 
     if (!navigator.geolocation) {
-      setError("Geolocation is not supported by your browser");
+      setError("Geolocation is not supported by your browser.");
       setIsVerifying(false);
       return;
     }
@@ -75,12 +75,9 @@ function TeacherAttendance() {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude, accuracy } = position.coords;
-
         try {
-          // Check location against fences
           const fenceRes = await authedFetch("/api/geo-fences");
           const fences = await fenceRes.json();
-
           let inside = false;
           if (Array.isArray(fences) && fences.length > 0) {
             for (const fence of fences) {
@@ -91,17 +88,15 @@ function TeacherAttendance() {
               }
             }
           } else {
-            // Demo mode/First school setup
             inside = true;
           }
 
           if (!inside) {
-            setError("You are currently outside the school boundary. Please move within school premises.");
+            setError("You are currently outside the school campus.");
             setIsVerifying(false);
             return;
           }
 
-          // Submit attendance
           const submitRes = await authedFetch("/api/attendance", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -109,10 +104,7 @@ function TeacherAttendance() {
               latitude,
               longitude,
               accuracy,
-              deviceInfo: {
-                userAgent: navigator.userAgent,
-                platform: navigator.platform
-              }
+              deviceInfo: { userAgent: navigator.userAgent, platform: navigator.platform }
             })
           });
 
@@ -120,20 +112,18 @@ function TeacherAttendance() {
             const data = await submitRes.json();
             setHasAttendedToday(true);
             setAttendanceTime(data.data.timestamp);
-            // Brief delay then redirect to dashboard
-            setTimeout(() => router.push("/teacher"), 2000);
           } else {
             const errData = await submitRes.json();
-            setError(errData.error || "Failed to submit attendance");
+            setError(errData.error || "Failed to record attendance.");
           }
         } catch {
-          setError("Failed to connect to the server. Please try again.");
+          setError("Network error. Please try again.");
         } finally {
           setIsVerifying(false);
         }
       },
       () => {
-        setError("Location permission denied. Please enable GPS and allow location access.");
+        setError("Location access denied.");
         setIsVerifying(false);
       },
       { enableHighAccuracy: true }
@@ -170,11 +160,10 @@ function TeacherAttendance() {
     }
   }, [hasAttendedToday, selectedGrade, selectedSection, fetchStudents]);
 
-  const toggleStudentStatus = (studentId: string) => {
+  const toggleStudentStatus = (studentId: string, current: string) => {
     setStudents(prev => prev.map(s => {
       if (s.id === studentId) {
-        const nextStatus = s.status === 'present' ? 'absent' : 'present';
-        return { ...s, status: nextStatus };
+        return { ...s, status: current === 'present' ? 'absent' : 'present' };
       }
       return s;
     }));
@@ -198,13 +187,10 @@ function TeacherAttendance() {
       });
 
       if (res.ok) {
-        alert("Attendance records synchronized successfully!");
-      } else {
-        alert("Failed to sync records.");
+          router.push('/teacher');
       }
     } catch (err) {
       console.error(err);
-      alert("Error saving attendance.");
     } finally {
       setStudentSyncing(false);
     }
@@ -214,15 +200,41 @@ function TeacherAttendance() {
     return (
       <DashboardLayout title="Attendance" role="teacher">
         <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="w-10 h-10 animate-spin text-indigo-600" />
+          <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
         </div>
       </DashboardLayout>
     );
   }
 
   return (
-    <DashboardLayout title="Daily Attendance" role="teacher">
-      <div className="max-w-4xl mx-auto space-y-8 pb-20 mt-10 px-4">
+    <DashboardLayout title="Attendance" role="teacher">
+      <div className="max-w-[1400px] mx-auto space-y-8 pb-20 px-4">
+        
+        {/* 🌟 CLEAN HEADER */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b border-slate-200 dark:border-white/5 pb-8 pt-4">
+            <div>
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Daily Attendance</h1>
+                <p className="text-sm text-slate-500 mt-1 font-medium">Record and track student participation in scheduled educational sessions.</p>
+            </div>
+            {hasAttendedToday ? (
+               <div className="flex items-center gap-3 bg-emerald-50 dark:bg-emerald-950/20 px-4 py-2 rounded-xl border border-emerald-100 dark:border-emerald-900/30">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                     Punch-in Recorded: {attendanceTime ? new Date(attendanceTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "ACTIVE"}
+                  </span>
+               </div>
+            ) : (
+               <Button 
+                   onClick={handleVerifyAndSubmit} 
+                   disabled={isVerifying}
+                   className="bg-indigo-600 hover:bg-indigo-700 text-white h-11 px-6 rounded-xl font-bold uppercase text-[10px] tracking-widest gap-2 shadow-lg active:scale-95 transition-all"
+               >
+                   {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
+                   Mark My Attendance
+               </Button>
+            )}
+        </div>
+
         <AnimatePresence mode="wait">
           {hasAttendedToday ? (
             <motion.div
@@ -231,214 +243,144 @@ function TeacherAttendance() {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-8"
             >
-              <div className="flex flex-col md:flex-row gap-6">
-                {/* Status Card */}
-                <Card className="flex-1 border-none shadow-2xl bg-emerald-600 text-white overflow-hidden rounded-3xl h-fit">
-                  <CardContent className="p-8 text-center space-y-4">
-                    <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <CheckCircle2 className="w-8 h-8 text-white" />
-                    </div>
-                    <div className="space-y-1">
-                      <h2 className="text-2xl font-black">Verified!</h2>
-                      <p className="text-emerald-100 text-xs font-bold uppercase tracking-widest opacity-80">
-                        {attendanceTime ? new Date(attendanceTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "--:--"}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Class Selection Card */}
-                <Card className="flex-[2] border-none shadow-xl bg-white dark:bg-slate-900 rounded-3xl">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg font-black uppercase tracking-tighter">Student Roll Call</CardTitle>
-                    <CardDescription>Select class to start marking students</CardDescription>
-                  </CardHeader>
-                  <CardContent className="p-6">
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Class</label>
+              <Card className="border-none shadow-md bg-white dark:bg-slate-900 rounded-3xl p-8">
+                 <div className="flex flex-col md:flex-row gap-8">
+                    <div className="flex-1 space-y-3">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 font-bold">Class Grade</p>
                         <select
-                          className="w-full h-12 rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 font-bold text-sm outline-none focus:border-indigo-600 appearance-none"
+                          className="w-full h-11 rounded-xl bg-slate-50 dark:bg-slate-950 px-4 font-bold text-xs outline-none border border-slate-100 dark:border-white/5 focus:ring-2 focus:ring-indigo-600/20"
                           value={selectedGrade}
                           onChange={(e) => setSelectedGrade(e.target.value)}
                         >
-                          <option value="">Select Grade</option>
+                          <option value="">SELECT GRADE</option>
                           {GRADES.map(g => <option key={g} value={g}>Class {g}</option>)}
                         </select>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Section</label>
+                    </div>
+                    <div className="flex-1 space-y-3">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 font-bold">Section</p>
                         <select
-                          className="w-full h-12 rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 font-bold text-sm outline-none focus:border-indigo-600 appearance-none"
+                          className="w-full h-11 rounded-xl bg-slate-50 dark:bg-slate-950 px-4 font-bold text-xs outline-none border border-slate-100 dark:border-white/5 focus:ring-2 focus:ring-indigo-600/20"
                           value={selectedSection}
                           onChange={(e) => setSelectedSection(e.target.value)}
                         >
-                          <option value="">Select Section</option>
+                          <option value="">SELECT SECTION</option>
                           {SECTIONS.map(s => <option key={s} value={s}>Section {s}</option>)}
                         </select>
-                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
+                 </div>
+              </Card>
 
-              {/* Students List */}
-              <AnimatePresence>
-                {(selectedGrade && selectedSection) && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="space-y-4"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-lg font-bold text-slate-800">Student List: {selectedGrade}-{selectedSection}</h3>
-                      <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">{students.length} Enlisted</p>
+              {selectedGrade && selectedSection && (
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight italic uppercase">Student Roster</h3>
+                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{students.length} Total Nodes</p>
                     </div>
 
-                    <Card className="border-none shadow-2xl rounded-3xl overflow-hidden bg-white/80 backdrop-blur-md">
-                      <CardContent className="p-0">
+                    <Card className="border-none shadow-lg bg-white/50 dark:bg-slate-900/50 backdrop-blur-md rounded-3xl overflow-hidden border border-white dark:border-white/5">
                         {loadingStudents ? (
-                          <div className="p-12 text-center flex flex-col items-center gap-4">
-                            <Loader2 className="w-10 h-10 animate-spin text-indigo-600" />
-                            <p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Synchronizing Registry...</p>
+                          <div className="p-20 text-center flex flex-col items-center gap-4">
+                            <Loader2 className="w-8 h-8 animate-spin text-indigo-500/30" />
+                            <p className="text-slate-400 font-bold uppercase text-[9px] tracking-widest">Loading registry...</p>
                           </div>
                         ) : students.length > 0 ? (
-                          <>
-                            <div className="divide-y divide-slate-50">
-                              {students.map((student) => (
-                                <div key={student.id} className="p-5 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                                  <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center font-black text-indigo-600">
-                                      {student.full_name?.charAt(0)}
-                                    </div>
-                                    <div>
-                                      <p className="font-bold text-slate-900">{student.full_name}</p>
-                                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{student.email}</p>
-                                    </div>
-                                  </div>
-                                  <div className="flex gap-2">
-                                    <Button
-                                      size="sm"
-                                      onClick={() => toggleStudentStatus(student.id)}
-                                      className={cn(
-                                        "h-9 px-4 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all",
-                                        student.status === 'present'
-                                          ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-100"
-                                          : student.status === 'absent'
-                                            ? "bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-100"
-                                            : "bg-slate-100 text-slate-400 hover:bg-slate-200"
-                                      )}
+                          <div className="p-6 md:p-8">
+                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {students.map((student) => (
+                                    <div
+                                        key={student.id}
+                                        onClick={() => toggleStudentStatus(student.id, student.status)}
+                                        className={cn(
+                                            "p-4 rounded-2xl flex items-center justify-between cursor-pointer transition-all border-2 select-none",
+                                            student.status === 'present' 
+                                                ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-500/20 shadow-sm" 
+                                                : student.status === 'absent'
+                                                    ? "bg-rose-50 dark:bg-rose-950/20 border-rose-500/20 shadow-sm"
+                                                    : "bg-white dark:bg-slate-900 border-slate-100 dark:border-white/5"
+                                        )}
                                     >
-                                      {student.status === 'present' ? 'Present' : student.status === 'absent' ? 'Absent' : 'Not Marked'}
-                                    </Button>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                            <div className="p-6 bg-slate-50/50 border-t border-slate-50 flex justify-end">
-                              <Button
-                                onClick={saveStudentAttendance}
-                                disabled={studentSyncing}
-                                className="bg-slate-900 hover:bg-black text-white px-10 h-12 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl flex items-center gap-2"
-                              >
-                                {studentSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Roll Call"}
-                              </Button>
-                            </div>
-                          </>
+                                        <div className="flex items-center gap-3">
+                                            <div className={cn(
+                                                "w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm",
+                                                student.status === 'present' ? "bg-emerald-600 text-white shadow-xl" : student.status === 'absent' ? "bg-rose-600 text-white shadow-xl" : "bg-slate-100 dark:bg-slate-800 text-slate-400"
+                                            )}>
+                                                {student.full_name?.charAt(0)}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-xs font-bold text-slate-900 dark:text-white truncate uppercase italic">{student.full_name}</p>
+                                                <p className="text-[9px] text-slate-400 truncate">{student.email}</p>
+                                            </div>
+                                        </div>
+                                        {student.status !== 'pending' && (
+                                            student.status === 'present' ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <AlertCircle className="w-4 h-4 text-rose-500" />
+                                        )}
+                                    </div>
+                                ))}
+                             </div>
+
+                             <div className="mt-10 p-6 bg-slate-50 dark:bg-slate-950/20 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6 border border-slate-100 dark:border-white/5">
+                                 <div className="flex gap-10">
+                                     <div className="flex flex-col">
+                                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Present Units</span>
+                                         <span className="text-xl font-bold text-emerald-600 tracking-tighter uppercase italic">{students.filter(s => s.status === 'present').length}</span>
+                                     </div>
+                                     <div className="flex flex-col">
+                                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Absent Units</span>
+                                         <span className="text-xl font-bold text-rose-600 tracking-tighter uppercase italic">{students.filter(s => s.status === 'absent').length}</span>
+                                     </div>
+                                 </div>
+                                 <Button 
+                                     onClick={saveStudentAttendance}
+                                     disabled={studentSyncing}
+                                     className="w-full md:w-auto bg-slate-900 dark:bg-indigo-600 hover:bg-black dark:hover:bg-indigo-700 text-white h-12 px-10 rounded-xl font-bold uppercase text-[10px] tracking-widest gap-3 shadow-lg transition-all"
+                                 >
+                                     {studentSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                                     Submit Registry
+                                 </Button>
+                             </div>
+                          </div>
                         ) : (
-                          <div className="p-20 text-center space-y-4">
-                            <UsersIcon className="w-12 h-12 text-slate-200 mx-auto" strokeWidth={3} />
-                            <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">No students found in this section.</p>
+                          <div className="p-20 text-center">
+                             <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest text-[9px]">Select a class to view roster.</p>
                           </div>
                         )}
-                      </CardContent>
                     </Card>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                </div>
+              )}
             </motion.div>
           ) : (
             <motion.div
               key="not-attended"
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="space-y-6"
+              className="py-20 flex flex-col items-center justify-center text-center space-y-6"
             >
-              <Card className="border-none shadow-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl overflow-hidden">
-                <CardHeader className="p-8 text-center bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700">
-                  <CardTitle className="text-3xl font-black text-slate-800 dark:text-white mb-2 uppercase tracking-tighter italic">Security Punch-In</CardTitle>
-                  <CardDescription className="text-slate-500 font-bold text-xs uppercase tracking-widest">Verify your location to unlock student roll-call.</CardDescription>
-                </CardHeader>
-                <CardContent className="p-12 text-center space-y-10">
-                  <div className="relative">
-                    <div className="w-32 h-32 bg-indigo-50 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mx-auto text-indigo-600 shadow-inner">
-                      <MapPin className="w-16 h-16 animate-pulse" />
-                    </div>
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-2 border-dashed border-indigo-200 dark:border-indigo-800 rounded-full animate-spin-slow" />
-                  </div>
-
-                  {error && (
-                    <div className="bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 p-4 rounded-2xl flex items-center gap-3 text-sm font-bold border border-rose-100 dark:border-rose-900/50">
-                      <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                      {error}
-                    </div>
-                  )}
-
-                  <Button
-                    onClick={handleVerifyAndSubmit}
-                    disabled={isVerifying}
-                    className="w-full h-20 text-xl font-black bg-indigo-600 hover:bg-indigo-700 shadow-2xl shadow-indigo-200 dark:shadow-none rounded-3xl transition-all hover:scale-[1.02] active:scale-95 group uppercase tracking-tighter"
-                  >
-                    {isVerifying ? (
-                      <>
-                        <Loader2 className="w-6 h-6 mr-3 animate-spin" />
-                        Scanning...
-                      </>
-                    ) : (
-                      <span className="flex items-center gap-3 group-hover:scale-110 transition-transform">
-                        <ShieldCheck className="w-8 h-8" strokeWidth={3} /> Verify & Unlock
-                      </span>
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
+               <div className="w-20 h-20 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-300">
+                   <Scan className="w-10 h-10" />
+               </div>
+               <div className="space-y-1">
+                   <h2 className="text-2xl font-bold text-slate-800 dark:text-whiteTracking-tight uppercase italic tracking-tighter">Check-in Required</h2>
+                   <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Please verify your location on campus to record attendance.</p>
+               </div>
+               <Button 
+                   onClick={handleVerifyAndSubmit} 
+                   disabled={isVerifying}
+                   size="lg"
+                   className="bg-indigo-600 hover:bg-indigo-700 text-white h-14 px-10 rounded-2xl font-bold uppercase text-[11px] tracking-[0.2em] shadow-xl group transition-all"
+               >
+                   {isVerifying ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
+                   Mark My Attendance
+               </Button>
+               {error && (
+                 <p className="text-rose-500 text-[10px] font-black uppercase tracking-widest mt-4 bg-rose-50 dark:bg-rose-950/20 px-4 py-2 rounded-lg border border-rose-100 dark:border-rose-900/30">
+                   {error}
+                 </p>
+               )}
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
 
-      <style jsx global>{`
-                @keyframes spin-slow {
-                    from { transform: translate(-50%, -50%) rotate(0deg); }
-                    to { transform: translate(-50%, -50%) rotate(360deg); }
-                }
-                .animate-spin-slow {
-                    animation: spin-slow 10s linear infinite;
-                }
-            `}</style>
+      </div>
     </DashboardLayout>
   );
 }
-
-function UsersIcon(props: React.ComponentProps<"svg">) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M23 7a4 4 0 0 0-4-4 4 4 0 0 0-1.55.3" />
-    </svg>
-  )
-}
-

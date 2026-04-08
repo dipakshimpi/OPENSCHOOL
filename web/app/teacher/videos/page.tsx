@@ -6,12 +6,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-    VideoCameraIcon,
-    PlusIcon,
-    PlayCircleIcon,
-    ClockIcon,
-    TrashIcon
-} from "@heroicons/react/24/outline";
+    Video,
+    Plus,
+    PlayCircle,
+    Clock,
+    Trash2
+} from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
@@ -85,7 +85,7 @@ function TeacherVideosContent() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/50 p-6 rounded-2xl border border-white/20 backdrop-blur-md shadow-sm">
                 <div className="flex items-center gap-4">
                     <div className="p-3 bg-purple-100 rounded-xl text-purple-600">
-                        <VideoCameraIcon className="w-8 h-8" />
+                        <Video className="w-8 h-8" />
                     </div>
                     <div>
                         <h2 className="text-2xl font-bold text-slate-900">
@@ -102,7 +102,7 @@ function TeacherVideosContent() {
                     )}
                     <Link href="/teacher/videos/upload">
                         <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg px-6">
-                            <PlusIcon className="w-5 h-5 mr-2" />
+                            <Plus className="w-5 h-5 mr-2" />
                             Add New Lesson
                         </Button>
                     </Link>
@@ -125,11 +125,11 @@ function TeacherVideosContent() {
                                     />
                                 ) : (
                                     <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-indigo-950 flex items-center justify-center">
-                                        <PlayCircleIcon className="w-16 h-16 text-white/20 group-hover:text-white/50 transition-colors" />
+                                        <PlayCircle className="w-16 h-16 text-white/20 group-hover:text-white/50 transition-colors" />
                                     </div>
                                 )}
                                 <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-                                    <PlayCircleIcon className="w-16 h-16 text-white opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300" />
+                                    <PlayCircle className="w-16 h-16 text-white opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300" />
                                 </div>
                                 <div className="absolute top-4 left-4 flex flex-col gap-2">
                                     <Badge className="bg-indigo-500 border-none shadow-lg">
@@ -145,7 +145,7 @@ function TeacherVideosContent() {
                                     onClick={() => handleDelete(video.id)}
                                     className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-rose-500 text-white rounded-lg transition-all backdrop-blur-md opacity-0 group-hover:opacity-100"
                                 >
-                                    <TrashIcon className="w-5 h-5" />
+                                    <Trash2 className="w-5 h-5" />
                                 </button>
                             </div>
                             <CardContent className="p-5">
@@ -157,7 +157,7 @@ function TeacherVideosContent() {
                                 </p>
                                 <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                                     <div className="flex items-center text-xs text-slate-400">
-                                        <ClockIcon className="w-4 h-4 mr-1" />
+                                        <Clock className="w-4 h-4 mr-1" />
                                         {new Date(video.created_at).toLocaleDateString()}
                                     </div>
                                     <Link href={`/student/videos/${video.id}`}>
@@ -171,7 +171,7 @@ function TeacherVideosContent() {
                     ))
                 ) : (
                     <div className="col-span-full py-20 text-center bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-200">
-                        <VideoCameraIcon className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                        <Video className="w-16 h-16 text-slate-300 mx-auto mb-4" />
                         <h3 className="text-xl font-bold text-slate-900 mb-1">No videos found</h3>
                         <p className="text-slate-500 mb-6">Start by adding your first lesson to a course.</p>
                         <Link href="/teacher/videos/upload">

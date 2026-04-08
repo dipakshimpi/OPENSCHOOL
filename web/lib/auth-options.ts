@@ -97,8 +97,8 @@ export const authOptions: NextAuthOptions = {
                 // 🏢 Fetch user role from Supabase to bake it into the JWT
                 try {
                     const supabase = createClient(
-                        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                        process.env.SERVICE_SUPABASESERVICE_KEY!
+                        process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SERVICE_SUPABASESERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
                     );
 
                     // 1. Try to find existing profile

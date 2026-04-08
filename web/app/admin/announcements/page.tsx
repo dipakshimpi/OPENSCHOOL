@@ -8,11 +8,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-    MegaphoneIcon,
-    PaperAirplaneIcon,
-    BellIcon
-} from "@heroicons/react/24/outline";
+    Megaphone,
+    Send,
+    Bell,
+    Clock,
+    User,
+    Search,
+    Plus
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface Announcement {
     id: string;
@@ -26,7 +31,6 @@ interface Announcement {
     };
 }
 
-// Force dynamic rendering since this page relies on Request data not available at build time
 export const dynamic = "force-dynamic";
 
 function AdminAnnouncementsContent() {
@@ -63,118 +67,155 @@ function AdminAnnouncementsContent() {
                 setFormData({ title: "", content: "", priority: "normal", target_role: "all" });
                 fetchAnnouncements();
             }
-        } catch (error) {
-            console.error(error);
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <DashboardLayout role="admin" title="System Announcements">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Create Form */}
-                <div className="lg:col-span-1">
-                    <Card className="border-none shadow-xl bg-white/70 backdrop-blur-sm sticky top-6">
-                        <CardHeader className="bg-indigo-600 text-white rounded-t-xl">
-                            <CardTitle className="flex items-center gap-2">
-                                <MegaphoneIcon className="w-5 h-5" />
-                                Post New Notice
-                            </CardTitle>
-                            <CardDescription className="text-indigo-100">Broadcast a message to users.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="p-6">
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="title">Subject</Label>
-                                    <Input
-                                        id="title"
-                                        placeholder="e.g. Campus Maintenance"
-                                        required
-                                        value={formData.title}
-                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="content">Details</Label>
-                                    <Textarea
-                                        id="content"
-                                        placeholder="Enter the notification details here..."
-                                        rows={4}
-                                        required
-                                        value={formData.content}
-                                        onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                                    />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>Priority</Label>
-                                        <select
-                                            className="w-full h-10 px-3 rounded-md border border-input bg-background"
-                                            value={formData.priority}
-                                            onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                                        >
-                                            <option value="normal">Normal</option>
-                                            <option value="high">High</option>
-                                            <option value="urgent">Urgent</option>
-                                        </select>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Target Audience</Label>
-                                        <select
-                                            className="w-full h-10 px-3 rounded-md border border-input bg-background"
-                                            value={formData.target_role}
-                                            onChange={(e) => setFormData({ ...formData, target_role: e.target.value })}
-                                        >
-                                            <option value="all">Everyone</option>
-                                            <option value="student">Students Only</option>
-                                            <option value="teacher">Teachers Only</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <Button className="w-full bg-indigo-600 hover:bg-indigo-700 mt-4" disabled={loading}>
-                                    <PaperAirplaneIcon className="w-4 h-4 mr-2" />
-                                    {loading ? "Sending..." : "Publish Announcement"}
-                                </Button>
-                            </form>
-                        </CardContent>
-                    </Card>
+        <DashboardLayout role="admin" title="Direct Bulletin">
+            <div className="max-w-[1400px] mx-auto space-y-10 pb-20 px-4">
+                
+                {/* 🌟 CLEAN HEADER */}
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b border-slate-200 dark:border-white/5 pb-8 pt-4">
+                    <div>
+                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Institutional Announcements</h1>
+                        <p className="text-sm text-slate-500 mt-1 font-medium">Broadcast critical updates and notifications across the platform.</p>
+                    </div>
                 </div>
 
-                {/* History List */}
-                <div className="lg:col-span-2 space-y-6">
-                    <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                        <BellIcon className="w-6 h-6 text-slate-400" />
-                        Recent Broadcasts
-                    </h3>
-
-                    {announcements.length > 0 ? (
-                        announcements.map((item) => (
-                            <Card key={item.id} className="border-none shadow-md bg-white hover:shadow-lg transition-all overflow-hidden">
-                                <CardContent className="p-6">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="flex gap-2">
-                                            {item.priority === 'urgent' && <Badge className="bg-rose-500 text-white border-none uppercase text-[10px]">Urgent</Badge>}
-                                            {item.priority === 'high' && <Badge className="bg-amber-500 text-white border-none uppercase text-[10px]">High</Badge>}
-                                            <Badge variant="outline" className="text-[10px] uppercase">{item.target_role}</Badge>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                    {/* Create Form */}
+                    <div className="lg:col-span-1 space-y-6">
+                        <Card className="border-none shadow-xl bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-100 dark:border-white/5">
+                            <CardHeader className="p-8 border-b border-slate-100 dark:border-white/5">
+                                <CardTitle className="text-xl font-bold flex items-center gap-2">
+                                    <Plus className="w-5 h-5 text-indigo-600" />
+                                    New Announcement
+                                </CardTitle>
+                                <CardDescription className="text-xs font-medium">Create a new notification for the community.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-8">
+                                <form onSubmit={handleSubmit} className="space-y-6">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="title" className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Subject Title</Label>
+                                        <Input
+                                            id="title"
+                                            placeholder="Enter announcement subject..."
+                                            required
+                                            className="h-11 rounded-xl bg-slate-50 dark:bg-slate-950 border-none px-4 focus-visible:ring-2 focus-visible:ring-indigo-600/20"
+                                            value={formData.title}
+                                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="content" className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Message Content</Label>
+                                        <Textarea
+                                            id="content"
+                                            placeholder="Compose your message here..."
+                                            rows={5}
+                                            required
+                                            className="rounded-xl bg-slate-50 dark:bg-slate-950 border-none p-4 focus-visible:ring-2 focus-visible:ring-indigo-600/20"
+                                            value={formData.content}
+                                            onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Priority Level</Label>
+                                            <select
+                                                className="w-full h-11 px-3 rounded-xl bg-slate-50 dark:bg-slate-950 border-none text-xs font-bold focus:ring-2 focus:ring-indigo-600/20"
+                                                value={formData.priority}
+                                                onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                                            >
+                                                <option value="normal">Normal</option>
+                                                <option value="high">High</option>
+                                                <option value="urgent">Urgent</option>
+                                            </select>
                                         </div>
-                                        <span className="text-[10px] text-slate-400 uppercase tracking-widest">{new Date(item.created_at).toLocaleString()}</span>
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Target Segment</Label>
+                                            <select
+                                                className="w-full h-11 px-3 rounded-xl bg-slate-50 dark:bg-slate-950 border-none text-xs font-bold focus:ring-2 focus:ring-indigo-600/20"
+                                                value={formData.target_role}
+                                                onChange={(e) => setFormData({ ...formData, target_role: e.target.value })}
+                                            >
+                                                <option value="all">Everyone</option>
+                                                <option value="student">Students Only</option>
+                                                <option value="teacher">Teachers Only</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                    <h4 className="font-bold text-lg text-slate-900 mb-2">{item.title}</h4>
-                                    <p className="text-slate-600 text-sm leading-relaxed mb-4">{item.content}</p>
-                                    <div className="flex items-center gap-2 text-xs text-slate-400 border-t pt-4">
-                                        <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold">A</div>
-                                        <span>Posted by Admin: {item.profiles?.full_name}</span>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))
-                    ) : (
-                        <div className="py-20 text-center bg-white rounded-3xl border-2 border-dashed border-slate-200">
-                            <MegaphoneIcon className="w-16 h-16 text-slate-200 mx-auto mb-4" />
-                            <p className="text-slate-500">No announcements have been broadcasted yet.</p>
+                                    <Button className="w-full bg-indigo-600 hover:bg-black dark:hover:bg-indigo-700 text-white h-12 rounded-xl font-bold uppercase text-[10px] tracking-widest gap-2 shadow-lg shadow-indigo-500/10" disabled={loading}>
+                                        {loading ? "Syncing..." : <Send className="w-4 h-4" />}
+                                        {loading ? "Sending..." : "Publish Broadcast"}
+                                    </Button>
+                                </form>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Feed */}
+                    <div className="lg:col-span-2 space-y-6">
+                        <div className="flex items-center justify-between mb-2">
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white uppercase italic tracking-tighter">Broadcast Feed</h3>
+                            <div className="flex items-center gap-2 text-slate-400">
+                                <Search className="w-4 h-4" />
+                                <span className="text-[10px] font-bold uppercase tracking-widest">{announcements.length} Active Records</span>
+                            </div>
                         </div>
-                    )}
+
+                        <div className="space-y-4">
+                            {announcements.map((ann) => (
+                                <Card key={ann.id} className="border-none shadow-md bg-white dark:bg-slate-900 rounded-3xl overflow-hidden hover:shadow-lg transition-all border border-slate-100 dark:border-white/5">
+                                    <CardContent className="p-8">
+                                        <div className="flex items-start justify-between gap-4 mb-4">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600">
+                                                    <Megaphone className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <h4 className="text-lg font-bold text-slate-900 dark:text-white leading-tight uppercase italic">{ann.title}</h4>
+                                                    <div className="flex items-center gap-3 mt-1">
+                                                        <div className="flex items-center gap-1.5 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                                            <User className="w-3 h-3" />
+                                                            {ann.profiles?.full_name || "Admin"}
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                                            <Clock className="w-3 h-3" />
+                                                            {new Date(ann.created_at).toLocaleDateString()}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <Badge className={cn(
+                                                "rounded-lg px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest border-none",
+                                                ann.priority === 'urgent' ? "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-400" :
+                                                ann.priority === 'high' ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400" :
+                                                "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                                            )}>
+                                                {ann.priority}
+                                            </Badge>
+                                        </div>
+                                        <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-6 bg-slate-50 dark:bg-slate-950/50 p-4 rounded-2xl border border-slate-100 dark:border-white/5">
+                                            {ann.content}
+                                        </p>
+                                        <div className="flex items-center gap-3">
+                                            <Badge variant="outline" className="rounded-md border-slate-200 dark:border-white/10 text-[9px] font-bold uppercase tracking-widest">
+                                                Recipient: {ann.target_role === 'all' ? 'Community' : ann.target_role}
+                                            </Badge>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                            {announcements.length === 0 && (
+                                <div className="py-24 text-center bg-white dark:bg-slate-900 rounded-[3rem] border-none shadow-sm">
+                                    <Bell className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+                                    <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">No active announcements found.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
         </DashboardLayout>

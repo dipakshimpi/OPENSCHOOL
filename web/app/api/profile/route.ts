@@ -8,12 +8,8 @@ export const dynamic = "force-dynamic";
 
 // Helper to get supabase admin client lazily
 function getSupabaseAdmin() {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SERVICE_SUPABASESERVICE_KEY;
-
-    if (!url || !key) {
-        throw new Error("Missing Supabase admin environment variables");
-    }
+    const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SERVICE_SUPABASESERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
     return createClient(url, key);
 }

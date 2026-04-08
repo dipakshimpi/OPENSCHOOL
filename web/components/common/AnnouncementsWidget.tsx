@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MegaphoneIcon } from "@heroicons/react/24/outline";
+import { Megaphone } from "lucide-react";
 
 interface Announcement {
     id: string;
@@ -14,6 +14,9 @@ interface Announcement {
     target_role: string;
     created_at: string;
 }
+
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 export function AnnouncementsWidget({ role = "all" }: { role?: string }) {
     const [notices, setNotices] = useState<Announcement[]>([]);
@@ -37,43 +40,57 @@ export function AnnouncementsWidget({ role = "all" }: { role?: string }) {
         fetchNotices();
     }, [role]);
 
-
     if (loading) {
         return (
-            <>
-                {[1, 2, 3].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}
-            </>
+            <div className="space-y-4 w-full">
+                {[1, 2, 3].map(i => <Skeleton key={i} className="h-32 rounded-[2rem] bg-muted" />)}
+            </div>
         );
     }
 
     if (notices.length === 0) {
         return (
-            <div className="col-span-full py-10 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 text-center">
-                <MegaphoneIcon className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                <p className="text-slate-500 text-sm italic">No recent campus announcements.</p>
+            <div className="w-full py-12 bg-muted/50 rounded-[2.5rem] border-2 border-dashed border-border text-center flex flex-col items-center justify-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground">
+                    <Megaphone className="w-6 h-6" />
+                </div>
+                <p className="text-muted-foreground font-black uppercase text-[10px] tracking-[0.3em]">Signal Flatline • No Notices</p>
             </div>
         );
     }
 
     return (
-        <>
-            {notices.map((item) => (
-                <Card key={item.id} className="border-none shadow-sm bg-white/50 backdrop-blur-md hover:shadow-md transition-all group overflow-hidden">
-                    <CardContent className="p-5">
-                        <div className="flex justify-between items-start mb-2">
-                            <Badge variant="outline" className={`text-[8px] uppercase tracking-wider ${item.priority === 'urgent' ? 'bg-red-50 text-red-600 border-red-100' :
-                                item.priority === 'high' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                    'bg-slate-50 text-slate-600 border-slate-100'
-                                }`}>
-                                {item.priority}
-                            </Badge>
-                            <span className="text-[9px] text-slate-400 font-medium">{new Date(item.created_at).toLocaleDateString()}</span>
-                        </div>
-                        <h4 className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">{item.title}</h4>
-                        <p className="text-xs text-slate-500 line-clamp-2 mt-1 leading-relaxed">{item.content}</p>
-                    </CardContent>
-                </Card>
+        <div className="space-y-6 w-full">
+            {notices.map((item, idx) => (
+                <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                >
+                    <Card className="border-none shadow-xl bg-card text-card-foreground hover:shadow-2xl transition-all duration-300 group overflow-hidden rounded-[2rem] border border-border">
+                        <CardContent className="p-8">
+                            <div className="flex justify-between items-start mb-6">
+                                <Badge className={cn(
+                                    "px-3 py-1 rounded-full font-black text-[8px] uppercase tracking-widest border-none shadow-inner",
+                                    item.priority === 'urgent' ? 'bg-destructive text-destructive-foreground animate-pulse' :
+                                    item.priority === 'high' ? 'bg-amber-500 text-white' :
+                                    'bg-primary text-primary-foreground'
+                                )}>
+                                    {item.priority} Protocol
+                                </Badge>
+                                <span className="text-[9px] text-muted-foreground font-black uppercase tracking-tighter">{new Date(item.created_at).toLocaleDateString()}</span>
+                            </div>
+                            <h4 className="font-black text-xl text-card-foreground group-hover:text-primary transition-colors uppercase tracking-tight leading-none mb-3">{item.title}</h4>
+                            <p className="text-xs text-muted-foreground font-bold leading-relaxed line-clamp-3">{item.content}</p>
+                            <div className="mt-6 pt-6 border-t border-border flex items-center gap-3">
+                                <div className="w-1.5 h-1.5 bg-primary rounded-full group-hover:scale-150 transition-all" />
+                                <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Campus Broadcast Hub</span>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </motion.div>
             ))}
-        </>
+        </div>
     );
 }

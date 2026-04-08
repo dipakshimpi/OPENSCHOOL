@@ -5,21 +5,24 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AcademicCapIcon } from "@heroicons/react/24/outline";
-import Link from "next/link";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Mail, ShieldCheck, GraduationCap, Users } from "lucide-react";
 import { signIn } from "next-auth/react";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { CosmicParallaxBg } from "@/components/parallax-cosmic-background";
 
 // Google Icon Component
 const GoogleIcon = () => (
-    <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+    <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
         <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
         <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
         <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
     </svg>
 );
+
+
 
 export default function LoginPage() {
     const router = useRouter();
@@ -36,7 +39,7 @@ export default function LoginPage() {
             await signIn("keycloak-google", { callbackUrl: `/?intendedRole=${role}` });
         } catch (error) {
             console.error("Google Login Error:", error);
-            setError("Failed to initialize Google login.");
+            setError("Sync failed.");
             setIsLoading(false);
         }
     };
@@ -47,7 +50,6 @@ export default function LoginPage() {
         setError(null);
 
         try {
-            // Call our custom Credentials provider
             const result = await signIn("credentials", {
                 email,
                 password,
@@ -56,122 +58,142 @@ export default function LoginPage() {
             });
 
             if (result?.error) {
-                setError("Invalid email or password.");
+                setError("Credential Mismatch");
                 setIsLoading(false);
                 return;
             }
 
-            // Success! Set cookie for role and redirect
             document.cookie = `intended_role=${role}; path=/; max-age=3600; SameSite=Lax`;
             router.push(`/?intendedRole=${role}`);
-        } catch (authError) {
-            console.error("[Login] Auth Error:", authError);
-            setError("An unexpected error occurred.");
+        } catch {
+            setError("System Error");
             setIsLoading(false);
         }
     };
 
     return (
-        <div className="w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 p-4">
-            {/* Background Decor */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-                <div className="absolute top-[-10%] right-[-5%] w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-                <div className="absolute bottom-[-10%] left-[-5%] w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
+        <div className="h-screen w-full flex items-center justify-center p-6 relative overflow-hidden font-sans">
+
+            {/* 🌌 Cosmic Parallax Background */}
+            <div className="absolute inset-0 z-0 pointer-events-none">
+                <CosmicParallaxBg
+                    loop={true}
+                    className="w-full h-full"
+                />
             </div>
 
-            <Card className="w-full max-w-md z-10 shadow-card-hover border-white/40 bg-white/80 backdrop-blur-xl dark:bg-slate-900/80 dark:border-slate-800 transition-all duration-300">
-                <CardHeader className="text-center space-y-2">
-                    <div className="mx-auto w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-2">
-                        <AcademicCapIcon className="w-7 h-7 text-primary" />
+            {/* 🪪 MAIN LOGIN CARD - Ultra-Compact Minimal Square */}
+            <motion.div
+                initial={{ opacity: 0, scale: 0.85, y: 30 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                className="relative z-10 w-full max-w-[360px]"
+            >
+                <div className="bg-card text-card-foreground rounded-[2.5rem] shadow-[0_60px_120px_rgba(0,0,0,0.5)] border-2 border-border p-8 flex flex-col items-center">
+                    
+                    {/* 🛡️ Brand Logo (OpenSchool) */}
+                    <div className="mb-8 flex flex-col items-center text-center">
+                        <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-xl shadow-primary/20 mb-4 group ring-4 ring-secondary">
+                             <GraduationCap className="w-7 h-7 text-primary-foreground" strokeWidth={2.5} />
+                        </div>
+                        <h1 className="text-xl font-black text-foreground tracking-tighter uppercase italic">OpenSchool</h1>
                     </div>
-                    <CardTitle className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                        Sign in to OpenSchool
-                    </CardTitle>
-                    <CardDescription className="text-slate-500 dark:text-slate-400">
-                        Access your academic dashboard
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Tabs
-                        defaultValue="student"
-                        onValueChange={(val) => setRole(val)}
-                        className="w-full"
-                    >
-                        <TabsList className="grid w-full grid-cols-3 mb-6 bg-slate-100/50 dark:bg-slate-800/50 p-1">
-                            <TabsTrigger value="admin">Admin</TabsTrigger>
-                            <TabsTrigger value="teacher">Teacher</TabsTrigger>
-                            <TabsTrigger value="student">Student</TabsTrigger>
+
+                    {/* 🎛️ Tabs Grid (Google / Email) */}
+                    <Tabs defaultValue="google" className="w-full">
+                        <TabsList className="grid grid-cols-2 w-full h-11 p-1 bg-muted rounded-xl mb-6 border border-border">
+                            <TabsTrigger value="google" className="rounded-lg font-bold text-[9px] data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all uppercase tracking-widest">
+                                <GoogleIcon /> login
+                            </TabsTrigger>
+                            <TabsTrigger value="email" className="rounded-lg font-bold text-[9px] data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all text-muted-foreground data-[state=active]:text-foreground uppercase tracking-widest">
+                                <Mail className="w-3.5 h-3.5 mr-2" /> Email
+                            </TabsTrigger>
                         </TabsList>
 
-                        <form onSubmit={handleLogin} className="space-y-4">
-                            {error && (
-                                <div className="p-3 text-sm text-rose-500 bg-rose-50 border border-rose-100 rounded-lg animate-in fade-in">
-                                    {error}
-                                </div>
-                            )}
-
-                            <div className="space-y-2">
-                                <Label htmlFor="email">Email address</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="your@email.com"
-                                    className="bg-white/50 dark:bg-slate-950/50 border-slate-200"
-                                    required
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <Label htmlFor="password">Password</Label>
-                                    <Link href="/auth/forgot-password" className="text-xs text-primary hover:underline font-medium">Forgot password?</Link>
-                                </div>
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="bg-white/50 dark:bg-slate-950/50 border-slate-200"
-                                    required
-                                />
-                            </div>
-
-                            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 shadow-lg" disabled={isLoading}>
-                                {isLoading ? "Signing in..." : "Sign In"}
-                            </Button>
-
-                            <div className="relative my-4">
-                                <div className="absolute inset-0 flex items-center">
-                                    <span className="w-full border-t border-slate-200 dark:border-slate-800" />
-                                </div>
-                                <div className="relative flex justify-center text-xs uppercase">
-                                    <span className="bg-white dark:bg-slate-900 px-2 text-slate-500">Or continue with</span>
-                                </div>
-                            </div>
-
-                            <Button
-                                type="button"
-                                variant="outline"
-                                className="w-full border-slate-200 hover:bg-slate-50"
+                        <TabsContent value="google" className="animate-in fade-in zoom-in-95 duration-500">
+                            <Button 
                                 onClick={handleGoogleLogin}
                                 disabled={isLoading}
+                                className="w-full h-12 bg-card hover:bg-muted text-foreground border border-border rounded-xl font-black text-[10px] shadow-sm transition-all flex items-center justify-center gap-2 hover:shadow-lg active:scale-95 uppercase tracking-widest"
                             >
                                 <GoogleIcon />
-                                Sign in with Google
+                                Institutional Authenticate
                             </Button>
-                        </form>
+                        </TabsContent>
+
+                        <TabsContent value="email" className="animate-in fade-in slide-in-from-bottom-6 duration-500">
+                            <form onSubmit={handleLogin} className="space-y-4">
+                                <div className="space-y-1.5">
+                                    <Label className="text-[8px] font-bold uppercase tracking-[0.2em] text-muted-foreground ml-1">Identity</Label>
+                                    <Input
+                                        type="email"
+                                        placeholder="user@domain.edu"
+                                        className="h-11 rounded-xl bg-muted border-none focus-visible:ring-2 focus-visible:ring-ring font-bold text-xs px-4"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-[8px] font-bold uppercase tracking-[0.2em] text-muted-foreground ml-1">Password</Label>
+                                    <Input
+                                        type="password"
+                                        placeholder="••••••••"
+                                        className="h-11 rounded-xl bg-muted border-none focus-visible:ring-2 focus-visible:ring-ring font-bold text-xs px-4"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                    />
+                                </div>
+
+                                {error && (
+                                    <p className="text-[8px] font-black text-destructive text-center uppercase tracking-widest">{error}</p>
+                                )}
+
+                                <Button 
+                                    type="submit"
+                                    disabled={isLoading}
+                                    className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-black text-[10px] transition-all shadow-xl active:scale-95 uppercase tracking-widest"
+                                >
+                                    Proceed
+                                </Button>
+                            </form>
+                        </TabsContent>
                     </Tabs>
-                </CardContent>
-                <CardFooter className="flex justify-center border-t border-slate-100 dark:border-slate-800 pt-6">
-                    <p className="text-sm text-slate-500">
-                        Don&apos;t have an account?{" "}
-                        <Link href="/auth/register" className="text-primary font-medium hover:underline">
-                            Create account
-                        </Link>
-                    </p>
-                </CardFooter>
-            </Card>
+
+                    {/* 🛡️ Combined Access Selectors - Compact & Hierarchical */}
+                    <div className="mt-8 pt-6 border-t border-border w-full flex flex-col items-center">
+                        <p className="text-[8px] font-black uppercase tracking-[0.3em] text-muted-foreground mb-4">Protocol Role</p>
+                        <div className="flex gap-1.5 p-1 bg-muted rounded-2xl border border-border">
+                            {[
+                                { id: "admin", icon: ShieldCheck },
+                                { id: "teacher", icon: GraduationCap },
+                                { id: "student", icon: Users }
+                            ].map((r) => (
+                                <button
+                                    key={r.id}
+                                    onClick={() => setRole(r.id)}
+                                    className={cn(
+                                        "px-2.5 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+                                        role === r.id 
+                                        ? "bg-card text-primary shadow-md ring-1 ring-border" 
+                                        : "text-muted-foreground hover:text-foreground"
+                                    )}
+                                >
+                                    <r.icon className="w-3 h-3" />
+                                    {r.id === "admin" ? "Admin" : r.id === "teacher" ? "Teacher" : "Student"}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                </div>
+
+                <p className="mt-8 text-center text-[8px] font-black text-muted-foreground/30 uppercase tracking-[0.4em]">
+                    Institutional Hub Hub v2.5
+                </p>
+            </motion.div>
+
         </div>
     );
 }

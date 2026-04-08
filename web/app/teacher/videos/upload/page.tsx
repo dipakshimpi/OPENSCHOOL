@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowUpTrayIcon, VideoCameraIcon, FilmIcon } from "@heroicons/react/24/outline";
+import { Upload, Video, Film } from "lucide-react";
 
 interface Course {
     id: string;
@@ -108,7 +108,7 @@ function UploadVideoContent() {
                     <CardHeader className="bg-gradient-to-r from-indigo-50 to-white dark:from-slate-900 dark:to-slate-800 border-b border-indigo-50 dark:border-slate-800 pb-8">
                         <div className="flex items-center gap-4 mb-2">
                             <div className="h-12 w-12 rounded-2xl bg-indigo-100 flex items-center justify-center text-indigo-600 shadow-sm">
-                                <ArrowUpTrayIcon className="w-6 h-6" />
+                                <Upload className="w-6 h-6" />
                             </div>
                             <div>
                                 <CardTitle className="text-2xl font-bold text-slate-900 dark:text-white">Upload Video Lesson</CardTitle>
@@ -181,7 +181,7 @@ function UploadVideoContent() {
                                         <label htmlFor="video-upload" className="cursor-pointer w-full h-full flex flex-col items-center justify-center">
                                             {file ? (
                                                 <>
-                                                    <FilmIcon className="w-16 h-16 text-emerald-500 mb-4" />
+                                                    <Film className="w-16 h-16 text-emerald-500 mb-4" />
                                                     <p className="font-bold text-slate-900 text-lg max-w-[200px] truncate">{file.name}</p>
                                                     <p className="text-sm text-slate-500 mt-1">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
                                                     <Button variant="outline" size="sm" className="mt-4 border-emerald-200 text-emerald-700 hover:bg-emerald-100">Change File</Button>
@@ -189,7 +189,7 @@ function UploadVideoContent() {
                                             ) : (
                                                 <>
                                                     <div className="h-16 w-16 bg-white rounded-full shadow-sm flex items-center justify-center mb-4">
-                                                        <VideoCameraIcon className="w-8 h-8 text-indigo-500" />
+                                                        <Video className="w-8 h-8 text-indigo-500" />
                                                     </div>
                                                     <p className="font-bold text-slate-700 text-lg">Click to Browse</p>
                                                     <p className="text-sm text-slate-400 mt-2 px-4">Supports MP4, WebM. Max 500MB recommended.</p>

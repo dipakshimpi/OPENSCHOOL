@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckBadgeIcon } from "@heroicons/react/24/outline";
+import { BadgeCheck } from "lucide-react";
 
 interface Student {
     id: string;
@@ -127,7 +127,7 @@ export default function TeacherApprovalsPage() {
                                                     >
                                                         {processingId === student.id ? "Granting..." : (
                                                             <>
-                                                                <CheckBadgeIcon className="w-4 h-4 mr-1" />
+                                                                <BadgeCheck className="w-4 h-4 mr-1" />
                                                                 Grant Access
                                                             </>
                                                         )}

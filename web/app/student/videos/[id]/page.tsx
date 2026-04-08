@@ -6,10 +6,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-    ChevronLeftIcon,
-    InformationCircleIcon,
-    AcademicCapIcon
-} from "@heroicons/react/24/outline";
+    ChevronLeft,
+    Info,
+    GraduationCap
+} from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { VideoPlayer } from "@/components/video/VideoPlayer";
@@ -81,7 +81,7 @@ export default function VideoWatchPage() {
                         onClick={() => router.back()}
                         className="mb-2 text-slate-500 hover:text-indigo-600"
                     >
-                        <ChevronLeftIcon className="w-4 h-4 mr-1" />
+                        <ChevronLeft className="w-4 h-4 mr-1" />
                         Back to Library
                     </Button>
 
@@ -100,7 +100,7 @@ export default function VideoWatchPage() {
                         </div>
                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                             <h3 className="font-bold text-slate-800 mb-2 flex items-center gap-2">
-                                <InformationCircleIcon className="w-5 h-5 text-indigo-500" />
+                                <Info className="w-5 h-5 text-indigo-500" />
                                 Description
                             </h3>
                             <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">
@@ -114,7 +114,7 @@ export default function VideoWatchPage() {
                 <div className="space-y-6">
                     <Card className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white border-none shadow-xl rounded-2xl overflow-hidden p-6">
                         <h3 className="font-bold text-xl mb-4 flex items-center gap-2">
-                            <AcademicCapIcon className="w-6 h-6 text-indigo-400" />
+                            <GraduationCap className="w-6 h-6 text-indigo-400" />
                             Next Steps
                         </h3>
                         <div className="space-y-4">
@@ -129,7 +129,7 @@ export default function VideoWatchPage() {
 
                     <div className="p-6 bg-amber-50 rounded-2xl border border-amber-100">
                         <h4 className="font-bold text-amber-800 mb-2 flex items-center gap-2">
-                            <InformationCircleIcon className="w-4 h-4" />
+                            <Info className="w-4 h-4" />
                             Lesson Tips
                         </h4>
                         <ul className="text-xs text-amber-700 space-y-2 list-disc list-inside">

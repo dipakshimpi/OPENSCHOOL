@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AcademicCapIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { GraduationCap, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 /**
@@ -25,7 +25,7 @@ export default function ForgotPasswordPage() {
             <Card className="w-full max-w-md z-10 shadow-xl border-white/40 bg-white/80 backdrop-blur-xl dark:bg-slate-900/80 dark:border-slate-800 transition-all duration-300">
                 <CardHeader className="text-center space-y-2">
                     <div className="mx-auto w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-2">
-                        <AcademicCapIcon className="w-7 h-7 text-primary" />
+                        <GraduationCap className="w-7 h-7 text-primary" />
                     </div>
                     <CardTitle className="text-2xl font-bold tracking-tight">
                         Reset password
@@ -51,7 +51,7 @@ export default function ForgotPasswordPage() {
 
                     <div className="flex justify-center border-t border-slate-100 dark:border-slate-800 pt-4">
                         <Link href="/auth/login" className="flex items-center gap-2 text-sm text-slate-500 hover:text-primary transition-colors">
-                            <ArrowLeftIcon className="w-4 h-4" />
+                            <ArrowLeft className="w-4 h-4" />
                             Back to login
                         </Link>
                     </div>

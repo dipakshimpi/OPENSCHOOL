@@ -1,10 +1,21 @@
 "use client";
 
-import { BellIcon, MagnifyingGlassIcon, MegaphoneIcon } from "@heroicons/react/24/outline";
+import { Bell, Search, Megaphone, LogOut, UserCircle, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useState, useEffect } from "react";
+import { signOut } from "next-auth/react";
+import { cn } from "@/lib/utils";
+import { authedFetch } from "@/lib/api";
 
 interface Notice {
     id: string;
@@ -14,12 +25,17 @@ interface Notice {
     created_at: string;
 }
 
-import { authedFetch } from "@/lib/api";
+const PRIORITY_STYLES: Record<string, string> = {
+    high: "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400",
+    medium: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400",
+    low: "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400",
+};
 
 export function Header({ title }: { title: string }) {
     const [notices, setNotices] = useState<Notice[]>([]);
-    const [showPanel, setShowPanel] = useState(false);
-    const [userInitials, setUserInitials] = useState("AD");
+    const [userInitials, setUserInitials] = useState("U");
+    const [userName, setUserName] = useState("User");
+    const [userRole, setUserRole] = useState("student");
 
     useEffect(() => {
         async function fetchProfile() {
@@ -30,6 +46,8 @@ export function Header({ title }: { title: string }) {
                     if (data.full_name) {
                         const initials = data.full_name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
                         setUserInitials(initials);
+                        setUserName(data.full_name);
+                        setUserRole(data.role || "student");
                     }
                 }
             } catch (err) {
@@ -45,7 +63,7 @@ export function Header({ title }: { title: string }) {
                 const res = await authedFetch("/api/announcements");
                 if (res.ok) {
                     const data = await res.json();
-                    setNotices(data.slice(0, 5)); // Show last 5
+                    setNotices(data.slice(0, 5));
                 }
             } catch (err) {
                 console.error("Notices fetch error", err);
@@ -55,64 +73,127 @@ export function Header({ title }: { title: string }) {
     }, []);
 
     return (
-        <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 h-16 px-6 flex items-center justify-between">
+        <header className="sticky top-0 z-[100] h-16 px-6 flex items-center justify-between bg-background border-b border-border shadow-sm">
+            {/* Left: Page Title */}
             <div className="flex items-center gap-4">
-                <h1 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight hidden md:block">
+                <h1 className="text-lg font-bold text-foreground tracking-tight hidden md:block">
                     {title}
                 </h1>
             </div>
 
-            <div className="flex items-center gap-4">
-                <div className="relative hidden md:block w-64">
-                    <MagnifyingGlassIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
-                    <Input
-                        placeholder="Search..."
-                        className="pl-9 h-9 bg-slate-100 dark:bg-slate-900 border-none focus-visible:ring-primary/20"
-                    />
-                </div>
+            {/* Right: Actions */}
+            <div className="flex items-center gap-3">
+                <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-full">
+                    <Search className="h-4 w-4" />
+                </Button>
 
-                <div className="relative">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="relative text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400"
-                        onClick={() => setShowPanel(!showPanel)}
+                {/* Notifications */}
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="relative h-9 w-9 text-muted-foreground hover:text-foreground"
+                        >
+                            <Bell className="h-4 w-4" />
+                            {notices.length > 0 && (
+                                <span className="absolute top-2 right-2 h-2 w-2 bg-rose-500 rounded-full border-2 border-white dark:border-slate-950" />
+                            )}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent 
+                        align="end" 
+                        sideOffset={8}
+                        className="w-80 p-0 rounded-2xl shadow-2xl border-border bg-popover text-popover-foreground overflow-hidden z-[99999]"
                     >
-                        <BellIcon className="h-6 w-6" />
-                        {notices.length > 0 && (
-                            <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border border-white dark:border-slate-950" />
-                        )}
-                    </Button>
-
-                    {showPanel && (
-                        <div className="absolute right-0 mt-4 w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
-                            <div className="p-4 border-b border-slate-50 dark:border-white/5 bg-indigo-600 text-white font-bold flex items-center justify-between">
-                                <span className="text-sm flex items-center gap-2"><MegaphoneIcon className="w-4 h-4" /> System Notices</span>
-                                <Badge className="bg-white/20 text-white border-none">{notices.length}</Badge>
+                        <div className="px-5 py-4 bg-muted/50 flex items-center justify-between border-b border-border">
+                            <div className="flex items-center gap-2">
+                                <Megaphone className="w-4 h-4 text-primary" />
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-foreground">Notice Registry</span>
                             </div>
-                            <div className="max-h-96 overflow-y-auto">
-                                {notices.length > 0 ? (
-                                    notices.map((n) => (
-                                        <div key={n.id} className="p-4 border-b border-slate-50 dark:border-white/5 hover:bg-slate-50 transition-colors">
-                                            <div className="flex justify-between items-center mb-1">
-                                                <Badge variant="outline" className="text-[8px] uppercase">{n.priority}</Badge>
-                                                <span className="text-[8px] text-slate-400 font-mono italic">{new Date(n.created_at).toLocaleDateString()}</span>
-                                            </div>
-                                            <p className="text-sm font-bold text-slate-900 dark:text-white">{n.title}</p>
-                                            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">{n.content}</p>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="p-10 text-center text-slate-400 text-sm">No new notices for you.</div>
-                                )}
-                            </div>
+                            <Badge className="bg-primary/10 text-primary border-none text-[10px] h-5 px-2 font-bold hover:bg-primary/20">
+                                {notices.length}
+                            </Badge>
                         </div>
-                    )}
-                </div>
+                        
+                        <div className="max-h-80 overflow-y-auto">
+                            {notices.length > 0 ? (
+                                <div className="divide-y divide-border">
+                                    {notices.map((n) => (
+                                        <div key={n.id} className="p-5 hover:bg-muted/50 transition-all cursor-pointer group">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <Badge className={cn("text-[9px] uppercase font-bold h-4 px-1.5 border-none", PRIORITY_STYLES[n.priority] || PRIORITY_STYLES.low)}>
+                                                    {n.priority}
+                                                </Badge>
+                                                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
+                                                    {new Date(n.created_at).toLocaleDateString()}
+                                                </span>
+                                            </div>
+                                            <h4 className="text-sm font-bold text-foreground leading-tight group-hover:text-primary transition-colors uppercase italic tracking-tighter">
+                                                {n.title}
+                                            </h4>
+                                            <p className="text-xs text-muted-foreground line-clamp-2 mt-1 font-medium leading-relaxed">
+                                                {n.content}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="py-12 px-6 text-center space-y-4">
+                                    <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center mx-auto">
+                                        <Bell className="w-6 h-6 text-muted-foreground" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-xs font-bold text-foreground uppercase tracking-widest">No Active Alerts</p>
+                                        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">You have scanned all recent updates.</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </PopoverContent>
+                </Popover>
 
-                <div className="h-8 w-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold text-sm border border-indigo-200 dark:border-indigo-800">
-                    {userInitials}
-                </div>
+                {/* User Dropdown */}
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
+                            <Avatar className="h-9 w-9">
+                                <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
+                                    {userInitials}
+                                </AvatarFallback>
+                            </Avatar>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent 
+                        align="end" 
+                        sideOffset={8}
+                        className="w-56 p-2 rounded-2xl shadow-2xl border-border bg-popover text-popover-foreground z-[99999]"
+                    >
+                        <div className="px-3 py-3 border-b border-border mb-1 text-center md:text-left">
+                            <p className="text-xs font-bold text-foreground truncate uppercase tracking-tight">{userName}</p>
+                        </div>
+                        <DropdownMenuItem asChild>
+                            <a href={`/${userRole}/profile`} className="flex items-center gap-3 cursor-pointer py-2 px-3 rounded-xl hover:bg-accent hover:text-accent-foreground transition-all text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                                <UserCircle className="w-4 h-4 text-primary" />
+                                My Profile
+                            </a>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                            <a href={`/${userRole}/settings`} className="flex items-center gap-3 cursor-pointer py-2 px-3 rounded-xl hover:bg-accent hover:text-accent-foreground transition-all text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                                <Settings className="w-4 h-4 text-primary" />
+                                Settings
+                            </a>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator className="my-1 bg-border" />
+                        <DropdownMenuItem
+                            className="flex items-center gap-3 py-2 px-3 rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive cursor-pointer text-xs font-bold uppercase tracking-widest"
+                            onClick={() => signOut({ callbackUrl: "/auth/login" })}
+                        >
+                            <LogOut className="w-4 h-4" />
+                            Sign Out
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </header>
     );

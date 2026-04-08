@@ -6,11 +6,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-    VideoCameraIcon,
-    PlayCircleIcon,
-    AcademicCapIcon,
-    ChevronRightIcon
-} from "@heroicons/react/24/outline";
+    Video,
+    PlayCircle,
+    GraduationCap,
+    ChevronRight
+} from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -80,7 +80,7 @@ export default function StudentVideosPage() {
                         <h2 className="text-3xl font-bold mb-3">Watch & Learn</h2>
                         <p className="text-indigo-200">Access video content for all your enrolled courses in one place.</p>
                     </div>
-                    <VideoCameraIcon className="absolute right-0 bottom-0 w-64 h-64 text-white/5 -mb-12 -mr-12" />
+                    <Video className="absolute right-0 bottom-0 w-64 h-64 text-white/5 -mb-12 -mr-12" />
                 </div>
 
                 {loading ? (
@@ -119,11 +119,11 @@ export default function StudentVideosPage() {
                                                                 />
                                                             ) : (
                                                                 <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-indigo-900 flex items-center justify-center">
-                                                                    <PlayCircleIcon className="w-12 h-12 text-white/20 group-hover:scale-125 group-hover:text-white/50 transition-all duration-300" />
+                                                                    <PlayCircle className="w-12 h-12 text-white/20 group-hover:scale-125 group-hover:text-white/50 transition-all duration-300" />
                                                                 </div>
                                                             )}
                                                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                                                                <PlayCircleIcon className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transform scale-50 group-hover:scale-100 transition-all duration-300" />
+                                                                <PlayCircle className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transform scale-50 group-hover:scale-100 transition-all duration-300" />
                                                             </div>
                                                         </div>
                                                         <CardContent className="p-4 flex items-center justify-between">
@@ -131,7 +131,7 @@ export default function StudentVideosPage() {
                                                                 <h4 className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">{video.title}</h4>
                                                                 <p className="text-xs text-slate-400 mt-1">Video Lesson</p>
                                                             </div>
-                                                            <ChevronRightIcon className="w-5 h-5 text-slate-300 group-hover:text-indigo-500 transition-colors" />
+                                                            <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-500 transition-colors" />
                                                         </CardContent>
                                                     </Card>
                                                 </Link>
@@ -148,7 +148,7 @@ export default function StudentVideosPage() {
                     </div>
                 ) : (
                     <div className="py-20 text-center bg-white rounded-2xl shadow-sm border border-slate-100">
-                        <AcademicCapIcon className="w-16 h-16 text-slate-200 mx-auto mb-4" />
+                        <GraduationCap className="w-16 h-16 text-slate-200 mx-auto mb-4" />
                         <h3 className="text-xl font-bold text-slate-800 mb-2">Not Enrolled in Any Courses</h3>
                         <p className="text-slate-500 mb-6 font-medium">Head over to the courses catalog to get started!</p>
                         <Link href="/student/courses">

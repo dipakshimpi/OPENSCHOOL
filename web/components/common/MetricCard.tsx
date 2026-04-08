@@ -30,7 +30,7 @@ export function MetricCard({
   return (
     <Card className={cn("relative overflow-hidden", className)}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-gray-600">
+        <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
         </CardTitle>
         <div className={cn("p-2 rounded-lg", iconBg)}>
@@ -40,7 +40,7 @@ export function MetricCard({
       <CardContent>
         <div className="text-3xl font-bold">{value}</div>
         {description && (
-          <p className="text-xs text-gray-500 mt-1">{description}</p>
+          <p className="text-xs text-muted-foreground mt-1">{description}</p>
         )}
         {trend && (
           <p

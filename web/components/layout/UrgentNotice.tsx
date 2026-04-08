@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MegaphoneIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { Megaphone, X } from "lucide-react";
 
 interface Announcement {
     id: string;
@@ -48,13 +48,13 @@ export function UrgentNotice() {
     if (!urgentNotice || dismissed) return null;
 
     return (
-        <div className="bg-rose-600 text-white px-6 py-3 flex items-center justify-between shadow-lg animate-in fade-in slide-in-from-top duration-500">
+        <div className="bg-destructive text-destructive-foreground px-6 py-3 flex items-center justify-between shadow-lg animate-in fade-in slide-in-from-top duration-500">
             <div className="flex items-center gap-3">
-                <div className="bg-rose-500 p-2 rounded-lg animate-pulse">
-                    <MegaphoneIcon className="w-5 h-5 text-white" />
+                <div className="bg-destructive/80 p-2 rounded-lg animate-pulse">
+                    <Megaphone className="w-5 h-5 text-destructive-foreground" />
                 </div>
                 <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
-                    <span className="font-black uppercase tracking-widest text-[10px] bg-white text-rose-600 px-2 py-0.5 rounded-full">
+                    <span className="font-black uppercase tracking-widest text-[10px] bg-background text-destructive px-2 py-0.5 rounded-full">
                         Urgent Notice
                     </span>
                     <span className="font-medium text-sm md:text-base">
@@ -64,10 +64,10 @@ export function UrgentNotice() {
             </div>
             <button
                 onClick={handleDismiss}
-                className="p-1 hover:bg-rose-500 rounded-lg transition-colors"
+                className="p-1 hover:bg-destructive/80 rounded-lg transition-colors"
                 title="Dismiss"
             >
-                <XMarkIcon className="w-5 h-5" />
+                <X className="w-5 h-5" />
             </button>
         </div>
     );
