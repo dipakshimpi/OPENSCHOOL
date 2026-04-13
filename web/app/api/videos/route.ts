@@ -99,10 +99,22 @@ export async function GET(request: Request) {
             teacher_id: v.teacher_id,
             created_at: v.created_at,
             courses: { title: courseMap[v.course_id] || "Unknown Course" }
-            // ⛔ video_url is intentionally NOT included here
         }));
 
-        return NextResponse.json(transformedVideos);
+        // 🚀 Add Demo Video for testing
+        const demoVideo = {
+            id: 'demo',
+            title: 'System Integration Test',
+            description: 'This is a 2MB sample video used to verify the secure streaming and proxy infrastructure.',
+            thumbnail_url: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?q=80&w=1074&auto=format&fit=crop',
+            duration: 15,
+            course_id: 'demo-course',
+            teacher_id: 'system',
+            created_at: new Date().toISOString(),
+            courses: { title: "System Diagnostics" }
+        };
+
+        return NextResponse.json([...transformedVideos, demoVideo]);
     } catch (error) {
         console.error("GET_VIDEOS_API_ERROR:", error);
         return NextResponse.json({ error: "Failed to fetch videos" }, { status: 500 });

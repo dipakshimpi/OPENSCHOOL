@@ -1,5 +1,7 @@
 import crypto from 'crypto';
 import { NextRequest } from "next/server";
+import fs from 'fs';
+import path from 'path';
 
 /**
  * 🔒 SECURE HIGH-PERFORMANCE VIDEO PROXY
@@ -69,6 +71,45 @@ export async function GET(
         }
 
         // 5. Build Ant Media upstream URL
+        if (streamId === 'demo') {
+            const filePath = path.join(process.cwd(), 'public', 'demo.mp4');
+            if (fs.existsSync(filePath)) {
+                const stats = fs.statSync(filePath);
+                const range = request.headers.get("range");
+                
+                if (range) {
+                    const parts = range.replace(/bytes=/, "").split("-");
+                    const start = parseInt(parts[0], 10);
+                    const end = parts[1] ? parseInt(parts[1], 10) : stats.size - 1;
+                    const chunksize = (end - start) + 1;
+                    const file = fs.createReadStream(filePath, { start, end });
+                    
+                    const head = {
+                        'Content-Range': `bytes ${start}-${end}/${stats.size}`,
+                        'Accept-Ranges': 'bytes',
+                        'Content-Length': chunksize.toString(),
+                        'Content-Type': 'video/mp4',
+                    };
+                    
+                    return new Response(file as unknown as ReadableStream, {
+                        status: 206,
+                        headers: head
+                    });
+                } else {
+                    const head = {
+                        'Content-Length': stats.size.toString(),
+                        'Content-Type': 'video/mp4',
+                    };
+                    return new Response(fs.createReadStream(filePath) as unknown as ReadableStream, {
+                        status: 200,
+                        headers: head
+                    });
+                }
+            } else {
+                return new Response("Demo video file not found", { status: 404 });
+            }
+        }
+
         const amsBaseUrl = process.env.NEXT_PUBLIC_ANT_MEDIA_URL?.replace(/\/$/, "");
         const appName = process.env.ANT_MEDIA_APP_NAME || "LiveApp";
         const targetUrl = `${amsBaseUrl}/${appName}/streams/${streamId}.mp4`;

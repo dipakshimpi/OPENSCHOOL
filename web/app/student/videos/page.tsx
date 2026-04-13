@@ -145,6 +145,54 @@ export default function StudentVideosPage() {
                                 </section>
                             );
                         })}
+
+                        {/* 🚀 Diagnostics Section for Integration Testing */}
+                        <section className="space-y-6 pt-12">
+                            <div className="flex items-center justify-between border-b border-rose-100 bg-rose-50/30 p-4 rounded-xl">
+                                <div>
+                                    <h3 className="text-xl font-bold text-rose-900 flex items-center gap-2">
+                                        System Diagnostics
+                                    </h3>
+                                    <p className="text-sm text-rose-600 font-medium">Verified Integration Test Media</p>
+                                </div>
+                                <Badge className="bg-rose-100 text-rose-700 border-rose-200">
+                                    1 Test Module
+                                </Badge>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {videos.filter(v => v.id === 'demo').map(video => (
+                                    <Link key={video.id} href={`/student/videos/${video.id}`}>
+                                        <Card className="group border-none shadow-md hover:shadow-card-hover transition-all overflow-hidden bg-white hover:scale-[1.02] cursor-pointer ring-1 ring-slate-200">
+                                            <div className="h-32 bg-slate-800 flex items-center justify-center relative overflow-hidden">
+                                                {video.thumbnail_url ? (
+                                                    <Image
+                                                        src={video.thumbnail_url}
+                                                        alt={video.title}
+                                                        fill
+                                                        className="object-cover group-hover:scale-110 transition-transform duration-500 opacity-80"
+                                                    />
+                                                ) : (
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-indigo-900 flex items-center justify-center">
+                                                        <PlayCircle className="w-12 h-12 text-white/20 group-hover:scale-125 group-hover:text-white/50 transition-all duration-300" />
+                                                    </div>
+                                                )}
+                                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                                    <PlayCircle className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transform scale-50 group-hover:scale-100 transition-all duration-300" />
+                                                </div>
+                                            </div>
+                                            <CardContent className="p-4 flex items-center justify-between">
+                                                <div className="flex-1">
+                                                    <h4 className="font-bold text-slate-900 group-hover:text-rose-600 transition-colors line-clamp-1">{video.title}</h4>
+                                                    <p className="text-xs text-slate-400 mt-1">Diagnostic Stream</p>
+                                                </div>
+                                                <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-rose-500 transition-colors" />
+                                            </CardContent>
+                                        </Card>
+                                    </Link>
+                                ))}
+                            </div>
+                        </section>
                     </div>
                 ) : (
                     <div className="py-20 text-center bg-white rounded-2xl shadow-sm border border-slate-100">

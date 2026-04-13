@@ -51,3 +51,6 @@ build_log*.txt
 peertube/.env
 test-video-insert.mjs
 *.mjs
+web/public/uploads/*
+web/public/videos/*
+web

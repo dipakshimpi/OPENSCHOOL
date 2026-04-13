@@ -98,9 +98,9 @@ function AdminAnnouncementsContent() {
                             <CardContent className="p-8">
                                 <form onSubmit={handleSubmit} className="space-y-6">
                                     <div className="space-y-2">
-                                        <Label htmlFor="title" className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Subject Title</Label>
+                                        <Label htmlFor="ann-title" className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Subject Title</Label>
                                         <Input
-                                            id="title"
+                                            id="ann-title"
                                             placeholder="Enter announcement subject..."
                                             required
                                             className="h-11 rounded-xl bg-slate-50 dark:bg-slate-950 border-none px-4 focus-visible:ring-2 focus-visible:ring-indigo-600/20"

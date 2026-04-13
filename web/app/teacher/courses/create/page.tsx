@@ -66,9 +66,9 @@ export default function CreateCoursePage() {
                     <CardContent className="p-8">
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="space-y-2">
-                                <Label htmlFor="title">Course Title</Label>
+                                <Label htmlFor="course-title">Course Title</Label>
                                 <Input
-                                    id="title"
+                                    id="course-title"
                                     placeholder="e.g. Advanced Chemistry"
                                     value={formData.title}
                                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}

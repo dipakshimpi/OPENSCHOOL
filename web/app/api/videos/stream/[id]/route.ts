@@ -8,6 +8,22 @@ export async function GET(
 ) {
     try {
         const { id } = await params;
+        
+        // 🚀 DEMO MODE: Bypasses DB check for testing
+        if (id === 'demo') {
+            const session = await verifySession();
+            if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            
+            const { VideoService } = await import("@/lib/video-service");
+            const secureProxyUrl = VideoService.getProxyUrl('demo', session.uid);
+            
+            return NextResponse.json({
+                stream_url: secureProxyUrl,
+                title: "System Demo Video",
+                timestamp: Date.now(),
+                provider: 'local'
+            });
+        }
 
         // 1. Check Keycloak session via NextAuth
         const session = await verifySession();

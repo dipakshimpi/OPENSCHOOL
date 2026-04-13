@@ -112,30 +112,39 @@ export default function VideoWatchPage() {
 
                 {/* Sidebar Context */}
                 <div className="space-y-6">
-                    <Card className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white border-none shadow-xl rounded-2xl overflow-hidden p-6">
-                        <h3 className="font-bold text-xl mb-4 flex items-center gap-2">
-                            <GraduationCap className="w-6 h-6 text-indigo-400" />
+                    <Card className="bg-white text-slate-900 border border-slate-200 shadow-sm rounded-2xl overflow-hidden p-6">
+                        <h3 className="font-bold text-xl mb-4 flex items-center gap-2 text-indigo-600">
+                            <GraduationCap className="w-6 h-6" />
                             Next Steps
                         </h3>
                         <div className="space-y-4">
-                            <p className="text-indigo-200 text-sm">
+                            <p className="text-slate-500 text-sm font-medium">
                                 Finished watching? Mark this lesson as completed to track your progress.
                             </p>
-                            <Button className="w-full bg-white text-indigo-900 hover:bg-slate-100 font-bold border-none h-12">
+                            <Button className="w-full bg-indigo-600 text-white hover:bg-indigo-700 font-bold border-none h-12 rounded-xl transition-all shadow-lg shadow-indigo-100">
                                 Mark as Completed
                             </Button>
                         </div>
                     </Card>
 
-                    <div className="p-6 bg-amber-50 rounded-2xl border border-amber-100">
-                        <h4 className="font-bold text-amber-800 mb-2 flex items-center gap-2">
-                            <Info className="w-4 h-4" />
+                    <div className="p-6 bg-white rounded-2xl border border-slate-200 shadow-sm">
+                        <h4 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                            <Info className="w-4 h-4 text-indigo-500" />
                             Lesson Tips
                         </h4>
-                        <ul className="text-xs text-amber-700 space-y-2 list-disc list-inside">
-                            <li>Take notes during the video.</li>
-                            <li>Re-watch difficult sections.</li>
-                            <li>Don&apos;t forget to complete the corresponding assignment.</li>
+                        <ul className="text-sm text-slate-500 space-y-3 list-none">
+                            <li className="flex items-start gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
+                                Take notes during the video to reinforce learning.
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
+                                Re-watch difficult sections to ensure full understanding.
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
+                                Don&apos;t forget to complete the corresponding assignment.
+                            </li>
                         </ul>
                     </div>
                 </div>

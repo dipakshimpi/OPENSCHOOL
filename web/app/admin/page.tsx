@@ -71,12 +71,12 @@ export default function AdminDashboard() {
     if (loading || !data) {
         return (
             <DashboardLayout role="admin" title="Loading Dashboard">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
-                    {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-40 rounded-[2.5rem]" />)}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 rounded-2xl" />)}
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <Skeleton className="lg:col-span-2 h-[500px] rounded-[3rem]" />
-                    <Skeleton className="h-[500px] rounded-[3rem]" />
+                    <Skeleton className="lg:col-span-2 h-[400px] rounded-3xl" />
+                    <Skeleton className="h-[400px] rounded-3xl" />
                 </div>
             </DashboardLayout>
         );
@@ -128,23 +128,23 @@ export default function AdminDashboard() {
                 )}
 
                 {/* KPI GRID */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                     {statsConfig.map((stat, idx) => (
                         <motion.div
                             key={stat.label}
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.05 }}
                         >
-                            <Card className="border-none shadow-lg bg-card text-card-foreground rounded-[2rem] hover:shadow-xl transition-shadow overflow-hidden">
-                                <CardContent className="p-6">
-                                    <div className="flex items-center gap-4 mb-4">
-                                        <div className={`p-3 rounded-2xl ${stat.bg} ${stat.color}`}>
-                                            <stat.icon className="w-6 h-6" />
+                            <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl hover:shadow-md transition-all overflow-hidden">
+                                <CardContent className="p-5">
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <div className={`p-2 rounded-xl ${stat.bg} ${stat.color} shrink-0`}>
+                                            <stat.icon className="w-5 h-5" />
                                         </div>
-                                        <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">{stat.label}</p>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
                                     </div>
-                                    <h3 className="text-4xl font-black text-foreground tracking-tighter">{stat.value}</h3>
+                                    <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{stat.value}</h3>
                                 </CardContent>
                             </Card>
                         </motion.div>
@@ -154,17 +154,17 @@ export default function AdminDashboard() {
                 {/* MAIN CONTENT AREA */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Activity Chart */}
-                    <Card className="lg:col-span-2 border-none shadow-xl bg-card text-card-foreground rounded-[2.5rem] p-8">
-                        <CardHeader className="p-0 mb-8">
-                            <CardTitle className="text-2xl font-black tracking-tight">Usage Statistics</CardTitle>
+                    <Card className="lg:col-span-2 border border-slate-200 dark:border-white/5 shadow-sm bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8">
+                        <CardHeader className="p-0 mb-6">
+                            <CardTitle className="text-xl font-black tracking-tight">Usage Statistics</CardTitle>
                         </CardHeader>
                         <CardContent className="p-0">
-                            <div className="h-64 flex items-end gap-2 bg-muted p-6 rounded-3xl">
+                            <div className="h-48 flex items-end gap-1.5 bg-slate-50 dark:bg-slate-950/50 p-4 rounded-2xl border border-slate-100 dark:border-white/5">
                                 {[40, 65, 45, 80, 55, 70, 90, 60, 50, 85, 75, 95, 80, 88, 100].map((h, i) => (
                                     <div 
                                         key={i} 
                                         style={{ height: `${h}%` }}
-                                        className="flex-1 bg-primary rounded-t-lg opacity-80 hover:opacity-100 transition-opacity"
+                                        className="flex-1 bg-indigo-600 dark:bg-indigo-500 rounded-t-sm opacity-80 hover:opacity-100 transition-opacity"
                                     />
                                 ))}
                             </div>
@@ -172,21 +172,21 @@ export default function AdminDashboard() {
                     </Card>
 
                     {/* Recent Activity */}
-                    <Card className="border-none shadow-xl bg-card text-card-foreground rounded-[2.5rem] p-8">
-                        <CardHeader className="p-0 mb-8">
-                            <CardTitle className="text-2xl font-black tracking-tight">Recent Activity</CardTitle>
+                    <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8">
+                        <CardHeader className="p-0 mb-6">
+                            <CardTitle className="text-xl font-black tracking-tight">Recent Activity</CardTitle>
                         </CardHeader>
-                        <CardContent className="p-0 space-y-6">
+                        <CardContent className="p-0 space-y-5">
                             {data.recentActivity?.map((item, i) => (
-                                <div key={i} className="flex gap-4">
-                                    <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center font-bold text-muted-foreground">
+                                <div key={i} className="flex gap-3">
+                                    <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-500 text-xs shrink-0 capitalize">
                                         {item.user.charAt(0)}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-bold text-foreground truncate">
+                                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
                                             {item.action} {item.target}
                                         </p>
-                                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                                        <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
                                             <Clock className="w-3 h-3" />
                                             {item.time}
                                         </div>

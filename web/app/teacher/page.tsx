@@ -99,31 +99,31 @@ export default function TeacherDashboard() {
 
                 {/* 📊 KPI GRID */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <Card className="border-none shadow-lg bg-white dark:bg-slate-900 rounded-3xl p-6 flex items-center gap-5">
-                        <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600">
-                            <BookOpen className="w-6 h-6" />
+                    <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl p-5 flex items-center gap-4 hover:shadow-md transition-all">
+                        <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 border border-indigo-100 dark:border-indigo-800/50">
+                            <BookOpen className="w-5 h-5" />
                         </div>
                         <div>
-                           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Active Modules</p>
-                           <div className="text-2xl font-black">{stats.activeCourses}</div>
+                           <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Active Modules</p>
+                           <div className="text-xl font-black">{stats.activeCourses}</div>
                         </div>
                     </Card>
-                    <Card className="border-none shadow-lg bg-white dark:bg-slate-900 rounded-3xl p-6 flex items-center gap-5">
-                        <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600">
-                            <Users className="w-6 h-6" />
+                    <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl p-5 flex items-center gap-4 hover:shadow-md transition-all">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 border border-emerald-100 dark:border-emerald-800/50">
+                            <Users className="w-5 h-5" />
                         </div>
                         <div>
-                           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total Students</p>
-                           <div className="text-2xl font-black">{stats.totalStudents}</div>
+                           <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Total Students</p>
+                           <div className="text-xl font-black">{stats.totalStudents}</div>
                         </div>
                     </Card>
-                    <Card className="border-none shadow-lg bg-white dark:bg-slate-900 rounded-3xl p-6 flex items-center gap-5">
-                        <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-600">
-                            <TrendingUp className="w-6 h-6" />
+                    <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl p-5 flex items-center gap-4 hover:shadow-md transition-all">
+                        <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-900/40 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0 border border-amber-100 dark:border-amber-800/50">
+                            <TrendingUp className="w-5 h-5" />
                         </div>
                         <div>
-                           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Success Rate</p>
-                           <div className="text-2xl font-black">{stats.attendanceRate}%</div>
+                           <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Success Rate</p>
+                           <div className="text-xl font-black">{stats.attendanceRate}%</div>
                         </div>
                     </Card>
                 </div>
@@ -146,15 +146,15 @@ export default function TeacherDashboard() {
                                     animate={{ opacity: 1, scale: 1 }}
                                     transition={{ delay: idx * 0.05 }}
                                 >
-                                    <Card className="border-none shadow-md bg-white dark:bg-slate-900 rounded-[2rem] p-6 hover:shadow-lg transition-all border border-transparent hover:border-indigo-500/10">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-950 flex items-center justify-center text-xs font-black text-indigo-600 border border-slate-100 dark:border-white/5">
+                                    <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white dark:bg-slate-900 rounded-2xl p-5 hover:shadow-md transition-all border border-transparent hover:border-indigo-500/10">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <div className="w-9 h-9 rounded-lg bg-slate-50 dark:bg-slate-950 flex items-center justify-center text-[10px] font-black text-indigo-600 dark:text-indigo-400 border border-slate-100 dark:border-white/5">
                                                 P{slot.period_number}
                                             </div>
-                                            <div className="text-[10px] font-bold text-slate-400 uppercase">{slot.start_time}</div>
+                                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{slot.start_time}</div>
                                         </div>
-                                        <h4 className="font-bold text-slate-900 dark:text-white tracking-tight truncate">{slot.subject}</h4>
-                                        <p className="text-[10px] font-bold text-slate-400 mt-1">Class {slot.class_grade}-{slot.section}</p>
+                                        <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm tracking-tight truncate">{slot.subject}</h4>
+                                        <p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">Class {slot.class_grade}-{slot.section}</p>
                                     </Card>
                                 </motion.div>
                             ))
@@ -168,21 +168,24 @@ export default function TeacherDashboard() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                    <Card className="lg:col-span-2 border-none shadow-xl bg-slate-900 text-white rounded-[2.5rem] overflow-hidden p-10 relative">
+                    <Card className="lg:col-span-2 border border-slate-200 dark:border-white/5 shadow-sm bg-slate-900 dark:bg-slate-900/90 text-white rounded-3xl overflow-hidden p-8 md:p-10 relative group">
+                        {/* Subtle background glow for the dark card */}
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 blur-[100px] -translate-y-1/2 translate-x-1/2 rounded-full pointer-events-none group-hover:bg-indigo-500/20 transition-all duration-700" />
+                        
                         <div className="relative z-10 space-y-8">
-                            <div className="space-y-2">
-                                <h3 className="text-2xl font-bold tracking-tight">Instructional Portal</h3>
-                                <p className="text-indigo-200 text-sm font-medium opacity-80">Access and manage your assigned educational modules.</p>
+                            <div className="space-y-1.5">
+                                <h3 className="text-xl font-black tracking-tight">Instructional Portal</h3>
+                                <p className="text-indigo-200/50 text-[11px] font-bold uppercase tracking-widest">Access and manage your assigned educational modules.</p>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <Link href="/teacher/classes">
-                                    <Button className="w-full h-14 bg-white text-slate-900 hover:bg-slate-100 rounded-2xl font-black uppercase text-[11px] tracking-widest gap-3">
+                                    <Button className="w-full h-12 bg-white text-slate-900 hover:bg-slate-50 rounded-xl font-bold uppercase text-[10px] tracking-[0.2em] gap-2 shadow-lg shadow-white/5 border-none">
                                         <Calendar className="w-4 h-4" />
                                         Full Schedule
                                     </Button>
                                 </Link>
                                 <Link href="/teacher/attendance">
-                                    <Button variant="outline" className="w-full h-14 border-white/20 text-white hover:bg-white/10 rounded-2xl font-black uppercase text-[11px] tracking-widest gap-3">
+                                    <Button variant="outline" className="w-full h-12 border-white/10 text-white hover:bg-white/5 rounded-xl font-bold uppercase text-[10px] tracking-[0.2em] gap-2">
                                         <CheckCircle2 className="w-4 h-4" />
                                         Record Attendance
                                     </Button>
@@ -191,16 +194,16 @@ export default function TeacherDashboard() {
                         </div>
                     </Card>
 
-                    <Card className="border-none shadow-xl bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 flex flex-col items-center justify-center text-center space-y-6">
-                         <div className="w-16 h-16 rounded-3xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600">
-                             <Plus className="w-8 h-8" />
+                    <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-3xl p-8 flex flex-col items-center justify-center text-center space-y-6 hover:shadow-md transition-all">
+                         <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 dark:bg-indigo-400/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 ring-1 ring-indigo-500/20 shadow-inner">
+                             <Plus className="w-7 h-7" />
                          </div>
-                         <div className="space-y-1">
-                             <h4 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Create Module</h4>
+                         <div className="space-y-1.5">
+                             <h4 className="text-lg font-black text-slate-800 dark:text-white tracking-tight">Create Module</h4>
                              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Design new curriculum nodes.</p>
                          </div>
                          <Link href="/teacher/courses/create" className="w-full">
-                            <Button className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold uppercase text-[10px] tracking-widest shadow-lg">
+                            <Button className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold uppercase text-[9px] tracking-[0.2em] shadow-lg shadow-indigo-600/20 active:scale-[0.98] transition-all">
                                 Initialize Architect
                             </Button>
                          </Link>

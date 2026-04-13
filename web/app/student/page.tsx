@@ -107,38 +107,38 @@ export default function StudentDashboard() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <Card className="border-none shadow-lg bg-white dark:bg-slate-900 rounded-[2rem] p-6 hover:shadow-xl transition-shadow">
-                        <CardContent className="p-0 flex items-center gap-6">
-                            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
-                                <BarChart2 className="w-6 h-6" />
+                    <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl p-5 hover:shadow-md transition-all">
+                        <CardContent className="p-0 flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0">
+                                <BarChart2 className="w-5 h-5" />
                             </div>
                             <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Academic Progress</p>
-                                <h3 className="text-2xl font-black text-slate-900 dark:text-white">{stats.avgProgress}%</h3>
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Academic Progress</p>
+                                <h3 className="text-xl font-black text-slate-900 dark:text-white">{stats.avgProgress}%</h3>
                             </div>
                         </CardContent>
                     </Card>
 
-                    <Card className="border-none shadow-lg bg-white dark:bg-slate-900 rounded-[2rem] p-6 hover:shadow-xl transition-shadow">
-                        <CardContent className="p-0 flex items-center gap-6">
-                            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-600">
-                                <GraduationCap className="w-6 h-6" />
+                    <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl p-5 hover:shadow-md transition-all">
+                        <CardContent className="p-0 flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-600 shrink-0">
+                                <GraduationCap className="w-5 h-5" />
                             </div>
                             <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total Enrollments</p>
-                                <h3 className="text-2xl font-black text-slate-900 dark:text-white">{stats.enrolledCount} Courses</h3>
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Total Enrollments</p>
+                                <h3 className="text-xl font-black text-slate-900 dark:text-white">{stats.enrolledCount} Courses</h3>
                             </div>
                         </CardContent>
                     </Card>
 
-                    <Card className="border-none shadow-lg bg-white dark:bg-slate-900 rounded-[2rem] p-6 hover:shadow-xl transition-shadow">
-                        <CardContent className="p-0 flex items-center gap-6">
-                            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600">
-                                <Clock className="w-6 h-6" />
+                    <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl p-5 hover:shadow-md transition-all">
+                        <CardContent className="p-0 flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600 shrink-0">
+                                <Clock className="w-5 h-5" />
                             </div>
                             <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Attendance Rate</p>
-                                <h3 className="text-2xl font-black text-slate-900 dark:text-white">{stats.attendanceRate}%</h3>
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Attendance Rate</p>
+                                <h3 className="text-xl font-black text-slate-900 dark:text-white">{stats.attendanceRate}%</h3>
                             </div>
                         </CardContent>
                     </Card>
@@ -161,29 +161,42 @@ export default function StudentDashboard() {
                             ) : courses.length > 0 ? (
                                 courses.map((enrollment) => (
                                     <Link key={enrollment.courses.id} href={`/student/courses/${enrollment.courses.id}`}>
-                                        <Card className="group relative h-48 border-none overflow-hidden rounded-[2.5rem] shadow-lg hover:shadow-2xl transition-all hover:-translate-y-1">
+                                        <Card className="group relative h-40 border border-slate-200 dark:border-white/5 overflow-hidden rounded-2xl shadow-sm hover:shadow-md transition-all hover:-translate-y-1 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md">
                                             {enrollment.courses.thumbnail_url ? (
                                                 <Image
                                                     src={enrollment.courses.thumbnail_url}
                                                     alt={enrollment.courses.title}
                                                     fill
-                                                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                                                    className="object-cover transition-transform duration-500 group-hover:scale-105"
                                                     unoptimized
                                                 />
                                             ) : (
-                                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-purple-700" />
+                                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-purple-50/30 dark:from-indigo-900/10 dark:to-purple-900/10" />
                                             )}
-                                            <div className="absolute inset-0 bg-slate-900/60 group-hover:bg-slate-900/40 transition-colors" />
-                                            <div className="absolute inset-0 p-8 flex flex-col justify-between text-white">
-                                                <div className="space-y-1">
-                                                    <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Curriculum Module</p>
-                                                    <h4 className="text-lg font-bold leading-tight line-clamp-2 tracking-tight">{enrollment.courses.title}</h4>
+                                            
+                                            {/* Subtle indicator for no-thumbnail state */}
+                                            {!enrollment.courses.thumbnail_url && (
+                                                <div className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-indigo-600/10 dark:bg-indigo-400/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                                                    <GraduationCap className="w-4 h-4" />
                                                 </div>
-                                                <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                                                    <div
-                                                        className="h-full bg-white transition-all duration-1000"
-                                                        style={{ width: `${enrollment.progress}%` }}
-                                                    />
+                                            )}
+
+                                            <div className="absolute inset-0 p-5 flex flex-col justify-between">
+                                                <div className="space-y-1">
+                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-600/70 dark:text-indigo-400/80">Curriculum Module</p>
+                                                    <h4 className="text-base font-bold leading-tight line-clamp-2 tracking-tight text-slate-900 dark:text-white">{enrollment.courses.title}</h4>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <div className="flex justify-between items-center text-[10px] font-bold text-slate-400">
+                                                        <span className="uppercase tracking-wider">Progress</span>
+                                                        <span>{enrollment.progress}%</span>
+                                                    </div>
+                                                    <div className="w-full h-1 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
+                                                        <div
+                                                            className="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-1000"
+                                                            style={{ width: `${enrollment.progress}%` }}
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </Card>
@@ -212,7 +225,7 @@ export default function StudentDashboard() {
                                 <div className="w-1 h-6 bg-indigo-600 rounded-full" />
                                 <h3 className="text-xl font-bold text-slate-900 dark:text-white">Class Schedule</h3>
                             </div>
-                            <Card className="border-none shadow-xl bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 space-y-6">
+                            <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl p-6 space-y-5">
                                 {loading ? (
                                     <div className="space-y-4">
                                         {[1, 2, 3].map(i => <Skeleton key={i} className="h-12 w-full rounded-xl" />)}
@@ -220,11 +233,11 @@ export default function StudentDashboard() {
                                 ) : upcomingClasses && upcomingClasses.length > 0 ? (
                                     upcomingClasses.map((session) => (
                                         <div key={session.id} className="flex items-center gap-4 group">
-                                            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 font-black text-xs shrink-0 group-hover:scale-110 transition-transform">
+                                            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-[10px] shrink-0 group-hover:scale-110 transition-transform border border-indigo-100 dark:border-indigo-800">
                                                 P{session.period_number}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-black text-slate-900 dark:text-white truncate">{session.subject}</p>
+                                                <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{session.subject}</p>
                                                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{session.start_time} • {session.teacher?.full_name}</p>
                                             </div>
                                         </div>
