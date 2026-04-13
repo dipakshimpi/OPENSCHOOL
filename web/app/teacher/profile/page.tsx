@@ -80,69 +80,68 @@ export default function TeacherProfile() {
 
   return (
     <DashboardLayout title="Faculty Profile" role="teacher">
-      <div className="max-w-6xl mx-auto space-y-6 pb-20">
-        {/* HERO SECTION */}
-        <div className="relative">
-          <Card className="relative border border-slate-200 dark:border-white/5 shadow-xl bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-2xl overflow-hidden">
-            <div className="h-24 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 dark:from-emerald-500/5 dark:to-teal-500/5" />
-            <CardContent className="px-6 pb-6 -mt-12">
-              <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
-                <div className="relative">
-                  <div className="h-24 w-24 rounded-2xl bg-white dark:bg-slate-800 p-1.5 shadow-xl ring-2 ring-slate-100 dark:ring-slate-800">
-                    <div className="h-full w-full rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-3xl font-bold">
-                      {profile?.full_name?.charAt(0) || "T"}
-                    </div>
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 p-1.5 bg-indigo-500 rounded-lg border-2 border-white dark:border-slate-900 shadow-md">
-                    <Award className="h-3.5 w-3.5 text-white" />
-                  </div>
-                </div>
-                <div className="flex-1 space-y-1 text-center md:text-left">
-                  <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-                    {profile?.full_name}
-                  </h1>
-                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                    <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-none font-bold text-[9px] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                      Senior Faculty
-                    </Badge>
-                    <Badge className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-none font-bold text-[9px] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                      {profile?.department || "Department of Science"}
-                    </Badge>
-                  </div>
-                </div>
-                <Button className="bg-white/80 hover:bg-white dark:bg-slate-800/80 dark:hover:bg-slate-800 border border-slate-200 dark:border-white/5 text-slate-900 dark:text-white font-bold uppercase text-[9px] tracking-widest px-6 h-10 rounded-xl shadow-lg shadow-emerald-500/5 backdrop-blur-md transition-all active:scale-95 flex items-center gap-2">
-                  <Edit3 className="h-3.5 w-3.5" />
-                  Refine Identity
-                </Button>
+      <div className="max-w-[1200px] mx-auto space-y-10 pb-20 px-4">
+        
+        {/* 🌟 REFINED COMPACT HEADER */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b border-slate-200 dark:border-white/5 pb-8 pt-4">
+          <div className="flex items-center gap-5">
+            <div className="relative">
+              <div className="h-16 w-16 rounded-2xl bg-emerald-600 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-emerald-500/20 ring-1 ring-white/10">
+                {profile?.full_name?.charAt(0) || "T"}
               </div>
-            </CardContent>
-          </Card>
+              <div className="absolute -bottom-1 -right-1 p-1 bg-indigo-600 rounded-lg border-2 border-white dark:border-slate-950 shadow-md">
+                <Award className="h-3 w-3 text-white" />
+              </div>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight leading-none">{profile?.full_name}</h1>
+              <div className="flex flex-wrap items-center gap-3 mt-2">
+                <Badge className="bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/50 font-bold text-[8px] px-2 py-0.5 rounded-md uppercase tracking-widest">
+                  Senior Faculty
+                </Badge>
+                <div className="flex items-center gap-1.5 text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                  <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                  {profile?.department || "General Sciences"}
+                </div>
+              </div>
+            </div>
+          </div>
+          <Button variant="outline" className="border-slate-200 dark:border-white/10 h-10 px-5 rounded-lg font-bold text-[10px] uppercase tracking-widest gap-2 bg-white/50 dark:bg-white/5 backdrop-blur-sm">
+            <Edit3 className="w-3.5 h-3.5" />
+            Refine Identity
+          </Button>
         </div>
 
-        {/* STATS GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white/50 dark:bg-slate-900/50 backdrop-blur-md rounded-xl p-4 text-center group hover:bg-emerald-600 transition-all duration-300">
-            <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center mx-auto mb-2 text-emerald-600 group-hover:bg-white transition-all">
-              <BookOpen className="h-5 w-5" />
+        {/* 📊 COMPACT KPI GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl p-5 flex items-center gap-4 hover:shadow-md transition-all">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 border border-emerald-100 dark:border-emerald-800/50">
+              <BookOpen className="w-5 h-5" />
             </div>
-            <h3 className="text-[9px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-white/70">Lectures</h3>
-            <p className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-white">{videoCount} sessions</p>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Total Lectures</p>
+              <div className="text-xl font-black">{videoCount} <span className="text-[10px] text-slate-400 uppercase ml-1">Sessions</span></div>
+            </div>
           </Card>
- 
-          <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white/50 dark:bg-slate-900/50 backdrop-blur-md rounded-xl p-4 text-center group hover:bg-indigo-600 transition-all duration-300">
-            <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center mx-auto mb-2 text-indigo-600 group-hover:bg-white transition-all">
-              <Users className="h-5 w-5" />
+
+          <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl p-5 flex items-center gap-4 hover:shadow-md transition-all">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 border border-indigo-100 dark:border-indigo-800/50">
+              <Users className="w-5 h-5" />
             </div>
-            <h3 className="text-[9px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-white/70">Students</h3>
-            <p className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-white">450+ Active</p>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Student Reach</p>
+              <div className="text-xl font-black">450+ <span className="text-[10px] text-emerald-500 uppercase ml-1">Acitve</span></div>
+            </div>
           </Card>
- 
-          <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white/50 dark:bg-slate-900/50 backdrop-blur-md rounded-xl p-4 text-center group hover:bg-amber-600 transition-all duration-300">
-            <div className="w-10 h-10 bg-amber-50 dark:bg-amber-900/30 rounded-xl flex items-center justify-center mx-auto mb-2 text-amber-600 group-hover:bg-white transition-all">
-              <Zap className="h-5 w-5" />
+
+          <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl p-5 flex items-center gap-4 hover:shadow-md transition-all">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-900/40 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0 border border-amber-100 dark:border-amber-800/50">
+              <Zap className="w-5 h-5" />
             </div>
-            <h3 className="text-[9px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-white/70">Rating</h3>
-            <p className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-white">4.9 Performance</p>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Instruction Score</p>
+              <div className="text-xl font-black">4.9 <span className="text-[10px] text-slate-400 uppercase ml-1">Performance</span></div>
+            </div>
           </Card>
         </div>
 

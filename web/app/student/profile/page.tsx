@@ -81,71 +81,69 @@ export default function StudentProfile() {
 
 
   return (
-    <DashboardLayout title="My Profile" role="student">
-      <div className="max-w-6xl mx-auto space-y-6 pb-20">
-        {/* HERO SECTION */}
-        <div className="relative">
-          <Card className="relative border border-slate-200 dark:border-white/5 shadow-xl bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-2xl overflow-hidden">
-            <div className="h-24 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 dark:from-indigo-500/5 dark:to-purple-500/5" />
-            <CardContent className="px-6 pb-6 -mt-12">
-              <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
-                <div className="relative">
-                  <div className="h-24 w-24 rounded-2xl bg-white dark:bg-slate-800 p-1.5 shadow-xl ring-2 ring-slate-100 dark:ring-slate-800">
-                    <div className="h-full w-full rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold">
-                      {profile?.full_name?.charAt(0) || "S"}
-                    </div>
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 p-1.5 bg-emerald-500 rounded-lg border-2 border-white dark:border-slate-900 shadow-md">
-                    <ShieldCheck className="h-3.5 w-3.5 text-white" />
-                  </div>
-                </div>
-                <div className="flex-1 space-y-1 text-center md:text-left">
-                  <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-                    {profile?.full_name}
-                  </h1>
-                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                    <Badge className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-none font-bold text-[9px] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                      Student Scholar
-                    </Badge>
-                    <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-none font-bold text-[9px] px-2.5 py-0.5 rounded-full uppercase tracking-wider gap-1">
-                      <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-                      Active Status
-                    </Badge>
-                  </div>
-                </div>
-                <Button className="bg-white/80 hover:bg-white dark:bg-slate-800/80 dark:hover:bg-slate-800 border border-slate-200 dark:border-white/5 text-slate-900 dark:text-white font-bold uppercase text-[9px] tracking-widest px-6 h-10 rounded-xl shadow-lg shadow-indigo-500/5 backdrop-blur-md transition-all active:scale-95 flex items-center gap-2">
-                  <Edit3 className="h-3.5 w-3.5" />
-                  Edit Identity
-                </Button>
+    <DashboardLayout title="Identity & Records" role="student">
+      <div className="max-w-[1200px] mx-auto space-y-10 pb-20 px-4">
+        
+        {/* 🌟 REFINED COMPACT HEADER */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b border-slate-200 dark:border-white/5 pb-8 pt-4">
+          <div className="flex items-center gap-5">
+            <div className="relative">
+              <div className="h-16 w-16 rounded-2xl bg-indigo-600 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-indigo-500/20 ring-1 ring-white/10">
+                {profile?.full_name?.charAt(0) || "S"}
               </div>
-            </CardContent>
-          </Card>
+              <div className="absolute -bottom-1 -right-1 p-1 bg-emerald-500 rounded-lg border-2 border-white dark:border-slate-950 shadow-md">
+                <ShieldCheck className="h-3 w-3 text-white" />
+              </div>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight leading-none">{profile?.full_name}</h1>
+              <div className="flex flex-wrap items-center gap-3 mt-2">
+                <Badge className="bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/50 font-bold text-[8px] px-2 py-0.5 rounded-md uppercase tracking-widest">
+                  Student Scholar
+                </Badge>
+                <div className="flex items-center gap-1.5 text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                  <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                  Grade {profile?.grade_level || "8"} • Section {profile?.section || "A"}
+                </div>
+              </div>
+            </div>
+          </div>
+          <Button variant="outline" className="border-slate-200 dark:border-white/10 h-10 px-5 rounded-lg font-bold text-[10px] uppercase tracking-widest gap-2 bg-white/50 dark:bg-white/5 backdrop-blur-sm">
+            <Edit3 className="w-3.5 h-3.5" />
+            Edit Identity
+          </Button>
         </div>
 
-        {/* STATS GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white/50 dark:bg-slate-900/50 backdrop-blur-md rounded-xl p-4 text-center group hover:bg-indigo-600 transition-all duration-300">
-            <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center mx-auto mb-2 text-indigo-600 group-hover:bg-white transition-all">
-              <GraduationCap className="h-5 w-5" />
+        {/* 📊 COMPACT KPI GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl p-5 flex items-center gap-4 hover:shadow-md transition-all">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 border border-indigo-100 dark:border-indigo-800/50">
+              <GraduationCap className="w-5 h-5" />
             </div>
-            <h3 className="text-[9px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-white/70">Class Level</h3>
-            <p className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-white">Grade {profile?.grade_level || "8"}-{profile?.section || "A"}</p>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Class Level</p>
+              <div className="text-xl font-black">Grade {profile?.grade_level || "8"} <span className="text-[10px] text-slate-400 uppercase ml-1">Section {profile?.section || "A"}</span></div>
+            </div>
           </Card>
- 
-          <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white/50 dark:bg-slate-900/50 backdrop-blur-md rounded-xl p-4 text-center group hover:bg-purple-600 transition-all duration-300">
-            <div className="w-10 h-10 bg-purple-50 dark:bg-purple-900/30 rounded-xl flex items-center justify-center mx-auto mb-2 text-purple-600 group-hover:bg-white transition-all">
-              <Trophy className="h-5 w-5" />
+
+          <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl p-5 flex items-center gap-4 hover:shadow-md transition-all">
+            <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-900/40 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0 border border-purple-100 dark:border-purple-800/50">
+              <Trophy className="w-5 h-5" />
             </div>
-            <h3 className="text-[9px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-white/70">Academic Score</h3>
-            <p className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-white">94% Average</p>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Academic Perf.</p>
+              <div className="text-xl font-black">94% <span className="text-[10px] text-emerald-500 uppercase ml-1">Avg Score</span></div>
+            </div>
           </Card>
- 
-          <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white/50 dark:bg-slate-900/50 backdrop-blur-md rounded-xl p-4 text-center group hover:bg-pink-600 transition-all duration-300">
-            <div className="w-10 h-10 bg-pink-50 dark:bg-pink-900/30 rounded-xl flex items-center justify-center mx-auto mb-2 text-pink-600 group-hover:bg-white transition-all">
-              <Clock className="h-5 w-5" />
+
+          <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl p-5 flex items-center gap-4 hover:shadow-md transition-all">
+            <div className="w-10 h-10 rounded-xl bg-pink-50 dark:bg-pink-900/40 flex items-center justify-center text-pink-600 dark:text-pink-400 shrink-0 border border-pink-100 dark:border-pink-800/50">
+              <Clock className="w-5 h-5" />
             </div>
-            <h3 className="text-[9px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-white/70">Attendance</h3>
-            <p className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-white">98.2% Record</p>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Daily Presence</p>
+              <div className="text-xl font-black">98.2% <span className="text-[10px] text-slate-400 uppercase ml-1">Record</span></div>
+            </div>
           </Card>
         </div>
 

@@ -64,70 +64,68 @@ export default function AdminProfile() {
 
     return (
         <DashboardLayout title="Nexus Identity" role="admin">
-            <div className="max-w-6xl mx-auto space-y-6 pb-20">
-                {/* HERO SECTION */}
-                <div className="relative">
-                    <Card className="relative border border-white/5 shadow-2xl bg-slate-950 text-white rounded-2xl overflow-hidden shadow-indigo-500/10">
-                        <div className="h-24 bg-gradient-to-r from-indigo-500/10 to-slate-500/10" />
-                        <CardContent className="px-6 pb-6 -mt-12">
-                            <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
-                                <div className="relative">
-                                    <div className="h-24 w-24 rounded-2xl bg-slate-900 p-1.5 shadow-2xl ring-2 ring-indigo-500/30">
-                                        <div className="h-full w-full rounded-xl bg-gradient-to-br from-indigo-600 to-slate-800 flex items-center justify-center text-white text-3xl font-bold">
-                                            {profile?.full_name?.charAt(0) || "A"}
-                                        </div>
-                                    </div>
-                                    <div className="absolute -bottom-1 -right-1 p-1.5 bg-indigo-500 rounded-lg border-2 border-slate-950 shadow-md">
-                                        <ShieldCheck className="h-3.5 w-3.5 text-white" />
-                                    </div>
-                                </div>
-                                <div className="flex-1 space-y-1 text-center md:text-left">
-                                    <h1 className="text-2xl font-bold text-white tracking-tight">
-                                        {profile?.full_name}
-                                    </h1>
-                                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                                        <Badge className="bg-indigo-500/20 text-indigo-400 border-none font-bold text-[9px] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                                            System Overlord
-                                        </Badge>
-                                        <Badge className="bg-slate-800 text-slate-400 border-none font-bold text-[9px] px-2.5 py-0.5 rounded-full uppercase tracking-wider gap-1">
-                                            <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-                                            Root Access
-                                        </Badge>
-                                    </div>
-                                </div>
-                                <Button className="bg-white/80 hover:bg-white dark:bg-slate-800/80 dark:hover:bg-slate-800 border border-white/10 text-slate-950 dark:text-white font-bold uppercase text-[9px] tracking-widest px-6 h-10 rounded-xl shadow-xl backdrop-blur-md transition-all active:scale-95 flex items-center gap-2">
-                                    <Edit3 className="h-3.5 w-3.5" />
-                                    Security Console
-                                </Button>
+            <div className="max-w-[1200px] mx-auto space-y-10 pb-20 px-4">
+                
+                {/* 🌟 REFINED COMPACT HEADER */}
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b border-slate-200 dark:border-white/5 pb-8 pt-4">
+                    <div className="flex items-center gap-5">
+                        <div className="relative">
+                            <div className="h-16 w-16 rounded-2xl bg-indigo-600 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-indigo-500/20 ring-1 ring-white/10">
+                                {profile?.full_name?.charAt(0) || "A"}
                             </div>
-                        </CardContent>
-                    </Card>
+                            <div className="absolute -bottom-1 -right-1 p-1 bg-indigo-600 rounded-lg border-2 border-white dark:border-slate-950 shadow-md">
+                                <ShieldCheck className="h-3 w-3 text-white" />
+                            </div>
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight leading-none">{profile?.full_name}</h1>
+                            <div className="flex items-center gap-3 mt-2">
+                                <Badge className="bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/50 font-bold text-[8px] px-2 py-0.5 rounded-md uppercase tracking-widest">
+                                    System Administrator
+                                </Badge>
+                                <div className="flex items-center gap-1.5 text-[8px] font-bold text-emerald-600 uppercase tracking-widest">
+                                    <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                                    Active Platform Node
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <Button variant="outline" className="border-slate-200 dark:border-white/10 h-10 px-5 rounded-lg font-bold text-[10px] uppercase tracking-widest gap-2 bg-white/50 dark:bg-white/5 backdrop-blur-sm">
+                        <Edit3 className="w-3.5 h-3.5" />
+                        Enter Console
+                    </Button>
                 </div>
 
-                {/* SYSTEM STATS */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Card className="border border-white/5 shadow-xl bg-slate-900/50 backdrop-blur-md rounded-xl p-4 text-center group">
-                        <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center mx-auto mb-2 text-indigo-400">
-                            <Cpu className="h-5 w-5" />
+                {/* 📊 COMPACT KPI GRID (Matching Teacher/Student Aesthetic) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl p-5 flex items-center gap-4 hover:shadow-md transition-all">
+                        <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 border border-indigo-100 dark:border-indigo-800/50">
+                            <Cpu className="w-5 h-5" />
                         </div>
-                        <h3 className="text-[9px] font-bold uppercase tracking-widest text-slate-500">System Load</h3>
-                        <p className="text-lg font-bold text-white mt-1">Normal / 12%</p>
+                        <div>
+                           <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Architecture Load</p>
+                           <div className="text-xl font-black">{profile?.role === 'admin' ? '12%' : 'N/A'} <span className="text-[10px] text-emerald-500 uppercase ml-1">Nominal</span></div>
+                        </div>
                     </Card>
 
-                    <Card className="border border-white/5 shadow-xl bg-slate-900/50 backdrop-blur-md rounded-xl p-4 text-center group">
-                        <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center mx-auto mb-2 text-emerald-400">
-                            <Lock className="h-5 w-5" />
+                    <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl p-5 flex items-center gap-4 hover:shadow-md transition-all">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 border border-emerald-100 dark:border-emerald-800/50">
+                            <Lock className="w-5 h-5" />
                         </div>
-                        <h3 className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Security Level</h3>
-                        <p className="text-lg font-bold text-white mt-1">Maximum</p>
+                        <div>
+                           <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Security Protocol</p>
+                           <div className="text-xl font-black">Maximum <span className="text-[10px] text-slate-400 uppercase ml-1">RSA-4096</span></div>
+                        </div>
                     </Card>
 
-                    <Card className="border border-white/5 shadow-xl bg-slate-900/50 backdrop-blur-md rounded-xl p-4 text-center group">
-                        <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center mx-auto mb-2 text-rose-400">
-                            <Activity className="h-5 w-5" />
+                    <Card className="border border-slate-200 dark:border-white/5 shadow-sm bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl p-5 flex items-center gap-4 hover:shadow-md transition-all">
+                        <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-900/40 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0 border border-rose-100 dark:border-rose-800/50">
+                            <Activity className="w-5 h-5" />
                         </div>
-                        <h3 className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Node Status</h3>
-                        <p className="text-lg font-bold text-white mt-1">Active / 12</p>
+                        <div>
+                           <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Synchronized Nodes</p>
+                           <div className="text-xl font-black">12 <span className="text-[10px] text-slate-400 uppercase ml-1">Live</span></div>
+                        </div>
                     </Card>
                 </div>
 
