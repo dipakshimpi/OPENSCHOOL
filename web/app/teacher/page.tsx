@@ -168,25 +168,32 @@ export default function TeacherDashboard() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                    <Card className="lg:col-span-2 border border-slate-200 dark:border-white/5 shadow-sm bg-slate-900 dark:bg-slate-900/90 text-white rounded-3xl overflow-hidden p-8 md:p-10 relative group">
-                        {/* Subtle background glow for the dark card */}
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 blur-[100px] -translate-y-1/2 translate-x-1/2 rounded-full pointer-events-none group-hover:bg-indigo-500/20 transition-all duration-700" />
+                    <Card className="lg:col-span-2 border border-slate-200 dark:border-white/5 shadow-sm bg-white dark:bg-slate-900/80 backdrop-blur-md rounded-3xl overflow-hidden p-8 md:p-10 relative group hover:shadow-md transition-all">
+                        {/* Subtle top accent bar */}
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 rounded-t-3xl" />
+                        {/* Subtle background glow */}
+                        <div className="absolute top-0 right-0 w-72 h-72 bg-indigo-50 dark:bg-indigo-500/5 blur-[80px] -translate-y-1/4 translate-x-1/4 rounded-full pointer-events-none" />
                         
                         <div className="relative z-10 space-y-8">
-                            <div className="space-y-1.5">
-                                <h3 className="text-xl font-black tracking-tight">Instructional Portal</h3>
-                                <p className="text-indigo-200/50 text-[11px] font-bold uppercase tracking-widest">Access and manage your assigned educational modules.</p>
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/40 flex items-center justify-center border border-indigo-100 dark:border-indigo-800/50">
+                                        <BookOpen className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                                    </div>
+                                    <h3 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">Instructional Portal</h3>
+                                </div>
+                                <p className="text-slate-400 dark:text-slate-500 text-[11px] font-bold uppercase tracking-widest">Access and manage your assigned educational modules.</p>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <Link href="/teacher/classes">
-                                    <Button className="w-full h-12 bg-white text-slate-900 hover:bg-slate-50 rounded-xl font-bold uppercase text-[10px] tracking-[0.2em] gap-2 shadow-lg shadow-white/5 border-none">
+                                    <Button className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold uppercase text-[10px] tracking-[0.2em] gap-2 shadow-md shadow-indigo-200 dark:shadow-indigo-900/30 active:scale-[0.98] transition-all border-none">
                                         <Calendar className="w-4 h-4" />
                                         Full Schedule
                                     </Button>
                                 </Link>
                                 <Link href="/teacher/attendance">
-                                    <Button variant="outline" className="w-full h-12 border-white/10 text-white hover:bg-white/5 rounded-xl font-bold uppercase text-[10px] tracking-[0.2em] gap-2">
-                                        <CheckCircle2 className="w-4 h-4" />
+                                    <Button variant="outline" className="w-full h-12 border-slate-200 dark:border-white/10 text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl font-bold uppercase text-[10px] tracking-[0.2em] gap-2 transition-all">
+                                        <CheckCircle2 className="w-4 h-4 text-indigo-500" />
                                         Record Attendance
                                     </Button>
                                 </Link>

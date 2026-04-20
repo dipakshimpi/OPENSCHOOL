@@ -100,7 +100,7 @@ export default function StudentCourses() {
 
   return (
     <DashboardLayout title="Learner Nexus" role="student">
-      <div className="max-w-[1600px] mx-auto space-y-12 pb-20 px-4">
+      <div className="max-w-[1400px] mx-auto space-y-10 pb-20 px-4">
         
         {/* 🌟 CLEAN HEADER */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b border-slate-200 dark:border-white/5 pb-8 pt-4">
@@ -108,7 +108,7 @@ export default function StudentCourses() {
                 <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Academic Catalog</h1>
                 <p className="text-sm text-slate-500 mt-1 font-medium">Explore and enroll in the various educational modules available on the platform.</p>
             </div>
-            <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-white/5">
+            <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-white/5">
                 <div className="text-right">
                     <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Total Courses</p>
                     <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400 leading-none mt-1">{allCourses.length} Modules</p>
@@ -120,7 +120,7 @@ export default function StudentCourses() {
 
         {/* 🔍 FILTER & NAVIGATION */}
         <Tabs defaultValue="available" className="w-full space-y-10">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl p-4 rounded-3xl border border-white dark:border-white/5 shadow-xl">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl p-3 rounded-2xl border border-white dark:border-white/5 shadow-md">
              <TabsList className="bg-slate-100/50 dark:bg-slate-950/50 p-1 rounded-xl h-12 w-full md:w-auto grid grid-cols-2">
                 <TabsTrigger value="available" className="rounded-lg font-bold text-xs uppercase tracking-wider data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:shadow-md transition-all px-8">
                     Available Courses
@@ -131,14 +131,14 @@ export default function StudentCourses() {
              </TabsList>
 
              <div className="flex items-center gap-4 w-full md:w-auto">
-                <div className="relative flex-1 md:w-80">
+                <div className="relative flex-1 md:w-64">
                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                    <input 
                       placeholder="Identify Module..." 
-                      className="w-full h-12 bg-slate-100/50 dark:bg-slate-950/50 rounded-2xl border-none pl-12 text-[11px] font-bold uppercase tracking-widest focus-visible:ring-2 focus-visible:ring-indigo-600/30 transition-all font-sans"
+                      className="w-full h-10 bg-slate-100/50 dark:bg-slate-950/50 rounded-xl border-none pl-10 text-[11px] font-bold uppercase tracking-widest focus-visible:ring-2 focus-visible:ring-indigo-600/30 transition-all font-sans"
                    />
                 </div>
-                <Button variant="ghost" className="h-12 w-12 rounded-2xl bg-white dark:bg-slate-900 shadow-sm text-slate-400">
+                <Button variant="ghost" className="h-10 w-10 rounded-xl bg-white dark:bg-slate-900 shadow-sm text-slate-400">
                     <Filter className="w-4 h-4" />
                 </Button>
              </div>
@@ -147,8 +147,8 @@ export default function StudentCourses() {
           <TabsContent value="available" className="mt-0">
              <AnimatePresence mode="wait">
                {loading ? (
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                   {[1, 2, 3, 4, 5, 8].map(i => <Skeleton key={i} className="h-80 rounded-2xl" />)}
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                   {[1, 2, 3, 4, 5, 8].map(i => <Skeleton key={i} className="h-64 rounded-2xl" />)}
                  </div>
                ) : availableCoursesList.length === 0 ? (
                  <div className="py-32 text-center space-y-8 bg-white/50 dark:bg-slate-900/50 rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-white/5">
@@ -157,7 +157,7 @@ export default function StudentCourses() {
                     <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em]">No unmatched course protocols detected in your Grade.</p>
                  </div>
                ) : (
-                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                    {availableCoursesList.map((course, idx) => (
                      <CourseCard 
                         key={course.id} 
@@ -199,8 +199,8 @@ function CourseCard({ course, isEnrolled, isLoading, onEnroll, idx }: { course: 
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         >
-            <Card className="group relative border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1">
-                <div className="h-40 relative overflow-hidden bg-slate-100 dark:bg-slate-800">
+            <Card className="group relative border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-500 hover:-translate-y-1">
+                <div className="h-32 relative overflow-hidden bg-slate-100 dark:bg-slate-800">
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     {course.thumbnail_url ? (
                         <Image 
@@ -211,22 +211,22 @@ function CourseCard({ course, isEnrolled, isLoading, onEnroll, idx }: { course: 
                             unoptimized
                         />
                     ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-indigo-500/10 to-purple-500/10 flex items-center justify-center p-6">
-                            <BookOpen className="w-12 h-12 text-indigo-500/20 group-hover:scale-110 group-hover:text-indigo-500/40 transition-all duration-700" />
+                        <div className="w-full h-full bg-gradient-to-br from-indigo-500/10 to-purple-500/10 flex items-center justify-center p-4">
+                            <BookOpen className="w-10 h-10 text-indigo-500/20 group-hover:scale-110 group-hover:text-indigo-500/40 transition-all duration-700" />
                         </div>
                     )}
-                    <Badge className="absolute top-6 left-6 z-20 bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-white border-none font-black text-[9px] px-4 py-1.5 rounded-xl uppercase tracking-widest backdrop-blur-md shadow-lg shadow-black/5">
+                    <Badge className="absolute top-4 left-4 z-20 bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-white border-none font-black text-[8px] px-3 py-1 rounded-lg uppercase tracking-widest backdrop-blur-md shadow-md shadow-black/5">
                         Module Registry
                     </Badge>
                 </div>
 
-                <CardContent className="p-6 space-y-4">
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                             <div className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.8)]" />
-                             <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Stream Validated</span>
+                <CardContent className="p-4 space-y-3">
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-1.5">
+                             <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.7)]" />
+                             <span className="text-[8px] font-black uppercase tracking-[0.25em] text-slate-400">Stream Validated</span>
                         </div>
-                        <h2 className="text-lg font-bold text-slate-900 dark:text-white leading-tight tracking-tight truncate group-hover:text-indigo-600 transition-colors">
+                        <h2 className="text-sm font-bold text-slate-900 dark:text-white leading-tight tracking-tight truncate group-hover:text-indigo-600 transition-colors">
                             {course.title}
                         </h2>
                         <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
@@ -234,42 +234,42 @@ function CourseCard({ course, isEnrolled, isLoading, onEnroll, idx }: { course: 
                         </p>
                     </div>
 
-                    <div className="flex items-center justify-between pt-4 border-t border-slate-50 dark:border-white/5">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-indigo-600 font-bold text-xs uppercase">
+                    <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-white/5">
+                        <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-indigo-600 font-bold text-[10px] uppercase">
                                 {course.profiles?.full_name?.charAt(0) || "T"}
                             </div>
                             <div className="flex flex-col">
-                                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Instructor Node</span>
-                                <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest truncate max-w-[120px]">{course.profiles?.full_name || "Lead Faculty"}</span>
+                                <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">Instructor</span>
+                                <span className="text-[9px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate max-w-[100px]">{course.profiles?.full_name || "Lead Faculty"}</span>
                             </div>
                         </div>
-                        <Badge className="bg-slate-50 dark:bg-slate-800 text-slate-400 border-none font-black text-[9px] px-3 py-1 rounded-lg uppercase tracking-widest">
+                        <Badge className="bg-slate-50 dark:bg-slate-800 text-slate-400 border-none font-black text-[8px] px-2 py-0.5 rounded-md uppercase tracking-widest">
                             GR {course.grade_level || "12"}
                         </Badge>
                     </div>
                 </CardContent>
 
-                <CardFooter className="px-6 pb-6 pt-0">
+                <CardFooter className="px-4 pb-4 pt-0">
                     {isEnrolled ? (
                         <Link href={`/student/courses/${course.id}`} className="w-full">
-                            <Button className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-[1.5rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-xl shadow-emerald-500/20 transition-all flex items-center justify-center gap-3 border-none shadow-none">
-                                Open Session Protocol
-                                <ArrowRight className="w-4 h-4 translate-y-[1px] group-hover:translate-x-1 transition-transform" />
+                            <Button className="w-full h-9 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold uppercase text-[9px] tracking-[0.15em] shadow-md shadow-emerald-500/10 transition-all flex items-center justify-center gap-2 border-none active:scale-[0.98]">
+                                Open Session
+                                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                             </Button>
                         </Link>
                     ) : (
                         <Button 
                             onClick={() => onEnroll?.(course.id)}
                             disabled={isLoading}
-                            className="w-full h-11 bg-slate-900 dark:bg-indigo-600 hover:bg-black dark:hover:bg-indigo-700 text-white rounded-xl font-bold uppercase text-[10px] tracking-widest shadow-lg shadow-indigo-500/10 transition-all flex items-center justify-center gap-2 border-none group/btn relative overflow-hidden"
+                            className="w-full h-9 bg-slate-900 dark:bg-indigo-600 hover:bg-black dark:hover:bg-indigo-700 text-white rounded-lg font-bold uppercase text-[9px] tracking-widest shadow-md shadow-indigo-500/10 transition-all flex items-center justify-center gap-2 border-none group/btn relative overflow-hidden active:scale-[0.98]"
                         >
                             {isLoading ? (
-                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
                                 <>
-                                    <span className="relative z-10 text-white">Initialize Linkage</span>
-                                    <PlusCircle className="w-5 h-5 relative z-10 translate-y-[1px] group-hover/btn:scale-110 transition-transform" />
+                                    <span className="relative z-10 text-white">Enroll Now</span>
+                                    <PlusCircle className="w-3.5 h-3.5 relative z-10 group-hover/btn:scale-110 transition-transform" />
                                 </>
                             )}
                         </Button>

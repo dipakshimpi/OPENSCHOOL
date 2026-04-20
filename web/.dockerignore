@@ -8,3 +8,4 @@ build
 .github
 README.md
 *.log
+.env.production
