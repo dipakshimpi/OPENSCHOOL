@@ -37,6 +37,7 @@ peertube/logs/
 *.md
 !README.md
 !web/README.md
+!CONTRIBUTING.md
 
 # Ignore migration and fix scripts (keep the actual logic files)
 *.sql
